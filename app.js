@@ -1230,10 +1230,22 @@ function initLearningVideoPlayer(videoUrl, placeholder) {
           <span>Loading video lesson...</span>
         </div>
       </div>
+      <div id="lp-yt-player-mount"></div>
       <div class="lp-video-top-overlay"></div>
-      <div id="lp-yt-player-mount"></div>`;
+      <div class="lp-video-bottomright-mask"></div>
+      <div class="lp-center-play-btn" id="lp-center-play-btn">
+        <div class="lp-center-play-ripple"></div>
+        <div class="lp-center-play-icon">
+          <i data-lucide="play" id="lp-center-play-icon" style="width:38px;height:38px;margin-left:4px;"></i>
+        </div>
+      </div>
+      <div class="lp-video-shield" id="lp-video-shield"
+           oncontextmenu="return false;"
+           onclick="window._lpTogglePlayPause && window._lpTogglePlayPause()">
+      </div>`;
     mountEl = document.getElementById('lp-yt-player-mount');
   }
+
 
   if (placeholder) placeholder.style.display = 'flex';
 
@@ -1256,6 +1268,47 @@ function initLearningVideoPlayer(videoUrl, placeholder) {
     const fsBtn     = document.getElementById('lp-btn-fullscreen');
 
     if (!playBtn) return; // controls not yet in DOM
+
+    // ── Center play/pause button state helper ──
+    const centerBtn  = document.getElementById('lp-center-play-btn');
+    const centerIcon = document.getElementById('lp-center-play-icon');
+
+    const updateCenterBtn = (isPlaying) => {
+      if (!centerBtn) return;
+      if (isPlaying) {
+        centerBtn.classList.add('playing');
+        if (centerIcon) {
+          centerIcon.setAttribute('data-lucide', 'pause');
+          centerIcon.style.marginLeft = '0';
+          lucide.createIcons({ nodes: [centerIcon] });
+        }
+      } else {
+        centerBtn.classList.remove('playing');
+        if (centerIcon) {
+          centerIcon.setAttribute('data-lucide', 'play');
+          centerIcon.style.marginLeft = '4px';
+          lucide.createIcons({ nodes: [centerIcon] });
+        }
+      }
+    };
+
+    // Expose global toggle for shield onclick + mobile touch
+    window._lpTogglePlayPause = () => {
+      if (!_ytPlayer) return;
+      const state = _ytPlayer.getPlayerState?.();
+      if (state === 1) { _ytPlayer.pauseVideo?.(); updateCenterBtn(false); }
+      else             { _ytPlayer.playVideo?.();  updateCenterBtn(true);  }
+    };
+
+    // Also handle touch tap on the shield for mobile
+    const shield = document.getElementById('lp-video-shield');
+    if (shield && !shield._touchWired) {
+      shield._touchWired = true;
+      shield.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        window._lpTogglePlayPause?.();
+      }, { passive: false });
+    }
 
     // Play / Pause
     const syncPlayIcon = () => {
@@ -1351,6 +1404,12 @@ function initLearningVideoPlayer(videoUrl, placeholder) {
       if (timeTotal && dur > 0) timeTotal.textContent = lpFmtTime(dur);
       syncPlayIcon();
       updateVolIcon();
+      // Sync center play button
+      const cp = document.getElementById('lp-center-play-btn');
+      if (cp) {
+        const isPlaying = _ytPlayer.getPlayerState?.() === 1;
+        cp.classList.toggle('playing', isPlaying);
+      }
     }, 500);
 
     // Keyboard shortcuts (only when learning view is active)
@@ -1416,10 +1475,21 @@ function initLearningVideoPlayer(videoUrl, placeholder) {
           wireControls();
         },
         onStateChange: (e) => {
-          const playIcon = document.getElementById('lp-play-icon');
+          const playIcon  = document.getElementById('lp-play-icon');
+          const centerBtn = document.getElementById('lp-center-play-btn');
+          const centerIco = document.getElementById('lp-center-play-icon');
+          const isPlaying = e.data === 1;
           if (playIcon) {
-            playIcon.setAttribute('data-lucide', e.data === 1 ? 'pause' : 'play');
+            playIcon.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
             lucide.createIcons({ nodes: [playIcon] });
+          }
+          if (centerBtn) {
+            centerBtn.classList.toggle('playing', isPlaying);
+          }
+          if (centerIco) {
+            centerIco.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
+            centerIco.style.marginLeft = isPlaying ? '0' : '4px';
+            lucide.createIcons({ nodes: [centerIco] });
           }
         }
       }

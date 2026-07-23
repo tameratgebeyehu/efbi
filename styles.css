@@ -6277,7 +6277,81 @@ body.learning-mode #learning-view {
   background: transparent;
   pointer-events: auto;
   user-select: none;
+  cursor: pointer;
 }
+
+/* ── Hides YouTube logo at bottom-right corner ── */
+.lp-video-bottomright-mask {
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 88px; height: 44px;
+  background: linear-gradient(135deg, transparent 0%, #000 55%);
+  z-index: 6;
+  pointer-events: none;
+}
+
+/* ── CENTER PLAY / PAUSE BUTTON OVERLAY ── */
+.lp-center-play-btn {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+  pointer-events: none; /* clicks pass through to .lp-video-shield */
+  transition: opacity 0.35s ease;
+  opacity: 1;
+}
+.lp-center-play-btn.playing {
+  opacity: 0;
+  /* delay fade-out so brief pause flash is visible */
+  transition: opacity 1.2s ease 0.3s;
+}
+/* When hovering the wrapper and video is playing, briefly show button */
+.lp-video-wrapper:hover .lp-center-play-btn.playing {
+  opacity: 0.75;
+  transition: opacity 0.2s ease;
+}
+.lp-center-play-icon {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: rgba(6, 9, 18, 0.75);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05);
+  transition: transform 0.15s ease, background 0.2s, border-color 0.2s;
+}
+.lp-video-wrapper:hover .lp-center-play-icon {
+  background: rgba(99, 102, 241, 0.85);
+  border-color: rgba(129, 140, 248, 0.6);
+  transform: scale(1.08);
+}
+.lp-center-play-ripple {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  border: 2px solid rgba(99,102,241,0.4);
+  animation: lpCenterRipple 2.2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes lpCenterRipple {
+  0%   { transform: translate(-50%,-50%) scale(1);   opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(1.85); opacity: 0; }
+}
+/* Hide ripple when playing */
+.lp-center-play-btn.playing .lp-center-play-ripple { animation: none; opacity: 0; }
+
+/* Mobile: slightly smaller center button */
+@media (max-width: 640px) {
+  .lp-center-play-icon { width: 56px; height: 56px; }
+  .lp-center-play-ripple { width: 56px; height: 56px; }
+}
+
 
 /* ── CUSTOM PLAYER CONTROLS ── */
 .lp-player-controls {

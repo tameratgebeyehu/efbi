@@ -7,7 +7,7 @@
   <meta name="description" content="Empowering Ethiopian youth with future-ready skills: AI, Software Development, Web/Mobile Apps, Entrepreneurship, and Leadership. Build the future with EFBI.">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=236">
+  <link rel="stylesheet" href="styles.css?v=237">
   
   <!-- Chart.js CDN for Admin Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -935,8 +935,23 @@
 
               <!-- Overlay: blocks top YouTube title / channel link area -->
               <div class="lp-video-top-overlay" id="lp-video-top-overlay"></div>
-              <!-- Right-click shield on entire video -->
-              <div class="lp-video-shield" id="lp-video-shield" oncontextmenu="return false;"></div>
+
+              <!-- Mask: hides YouTube logo bottom-right corner -->
+              <div class="lp-video-bottomright-mask"></div>
+
+              <!-- Center click-to-play / pause button overlay -->
+              <div class="lp-center-play-btn" id="lp-center-play-btn">
+                <div class="lp-center-play-ripple"></div>
+                <div class="lp-center-play-icon">
+                  <i data-lucide="play" id="lp-center-play-icon" style="width:38px;height:38px;margin-left:4px;"></i>
+                </div>
+              </div>
+
+              <!-- Right-click shield + click-to-play/pause for entire video -->
+              <div class="lp-video-shield" id="lp-video-shield"
+                   oncontextmenu="return false;"
+                   onclick="window._lpTogglePlayPause && window._lpTogglePlayPause()">
+              </div>
 
             </div>
 
@@ -2641,8 +2656,8 @@
   </div>
 
   <!-- JavaScript Logics -->
-  <script src="api.js?v=236"></script>
-  <script src="app.js?v=236"></script>
+  <script src="api.js?v=237"></script>
+  <script src="app.js?v=237"></script>
 
   <!-- =========================================================
        QUIZ MODAL
