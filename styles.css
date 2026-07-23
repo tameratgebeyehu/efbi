@@ -6430,3 +6430,207 @@ select.form-control.premium-input option {
   font-weight: 700;
   margin-bottom: 12px;
 }
+
+/* ==========================================================================
+   REGISTRATION VIEW & GLOBAL LIGHT MODE THEME OVERRIDES
+   ========================================================================== */
+
+/* Registration View Defaults (Dark Mode) */
+.reg-header-banner {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e3a5f 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.reg-header-badge {
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
+}
+.reg-header-title {
+  color: #ffffff;
+}
+.reg-header-sub {
+  color: rgba(255, 255, 255, 0.72);
+}
+.reg-body-container {
+  background: var(--bg-primary, #0f172a);
+}
+.reg-card-panel {
+  background: var(--glass-bg, rgba(30, 27, 75, 0.95));
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #ffffff;
+}
+.reg-step-label {
+  color: rgba(255, 255, 255, 0.5);
+}
+.step-indicator.active .reg-step-label {
+  color: #a5b4fc;
+}
+.step-indicator.completed .reg-step-label {
+  color: #10b981;
+}
+.reg-step-heading {
+  color: #ffffff;
+}
+.reg-step-subheading {
+  color: rgba(255, 255, 255, 0.5);
+}
+.reg-label {
+  color: rgba(255, 255, 255, 0.85);
+}
+.reg-input-field, .reg-select-field, .reg-textarea {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1.5px solid rgba(99, 102, 241, 0.25);
+  color: #ffffff;
+}
+.reg-input-field:focus, .reg-select-field:focus, .reg-textarea:focus {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.14);
+}
+.reg-option {
+  background: #1e1b4b;
+  color: #ffffff;
+}
+.reg-btn-secondary {
+  background: rgba(99, 102, 241, 0.12);
+  border: 1.5px solid rgba(99, 102, 241, 0.3);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── LIGHT MODE OVERRIDES ── */
+html[data-theme="light"] .reg-header-banner {
+  background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 50%, #dbeafe 100%) !important;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.15) !important;
+}
+html[data-theme="light"] .reg-header-badge {
+  background: rgba(99, 102, 241, 0.15) !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  color: #4338ca !important;
+}
+html[data-theme="light"] .reg-header-title {
+  color: #1e1b4b !important;
+}
+html[data-theme="light"] .reg-header-sub {
+  color: #475569 !important;
+}
+html[data-theme="light"] .reg-body-container {
+  background: #f8fafc !important;
+}
+html[data-theme="light"] .reg-card-panel {
+  background: #ffffff !important;
+  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06) !important;
+  color: #0f172a !important;
+}
+html[data-theme="light"] .reg-step-label {
+  color: #64748b !important;
+}
+html[data-theme="light"] .step-indicator.active .reg-step-label {
+  color: #4338ca !important;
+}
+html[data-theme="light"] .step-indicator.completed .reg-step-label {
+  color: #059669 !important;
+}
+html[data-theme="light"] .reg-step-heading {
+  color: #0f172a !important;
+}
+html[data-theme="light"] .reg-step-subheading {
+  color: #64748b !important;
+}
+html[data-theme="light"] .reg-label {
+  color: #334155 !important;
+}
+html[data-theme="light"] .reg-input-field,
+html[data-theme="light"] .reg-select-field,
+html[data-theme="light"] .reg-textarea {
+  background: #f8fafc !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.25) !important;
+  color: #0f172a !important;
+}
+html[data-theme="light"] .reg-input-field:focus,
+html[data-theme="light"] .reg-select-field:focus,
+html[data-theme="light"] .reg-textarea:focus {
+  background: #ffffff !important;
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12) !important;
+}
+html[data-theme="light"] .reg-option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+html[data-theme="light"] .reg-btn-secondary {
+  background: #f1f5f9 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #334155 !important;
+}
+html[data-theme="light"] .pathway-card {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.2) !important;
+  color: #0f172a !important;
+}
+html[data-theme="light"] .pathway-card:hover,
+html[data-theme="light"] .pathway-card.selected {
+  background: #f5f3ff !important;
+  border-color: #6366f1 !important;
+}
+html[data-theme="light"] .pathway-card-title {
+  color: #1e1b4b !important;
+}
+html[data-theme="light"] .pathway-card-desc {
+  color: #64748b !important;
+}
+
+/* Global Light Mode Polish across Platform */
+html[data-theme="light"] .navbar {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+html[data-theme="light"] .nav-link {
+  color: #334155 !important;
+}
+html[data-theme="light"] .nav-link:hover,
+html[data-theme="light"] .nav-link.active {
+  color: #4f46e5 !important;
+}
+html[data-theme="light"] .card,
+html[data-theme="light"] .glass-panel,
+html[data-theme="light"] .course-card,
+html[data-theme="light"] .feature-card,
+html[data-theme="light"] .stat-card,
+html[data-theme="light"] .mentor-card,
+html[data-theme="light"] .testimonial-card,
+html[data-theme="light"] .blog-card,
+html[data-theme="light"] .project-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+  color: #0f172a !important;
+}
+html[data-theme="light"] .course-title,
+html[data-theme="light"] .feature-title,
+html[data-theme="light"] .card-title,
+html[data-theme="light"] .modal-title {
+  color: #0f172a !important;
+}
+html[data-theme="light"] .course-description,
+html[data-theme="light"] .feature-desc,
+html[data-theme="light"] .text-secondary {
+  color: #475569 !important;
+}
+html[data-theme="light"] select.form-control.premium-input option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+html[data-theme="light"] .modal-content,
+html[data-theme="light"] .modal-header,
+html[data-theme="light"] .modal-body,
+html[data-theme="light"] .modal-footer {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+html[data-theme="light"] footer,
+html[data-theme="light"] .site-footer {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}

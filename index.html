@@ -7,7 +7,7 @@
   <meta name="description" content="Empowering Ethiopian youth with future-ready skills: AI, Software Development, Web/Mobile Apps, Entrepreneurship, and Leadership. Build the future with EFBI.">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=215">
+  <link rel="stylesheet" href="styles.css?v=220">
   
   <!-- Chart.js CDN for Admin Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1242,22 +1242,22 @@
     <!-- 5. STUDENT REGISTRATION FORM VIEW -->
     <section id="register-view" class="router-view">
 
-      <!-- Page Header -->
-      <div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e3a5f 100%); padding: 52px 20px 36px; text-align: center;">
+      <!-- Page Header Banner -->
+      <div class="reg-header-banner" style="padding: 110px 20px 44px; text-align: center;">
         <div style="max-width: 600px; margin: 0 auto;">
-          <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); border-radius: 50px; padding: 6px 16px; font-size: 0.78rem; font-weight: 600; color: #a5b4fc; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 16px;">
+          <div class="reg-header-badge" style="display: inline-flex; align-items: center; gap: 8px; border-radius: 50px; padding: 6px 16px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 16px;">
             <i data-lucide="zap" style="width:14px;height:14px;"></i> Free Tuition · Cohort 2026
           </div>
-          <h1 style="font-size: 2.2rem; font-weight: 800; color: #fff; margin: 0 0 10px; line-height: 1.2;">Join EFBI Today</h1>
-          <p style="font-size: 0.95rem; color: rgba(255,255,255,0.72); margin: 0;">Build future-ready skills with Ethiopia's leading youth platform.</p>
+          <h1 class="reg-header-title" style="font-size: 2.2rem; font-weight: 800; margin: 0 0 10px; line-height: 1.2;">Join EFBI Today</h1>
+          <p class="reg-header-sub" style="font-size: 0.95rem; margin: 0;">Build future-ready skills with Ethiopia's leading youth platform.</p>
         </div>
       </div>
 
-      <div style="padding: 40px 20px 80px; background: var(--bg-primary, #0f172a);">
+      <div class="reg-body-container" style="padding: 40px 20px 80px;">
         <div style="max-width: 520px; margin: 0 auto;">
 
           <!-- Wizard Card -->
-          <div id="register-card-panel" style="background: var(--glass-bg, rgba(30,27,75,0.95)); border: 1px solid rgba(99,102,241,0.25); border-radius: 24px; padding: 36px 32px; box-shadow: 0 32px 64px rgba(0,0,0,0.4);">
+          <div id="register-card-panel" class="reg-card-panel" style="border-radius: 24px; padding: 36px 32px; box-shadow: 0 32px 64px rgba(0,0,0,0.4);">
 
             <!-- ── STEP PROGRESS INDICATOR ── -->
             <div style="margin-bottom: 32px;">
@@ -1271,7 +1271,7 @@
                        style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(99,102,241,0.45); transition: all 0.3s ease;">
                     1
                   </div>
-                  <span style="font-size: 0.72rem; font-weight: 600; color: #a5b4fc; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;">Credentials</span>
+                  <span class="reg-step-label" style="font-size: 0.72rem; font-weight: 600; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;">Credentials</span>
                 </div>
 
                 <!-- Line 1 -->
@@ -1284,7 +1284,7 @@
                        style="width: 40px; height: 40px; border-radius: 50%; background: rgba(99,102,241,0.15); border: 2px solid rgba(99,102,241,0.3); color: rgba(255,255,255,0.45); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; transition: all 0.3s ease;">
                     2
                   </div>
-                  <span style="font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.4); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;">Profile</span>
+                  <span class="reg-step-label" style="font-size: 0.72rem; font-weight: 600; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;">Profile</span>
                 </div>
 
                 <!-- Line 2 -->
@@ -1297,7 +1297,7 @@
                        style="width: 40px; height: 40px; border-radius: 50%; background: rgba(99,102,241,0.15); border: 2px solid rgba(99,102,241,0.3); color: rgba(255,255,255,0.45); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; transition: all 0.3s ease;">
                     3
                   </div>
-                  <span style="font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.4); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;">Pathway</span>
+                  <span class="reg-step-label" style="font-size: 0.72rem; font-weight: 600; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;">Pathway</span>
                 </div>
 
               </div>
@@ -1315,39 +1315,39 @@
               <!-- ════════ STEP 1: Credentials ════════ -->
               <div class="onboarding-step active" data-step-content="1" style="display: block;">
                 <div style="margin-bottom: 20px;">
-                  <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0 0 4px;">Create Credentials</h3>
-                  <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin: 0;">Use these credentials to sign in to your dashboard.</p>
+                  <h3 class="reg-step-heading" style="font-size: 1.25rem; font-weight: 700; margin: 0 0 4px;">Create Credentials</h3>
+                  <p class="reg-step-subheading" style="font-size: 0.85rem; margin: 0;">Use these credentials to sign in to your dashboard.</p>
                 </div>
 
                 <!-- Full Name -->
                 <div style="margin-bottom: 16px;">
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.75); margin-bottom: 6px; letter-spacing: 0.02em;">Full Name *</label>
+                  <label class="reg-label" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.02em;">Full Name *</label>
                   <div style="position: relative;">
                     <i data-lucide="user" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: rgba(99,102,241,0.7); pointer-events: none; z-index: 2;"></i>
-                    <input type="text" id="reg-name" placeholder="Full Name"
-                           style="width: 100%; height: 50px; background: rgba(99,102,241,0.08); border: 1.5px solid rgba(99,102,241,0.25); border-radius: 12px; color: #fff; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; transition: border-color 0.2s ease;" required>
+                    <input type="text" id="reg-name" class="reg-input-field" placeholder="Full Name"
+                           style="width: 100%; height: 50px; border-radius: 12px; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; transition: border-color 0.2s ease;" required>
                   </div>
                   <div id="error-reg-name" style="display:none; color:#f87171; font-size:0.78rem; margin-top:4px;">Please enter your full name (min 4 characters).</div>
                 </div>
 
                 <!-- Email -->
                 <div style="margin-bottom: 16px;">
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.75); margin-bottom: 6px; letter-spacing: 0.02em;">Email Address *</label>
+                  <label class="reg-label" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.02em;">Email Address *</label>
                   <div style="position: relative;">
                     <i data-lucide="mail" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: rgba(99,102,241,0.7); pointer-events: none; z-index: 2;"></i>
-                    <input type="email" id="reg-email" placeholder="Email Address"
-                           style="width: 100%; height: 50px; background: rgba(99,102,241,0.08); border: 1.5px solid rgba(99,102,241,0.25); border-radius: 12px; color: #fff; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; transition: border-color 0.2s ease;" required>
+                    <input type="email" id="reg-email" class="reg-input-field" placeholder="Email Address"
+                           style="width: 100%; height: 50px; border-radius: 12px; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; transition: border-color 0.2s ease;" required>
                   </div>
                   <div id="error-reg-email" style="display:none; color:#f87171; font-size:0.78rem; margin-top:4px;">Please enter a valid email address.</div>
                 </div>
 
                 <!-- Password -->
                 <div style="margin-bottom: 28px;">
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.75); margin-bottom: 6px; letter-spacing: 0.02em;">Password *</label>
+                  <label class="reg-label" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.02em;">Password *</label>
                   <div style="position: relative;">
                     <i data-lucide="lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: rgba(99,102,241,0.7); pointer-events: none; z-index: 2;"></i>
-                    <input type="password" id="reg-password" placeholder="Password (min 6 characters)" autocomplete="new-password"
-                           style="width: 100%; height: 50px; background: rgba(99,102,241,0.08); border: 1.5px solid rgba(99,102,241,0.25); border-radius: 12px; color: #fff; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; transition: border-color 0.2s ease;" required>
+                    <input type="password" id="reg-password" class="reg-input-field" placeholder="Password (min 6 characters)" autocomplete="new-password"
+                           style="width: 100%; height: 50px; border-radius: 12px; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; transition: border-color 0.2s ease;" required>
                   </div>
                   <div id="error-reg-password" style="display:none; color:#f87171; font-size:0.78rem; margin-top:4px;">Password must be at least 6 characters.</div>
                 </div>
@@ -1362,73 +1362,73 @@
               <!-- ════════ STEP 2: Academic Profile ════════ -->
               <div class="onboarding-step" data-step-content="2" style="display: none;">
                 <div style="margin-bottom: 20px;">
-                  <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0 0 4px;">Academic Profile</h3>
-                  <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin: 0;">Helps us match you with regional student groups.</p>
+                  <h3 class="reg-step-heading" style="font-size: 1.25rem; font-weight: 700; margin: 0 0 4px;">Academic Profile</h3>
+                  <p class="reg-step-subheading" style="font-size: 0.85rem; margin: 0;">Helps us match you with regional student groups.</p>
                 </div>
 
                 <!-- Region -->
                 <div style="margin-bottom: 16px;">
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.75); margin-bottom: 6px; letter-spacing: 0.02em;">Region / City *</label>
+                  <label class="reg-label" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.02em;">Region / City *</label>
                   <div style="position: relative;">
                     <i data-lucide="map-pin" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: rgba(99,102,241,0.7); pointer-events: none; z-index: 2;"></i>
-                    <select id="reg-region" required
-                            style="width: 100%; height: 50px; background: rgba(99,102,241,0.08); border: 1.5px solid rgba(99,102,241,0.25); border-radius: 12px; color: #fff; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; appearance: none; cursor: pointer;">
-                      <option value="" disabled selected style="background:#1e1b4b;">Select Region / City</option>
-                      <option value="Addis Ababa" style="background:#1e1b4b;">Addis Ababa</option>
-                      <option value="Afar" style="background:#1e1b4b;">Afar</option>
-                      <option value="Amhara" style="background:#1e1b4b;">Amhara</option>
-                      <option value="Benishangul-Gumuz" style="background:#1e1b4b;">Benishangul-Gumuz</option>
-                      <option value="Central Ethiopia" style="background:#1e1b4b;">Central Ethiopia</option>
-                      <option value="Dire Dawa" style="background:#1e1b4b;">Dire Dawa</option>
-                      <option value="Gambela" style="background:#1e1b4b;">Gambela</option>
-                      <option value="Harari" style="background:#1e1b4b;">Harari</option>
-                      <option value="Oromia" style="background:#1e1b4b;">Oromia</option>
-                      <option value="Sidama" style="background:#1e1b4b;">Sidama</option>
-                      <option value="Somali" style="background:#1e1b4b;">Somali</option>
-                      <option value="South Ethiopia" style="background:#1e1b4b;">South Ethiopia</option>
-                      <option value="South West Ethiopia" style="background:#1e1b4b;">South West Ethiopia</option>
-                      <option value="Tigray" style="background:#1e1b4b;">Tigray</option>
+                    <select id="reg-region" class="reg-select-field" required
+                            style="width: 100%; height: 50px; border-radius: 12px; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; appearance: none; cursor: pointer;">
+                      <option value="" disabled selected class="reg-option">Select Region / City</option>
+                      <option value="Addis Ababa" class="reg-option">Addis Ababa</option>
+                      <option value="Afar" class="reg-option">Afar</option>
+                      <option value="Amhara" class="reg-option">Amhara</option>
+                      <option value="Benishangul-Gumuz" class="reg-option">Benishangul-Gumuz</option>
+                      <option value="Central Ethiopia" class="reg-option">Central Ethiopia</option>
+                      <option value="Dire Dawa" class="reg-option">Dire Dawa</option>
+                      <option value="Gambela" class="reg-option">Gambela</option>
+                      <option value="Harari" class="reg-option">Harari</option>
+                      <option value="Oromia" class="reg-option">Oromia</option>
+                      <option value="Sidama" class="reg-option">Sidama</option>
+                      <option value="Somali" class="reg-option">Somali</option>
+                      <option value="South Ethiopia" class="reg-option">South Ethiopia</option>
+                      <option value="South West Ethiopia" class="reg-option">South West Ethiopia</option>
+                      <option value="Tigray" class="reg-option">Tigray</option>
                     </select>
-                    <i data-lucide="chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: rgba(255,255,255,0.5); pointer-events: none; z-index: 2;"></i>
+                    <i data-lucide="chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: rgba(99,102,241,0.7); pointer-events: none; z-index: 2;"></i>
                   </div>
                   <div id="error-reg-region" style="display:none; color:#f87171; font-size:0.78rem; margin-top:4px;">Please select your region.</div>
                 </div>
 
                 <!-- School -->
                 <div style="margin-bottom: 16px;">
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.75); margin-bottom: 6px; letter-spacing: 0.02em;">School / University *</label>
+                  <label class="reg-label" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.02em;">School / University *</label>
                   <div style="position: relative;">
                     <i data-lucide="building" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: rgba(99,102,241,0.7); pointer-events: none; z-index: 2;"></i>
-                    <input type="text" id="reg-school" placeholder="School or University Name"
-                           style="width: 100%; height: 50px; background: rgba(99,102,241,0.08); border: 1.5px solid rgba(99,102,241,0.25); border-radius: 12px; color: #fff; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; transition: border-color 0.2s ease;" required>
+                    <input type="text" id="reg-school" class="reg-input-field" placeholder="School or University Name"
+                           style="width: 100%; height: 50px; border-radius: 12px; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; transition: border-color 0.2s ease;" required>
                   </div>
                   <div id="error-reg-school" style="display:none; color:#f87171; font-size:0.78rem; margin-top:4px;">Please enter your school or university name.</div>
                 </div>
 
                 <!-- Grade -->
                 <div style="margin-bottom: 28px;">
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.75); margin-bottom: 6px; letter-spacing: 0.02em;">Grade / Level *</label>
+                  <label class="reg-label" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.02em;">Grade / Level *</label>
                   <div style="position: relative;">
                     <i data-lucide="graduation-cap" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: rgba(99,102,241,0.7); pointer-events: none; z-index: 2;"></i>
-                    <select id="reg-grade" required
-                            style="width: 100%; height: 50px; background: rgba(99,102,241,0.08); border: 1.5px solid rgba(99,102,241,0.25); border-radius: 12px; color: #fff; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; appearance: none; cursor: pointer;">
-                      <option value="" disabled selected style="background:#1e1b4b;">Select Grade / Level</option>
-                      <option value="Grade 9-10" style="background:#1e1b4b;">High School (Grade 9–10)</option>
-                      <option value="Grade 11-12" style="background:#1e1b4b;">High School (Grade 11–12)</option>
-                      <option value="University Freshman" style="background:#1e1b4b;">University Freshman</option>
-                      <option value="University Sophomore" style="background:#1e1b4b;">University Sophomore</option>
-                      <option value="University Junior/Senior" style="background:#1e1b4b;">University Junior / Senior</option>
-                      <option value="Graduate/Other" style="background:#1e1b4b;">Other / Young Professional</option>
+                    <select id="reg-grade" class="reg-select-field" required
+                            style="width: 100%; height: 50px; border-radius: 12px; font-size: 0.9rem; padding: 0 16px 0 46px; box-sizing: border-box; outline: none; appearance: none; cursor: pointer;">
+                      <option value="" disabled selected class="reg-option">Select Grade / Level</option>
+                      <option value="Grade 9-10" class="reg-option">High School (Grade 9–10)</option>
+                      <option value="Grade 11-12" class="reg-option">High School (Grade 11–12)</option>
+                      <option value="University Freshman" class="reg-option">University Freshman</option>
+                      <option value="University Sophomore" class="reg-option">University Sophomore</option>
+                      <option value="University Junior/Senior" class="reg-option">University Junior / Senior</option>
+                      <option value="Graduate/Other" class="reg-option">Other / Young Professional</option>
                     </select>
-                    <i data-lucide="chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: rgba(255,255,255,0.5); pointer-events: none; z-index: 2;"></i>
+                    <i data-lucide="chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: rgba(99,102,241,0.7); pointer-events: none; z-index: 2;"></i>
                   </div>
                   <div id="error-reg-grade" style="display:none; color:#f87171; font-size:0.78rem; margin-top:4px;">Please select your grade level.</div>
                 </div>
 
                 <!-- Navigation Buttons -->
                 <div style="display: grid; grid-template-columns: 1fr 1.8fr; gap: 12px;">
-                  <button type="button" class="btn-prev-step" data-prev="1"
-                          style="height: 52px; background: rgba(99,102,241,0.12); border: 1.5px solid rgba(99,102,241,0.3); border-radius: 14px; color: rgba(255,255,255,0.75); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s ease;">
+                  <button type="button" class="btn-prev-step reg-btn-secondary" data-prev="1"
+                          style="height: 52px; border-radius: 14px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s ease;">
                     <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back
                   </button>
                   <button type="button" class="btn-next-step" data-next="3"
@@ -1441,8 +1441,8 @@
               <!-- ════════ STEP 3: Pathway Selection ════════ -->
               <div class="onboarding-step" data-step-content="3" style="display: none;">
                 <div style="margin-bottom: 20px;">
-                  <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin: 0 0 4px;">Choose Your Pathway</h3>
-                  <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin: 0;">Pick your primary technical focus area to get started.</p>
+                  <h3 class="reg-step-heading" style="font-size: 1.25rem; font-weight: 700; margin: 0 0 4px;">Choose Your Pathway</h3>
+                  <p class="reg-step-subheading" style="font-size: 0.85rem; margin: 0;">Pick your primary technical focus area to get started.</p>
                 </div>
 
                 <!-- Hidden select for form submission -->
@@ -1456,17 +1456,17 @@
 
                 <!-- Goals (Optional) -->
                 <div style="margin-bottom: 28px;">
-                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.75); margin-bottom: 6px; letter-spacing: 0.02em;">
-                    Goals <span style="font-weight: 400; color: rgba(255,255,255,0.35); font-size: 0.75rem;">(Optional)</span>
+                  <label class="reg-label" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.02em;">
+                    Goals <span style="font-weight: 400; opacity: 0.6; font-size: 0.75rem;">(Optional)</span>
                   </label>
-                  <textarea id="reg-why" rows="2" placeholder="What do you want to learn or build?"
-                            style="width: 100%; background: rgba(99,102,241,0.08); border: 1.5px solid rgba(99,102,241,0.25); border-radius: 12px; color: #fff; font-size: 0.85rem; padding: 12px 16px; box-sizing: border-box; outline: none; resize: none; font-family: inherit; line-height: 1.5;"></textarea>
+                  <textarea id="reg-why" class="reg-textarea" rows="2" placeholder="What do you want to learn or build?"
+                            style="width: 100%; border-radius: 12px; font-size: 0.85rem; padding: 12px 16px; box-sizing: border-box; outline: none; resize: none; font-family: inherit; line-height: 1.5;"></textarea>
                 </div>
 
                 <!-- Navigation Buttons -->
                 <div style="display: grid; grid-template-columns: 1fr 1.8fr; gap: 12px;">
-                  <button type="button" class="btn-prev-step" data-prev="2"
-                          style="height: 52px; background: rgba(99,102,241,0.12); border: 1.5px solid rgba(99,102,241,0.3); border-radius: 14px; color: rgba(255,255,255,0.75); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s ease;">
+                  <button type="button" class="btn-prev-step reg-btn-secondary" data-prev="2"
+                          style="height: 52px; border-radius: 14px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s ease;">
                     <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back
                   </button>
                   <button type="submit" id="btn-submit-registration"
@@ -1480,12 +1480,12 @@
           </div>
 
           <!-- ── SUCCESS STATE ── -->
-          <div id="register-success-panel" style="display: none; background: rgba(30,27,75,0.95); border: 1px solid rgba(16,185,129,0.3); border-radius: 24px; padding: 48px 32px; text-align: center; box-shadow: 0 32px 64px rgba(0,0,0,0.4);">
+          <div id="register-success-panel" class="reg-card-panel" style="display: none; border-radius: 24px; padding: 48px 32px; text-align: center; box-shadow: 0 32px 64px rgba(0,0,0,0.4);">
             <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(16,185,129,0.15); border: 2px solid rgba(16,185,129,0.4); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #10b981;">
               <i data-lucide="check" style="width:36px;height:36px;"></i>
             </div>
-            <h2 style="font-size: 1.6rem; font-weight: 800; color: #fff; margin: 0 0 12px;">Application Received!</h2>
-            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; line-height: 1.6; max-width: 380px; margin: 0 auto 28px;">We've registered your application. Our team will contact you via email within 7 days with your enrollment details.</p>
+            <h2 class="reg-step-heading" style="font-size: 1.6rem; font-weight: 800; margin: 0 0 12px;">Application Received!</h2>
+            <p class="reg-step-subheading" style="font-size: 0.9rem; line-height: 1.6; max-width: 380px; margin: 0 auto 28px;">We've registered your application. Our team will contact you via email within 7 days with your enrollment details.</p>
             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
               <a href="#courses" data-view="courses" class="btn btn-primary" style="padding: 12px 24px; border-radius: 12px; font-weight: 600;">Browse Courses</a>
               <button class="btn btn-secondary" id="btn-register-reset" style="padding: 12px 24px; border-radius: 12px;">Submit Another</button>
@@ -2540,8 +2540,8 @@
   </div>
 
   <!-- JavaScript Logics -->
-  <script src="api.js?v=215"></script>
-  <script src="app.js?v=215"></script>
+  <script src="api.js?v=220"></script>
+  <script src="app.js?v=220"></script>
 
   <!-- =========================================================
        QUIZ MODAL
