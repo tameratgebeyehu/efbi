@@ -3584,9 +3584,21 @@ function initStudentAuth() {
     window.location.hash = '#home';
   };
 
+  // Logout Student (Profile Page)
+  const profileLogoutBtn = document.getElementById('btn-student-logout-profile');
+  if (profileLogoutBtn) {
+    profileLogoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleLogout();
+    });
+  }
+
   // Logout Student (Desktop)
   if (studentLogoutBtn) {
-    studentLogoutBtn.addEventListener('click', handleLogout);
+    studentLogoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleLogout();
+    });
   }
 
   // Logout Student (Mobile)
@@ -3597,6 +3609,15 @@ function initStudentAuth() {
       closeMobileMenu();
     });
   }
+
+  // Global document fallback listener for any logout button clicks
+  document.addEventListener('click', (e) => {
+    const logoutTarget = e.target.closest('#btn-student-logout-profile, #btn-student-logout-mobile, #btn-student-logout, [data-action="logout"]');
+    if (logoutTarget) {
+      e.preventDefault();
+      handleLogout();
+    }
+  });
 
   // Profile Settings Form
   initStudentSettings();
