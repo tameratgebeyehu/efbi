@@ -5527,28 +5527,29 @@ a:focus-visible {
   border: none;
 }
 
-/* Full-top overlay: blocks YouTube title bar on hover */
+/* Full-top overlay: blocks YouTube title bar & links on hover */
 .lp-video-top-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 52px;
-  background: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.85) 70%, transparent 100%);
-  z-index: 4;
-  pointer-events: none;
+  height: 64px;
+  background: #000;
+  z-index: 5;
+  pointer-events: auto;
+  cursor: default;
 }
 
-/* Top-right: hides YouTube logo watermark */
+/* Top-right: hides YouTube logo watermark & share button */
 .lp-video-topright-mask {
   position: absolute;
   top: 0;
   right: 0;
-  width: 130px;
-  height: 52px;
+  width: 180px;
+  height: 64px;
   background: #000;
-  z-index: 5;
-  pointer-events: none;
+  z-index: 6;
+  pointer-events: auto;
 }
 
 /* Bottom-left: hides YouTube branding in controls */
@@ -5556,11 +5557,11 @@ a:focus-visible {
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 100px;
-  height: 44px;
+  width: 140px;
+  height: 48px;
   background: #000;
-  z-index: 5;
-  pointer-events: none;
+  z-index: 6;
+  pointer-events: auto;
 }
 
 /* Loading placeholder */
