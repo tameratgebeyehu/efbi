@@ -1,0 +1,2895 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ethiopian Future Builders Initiative (EFBI) | Empowering Next-Gen Innovators</title>
+  <meta name="description" content="Empowering Ethiopian youth with future-ready skills: AI, Software Development, Web/Mobile Apps, Entrepreneurship, and Leadership. Build the future with EFBI.">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css?v=20">
+  
+  <!-- Chart.js CDN for Admin Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="#home" class="logo">
+        <i data-lucide="cpu" style="stroke: var(--secondary); fill: var(--primary-glow);"></i>
+        EFBI <span>Initiative</span>
+      </a>
+      
+      <nav>
+        <ul class="nav-links" id="nav-links">
+          <li class="nav-item active"><a href="#home" data-view="home">Home</a></li>
+          <li class="nav-item"><a href="#courses" data-view="courses">Courses</a></li>
+          <li class="nav-item nav-mycourses-item" id="nav-mycourses-desktop" style="display:none;"><a href="#my-courses" data-view="my-courses"><i data-lucide="layout-dashboard" style="width:14px;margin-right:4px;display:inline-block;vertical-align:middle;"></i>My Courses</a></li>
+          <li class="nav-item"><a href="#certification" data-view="certification">Certification</a></li>
+          <li class="nav-item"><a href="#verify" data-view="verify">Verify</a></li>
+          <li class="nav-item"><a href="#blog" data-view="blog">Blog</a></li>
+          <li class="nav-item"><a href="#contact" data-view="contact">Contact</a></li>
+          
+          <!-- Mobile Specific Auth Links -->
+          <li class="nav-item mobile-auth-guest" style="width: 100%;"><a href="#" id="btn-show-student-login-mobile" class="btn btn-secondary" style="width: 100%; margin-top: 15px; padding: 12px;"><i data-lucide="log-in" style="width: 14px; margin-right: 4px; display: inline-block; vertical-align: middle;"></i> Sign In</a></li>
+          <li class="nav-item mobile-auth-guest" style="width: 100%;"><a href="#register" data-view="register" class="btn btn-primary" style="width: 100%; margin-top: 5px; padding: 12px;">Join EFBI</a></li>
+          
+          <li class="nav-item mobile-auth-student" style="display: none; width: 100%;"><a href="#profile" data-view="profile" class="btn btn-secondary" style="width: 100%; margin-top: 15px; padding: 12px;"><i data-lucide="user" style="width: 14px; margin-right: 4px; display: inline-block; vertical-align: middle;"></i> Profile</a></li>
+          <li class="nav-item mobile-auth-student mobile-auth-mycourses" style="display: none; width: 100%;"><a href="#my-courses" data-view="my-courses" class="btn btn-secondary" style="width: 100%; margin-top: 5px; padding: 12px;"><i data-lucide="layout-dashboard" style="width: 14px; margin-right: 4px; display: inline-block; vertical-align: middle;"></i> My Courses</a></li>
+          <li class="nav-item mobile-auth-student" style="display: none; width: 100%;"><a href="#" id="btn-student-logout-mobile" class="btn btn-secondary" style="width: 100%; margin-top: 5px; padding: 12px; border-color: var(--danger); color: var(--danger);"><i data-lucide="log-out" style="width: 14px; margin-right: 4px; display: inline-block; vertical-align: middle;"></i> Sign Out</a></li>
+        </ul>
+      </nav>
+      
+      <div class="nav-actions">
+        <!-- Theme Toggle -->
+        <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle Theme">
+          <i data-lucide="sun" class="sun-icon"></i>
+          <i data-lucide="moon" class="moon-icon"></i>
+        </button>
+        
+        <!-- Guest Actions -->
+        <div id="nav-guest-actions" style="display: flex; gap: 12px; align-items: center;">
+          <a href="#" id="btn-show-student-login" class="btn btn-secondary" style="padding: 10px 16px; border-radius: 8px;"><i data-lucide="log-in" style="width: 14px; margin-right: 4px; display: inline-block; vertical-align: middle;"></i> Sign In</a>
+          <a href="#register" data-view="register" class="btn btn-primary desktop-only">Join EFBI</a>
+        </div>
+
+        <!-- Student Actions -->
+        <div id="nav-student-actions" style="display: none; gap: 12px; align-items: center;">
+          <a href="#profile" data-view="profile" class="btn btn-primary" style="padding: 10px 16px; border-radius: 8px;"><i data-lucide="user" style="width: 14px; margin-right: 4px; display: inline-block; vertical-align: middle;"></i> Profile</a>
+        </div>
+        
+        <!-- Mobile Hamburger Toggle -->
+        <button class="hamburger" id="hamburger" aria-label="Open Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Router Container -->
+  <main id="app-router">
+    
+    <!-- 1. HOME VIEW -->
+    <section id="home-view" class="router-view active">
+      
+      <!-- Hero Section -->
+      <div class="section" style="padding: 140px 0 80px 0; overflow: hidden;">
+        <div class="hero-glow-effect-1"></div>
+        <div class="hero-glow-effect-2"></div>
+        
+        <div class="container">
+          <div class="hero-grid">
+            <div class="hero-content">
+              <div class="hero-tagline">
+                Ethiopian Future Builders Initiative
+              </div>
+              <h1 class="hero-headline">Learn. Build. Lead.</h1>
+              <p class="hero-subheadline">EFBI gives Ethiopian students real tech skills — AI, coding, entrepreneurship, and leadership — taught by local mentors.</p>
+              
+              <div class="hero-buttons">
+                <a href="#register" data-view="register" class="btn btn-primary">Join EFBI <i data-lucide="arrow-right"></i></a>
+                <a href="#courses" data-view="courses" class="btn btn-secondary">Explore Courses</a>
+              </div>
+            </div>
+            
+            <div class="hero-visual">
+              <div class="ide-window glass-panel">
+                <!-- Titlebar -->
+                <div class="ide-titlebar">
+                  <div class="ide-dots">
+                    <span class="ide-dot close"></span>
+                    <span class="ide-dot minimize"></span>
+                    <span class="ide-dot maximize"></span>
+                  </div>
+                  <div class="ide-title">efbi-initiative — main.py</div>
+                </div>
+                
+                <!-- Editor Area -->
+                <div class="ide-editor-container">
+                  <!-- Sidebar/File tree -->
+                  <div class="ide-sidebar">
+                    <div class="ide-file active"><i data-lucide="file-code" style="width: 14px; color: var(--secondary); display: inline-block; vertical-align: middle;"></i> main.py</div>
+                    <div class="ide-file"><i data-lucide="file-json" style="width: 14px; display: inline-block; vertical-align: middle;"></i> data.json</div>
+                    <div class="ide-file"><i data-lucide="settings" style="width: 14px; display: inline-block; vertical-align: middle;"></i> config.cfg</div>
+                  </div>
+                  
+                  <!-- Code view -->
+                  <div class="ide-code-view">
+                    <pre class="ide-code"><code id="hero-animated-code"><span class="code-line">1</span> <span class="code-keyword">import</span> efbi_core
+<span class="code-line">2</span> 
+<span class="code-line">3</span> <span class="code-keyword">def</span> <span class="code-function">build_future</span>(student):
+<span class="code-line">4</span>     path = student.interest
+<span class="code-line">5</span>     skills = [
+<span class="code-line">6</span>         <span class="code-string">"AI & Coding"</span>, 
+<span class="code-line">7</span>         <span class="code-string">"Leadership"</span>,
+<span class="code-line">8</span>         <span class="code-string">"Innovation"</span>
+<span class="code-line">9</span>     ]
+<span class="code-line">10</span>     <span class="code-keyword">return</span> efbi_core.empower(skills)
+<span class="code-line">11</span> 
+<span class="code-line">12</span> <span class="code-comment"># Ready to build the nation!</span>
+<span class="code-line">13</span> build_future(<span class="code-string">"Ethiopian Youth"</span>)</code></pre>
+                  </div>
+                </div>
+                
+                <!-- Terminal / Output -->
+                <div class="ide-terminal">
+                  <div class="ide-terminal-header"><i data-lucide="terminal" style="width:12px; display: inline-block; vertical-align: middle;"></i> Console Output</div>
+                  <div class="ide-terminal-body" id="hero-animated-terminal">
+                    <div class="terminal-line"><span class="terminal-prompt">$</span> python main.py</div>
+                    <div class="terminal-line success">>>> [EFBI Core] Status: Empowered 🌟</div>
+                    <div class="terminal-line success">>>> Impact: 100% Certified. Curriculum unlocked!</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Floating AI Copilot Card -->
+              <div class="floating-copilot-card glass-card">
+                <div class="copilot-header">
+                  <div class="copilot-avatar">
+                    <i data-lucide="bot" style="width:18px; color: var(--secondary);"></i>
+                  </div>
+                  <div>
+                    <div class="copilot-name">EFBI AI Copilot</div>
+                    <div class="copilot-status">Online</div>
+                  </div>
+                </div>
+                <div class="copilot-body">
+                  "Great job! The model has been optimized. Ready to launch?"
+                </div>
+                <div class="copilot-footer">
+                  <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 6px;">Approve & Deploy</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Statistics Counters Bar -->
+          <div class="stats-bar glass-panel" id="stats-section">
+            <div class="stat-item">
+              <div class="stat-number" id="homepage-stat-students" data-target="150">0<span>+</span></div>
+              <div class="stat-label">Students Trained</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="homepage-stat-courses" data-target="6">0<span>+</span></div>
+              <div class="stat-label">Courses Offered</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="homepage-stat-certs" data-target="85">0<span>+</span></div>
+              <div class="stat-label">Certificates Awarded</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="homepage-stat-projects" data-target="110">0<span>+</span></div>
+              <div class="stat-label">Projects Built</div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      <!-- About Us Section -->
+      <div id="about" class="section" style="border-top: 1px solid var(--border-color); background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);">
+        <div class="container">
+          <div class="section-header text-center">
+            <span class="section-tag">Who We Are</span>
+            <h2 class="section-title">Empowering the Next Generation</h2>
+            <p class="section-desc">A youth-led initiative giving Ethiopian students practical tech skills, mentorship, and the confidence to build a digital future.</p>
+          </div>
+          
+          <div class="about-grid">
+            <div class="about-visual">
+              <div class="certified-seal-wrapper glass-panel">
+                <div class="seal-container">
+                  <svg viewBox="0 0 200 200" class="seal-svg">
+                    <defs>
+                      <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#fbbf24"/>
+                        <stop offset="50%" stop-color="#f59e0b"/>
+                        <stop offset="100%" stop-color="#d97706"/>
+                      </linearGradient>
+                      <linearGradient id="blue-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#818cf8"/>
+                        <stop offset="100%" stop-color="#4f46e5"/>
+                      </linearGradient>
+                    </defs>
+                    
+                    <!-- Outer glowing ring -->
+                    <circle cx="100" cy="100" r="88" fill="none" stroke="url(#gold-grad)" stroke-width="2" stroke-opacity="0.5" filter="drop-shadow(0 0 6px rgba(245, 158, 11, 0.4))"/>
+                    
+                    <!-- Outer rotating dashed ring -->
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="url(#gold-grad)" stroke-width="2.5" stroke-dasharray="8 6" class="spinning-ring"/>
+                    
+                    <!-- Inner Solid ring -->
+                    <circle cx="100" cy="100" r="70" fill="none" stroke="url(#blue-grad)" stroke-width="3"/>
+                    <circle cx="100" cy="100" r="66" fill="rgba(13, 18, 34, 0.7)"/>
+                    
+                    <!-- Star symbols around the circle -->
+                    <path d="M 100,42 L 102,46 L 106,46 L 103,49 L 104,53 L 100,50 L 96,53 L 97,49 L 94,46 L 98,46 Z" fill="#fbbf24"/>
+                    <path d="M 42,100 L 46,102 L 46,106 L 49,103 L 53,104 L 50,100 L 53,96 L 49,97 L 46,94 L 46,98 Z" fill="#fbbf24"/>
+                    <path d="M 158,100 L 154,102 L 154,106 L 151,103 L 147,104 L 150,100 L 147,96 L 151,97 L 154,94 L 154,98 Z" fill="#fbbf24"/>
+                    
+                    <!-- Centered verified shield -->
+                    <g transform="translate(70, 70) scale(1.5)">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="url(#blue-grad)"/>
+                      <path d="M9 11l2 2 4-4" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </g>
+                  </svg>
+                </div>
+                <div class="seal-title">EFBI Impact Certified</div>
+                <div class="seal-badge">Verified Organization</div>
+                <p class="seal-desc">Youth-led and impact-driven framework supporting national growth and digital readiness.</p>
+              </div>
+            </div>
+            
+            <div class="about-cards">
+              <!-- Mission Card -->
+              <div class="about-card glass-panel">
+                <div class="about-card-icon">
+                  <i data-lucide="target"></i>
+                </div>
+                <div class="about-card-content">
+                  <h3 class="about-card-title">Our Mission</h3>
+                  <p class="about-card-desc">Give Ethiopian youth access to practical tech training, mentorship, and leadership development that solves real problems.</p>
+                </div>
+              </div>
+              
+              <!-- Vision Card -->
+              <div class="about-card glass-panel">
+                <div class="about-card-icon" style="background: var(--secondary-glow); color: var(--secondary);">
+                  <i data-lucide="eye"></i>
+                </div>
+                <div class="about-card-content">
+                  <h3 class="about-card-title">Our Vision</h3>
+                  <p class="about-card-desc">A thriving community of young Ethiopian builders driving local digital transformation and shaping global innovations.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Core Values -->
+          <div class="values-section">
+            <h3 class="text-center" style="margin-bottom: 32px; font-size: 1.6rem;">Our Core Values</h3>
+            <div class="grid-3">
+              <!-- Value 1 -->
+              <div class="value-card glass-card">
+                <div class="value-icon"><i data-lucide="sparkles"></i></div>
+                <h4 class="value-title">Innovation</h4>
+                <p class="value-desc">Embracing creative solutions, computational thinking, and future technologies to solve complex problems.</p>
+              </div>
+              <!-- Value 2 -->
+              <div class="value-card glass-card">
+                <div class="value-icon"><i data-lucide="award"></i></div>
+                <h4 class="value-title">Leadership</h4>
+                <p class="value-desc">Guiding ourselves and others with integrity, accountability, and a focus on community service.</p>
+              </div>
+              <!-- Value 3 -->
+              <div class="value-card glass-card">
+                <div class="value-icon"><i data-lucide="trending-up"></i></div>
+                <h4 class="value-title">Excellence</h4>
+                <p class="value-desc">Striving for the highest educational standards and building practical, production-ready software.</p>
+              </div>
+              <!-- Value 4 -->
+              <div class="value-card glass-card">
+                <div class="value-icon"><i data-lucide="users"></i></div>
+                <h4 class="value-title">Collaboration</h4>
+                <p class="value-desc">Promoting peer-to-peer learning, open-source work, and community innovation hubs.</p>
+              </div>
+              <!-- Value 5 -->
+              <div class="value-card glass-card">
+                <div class="value-icon"><i data-lucide="shield-check"></i></div>
+                <h4 class="value-title">Integrity</h4>
+                <p class="value-desc">Acting with honesty, transparency, and responsibility in everything we build and teach.</p>
+              </div>
+              <!-- Value 6 -->
+              <div class="value-card glass-card">
+                <div class="value-icon"><i data-lucide="book-open"></i></div>
+                <h4 class="value-title">Lifelong Learning</h4>
+                <p class="value-desc">Fostering continuous curiosity and adapting constantly to technological advancements.</p>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      <!-- Programs Section -->
+      <div id="programs" class="section">
+        <div class="container">
+          <div class="section-header text-center">
+            <span class="section-tag">Our Programs</span>
+            <h2 class="section-title">Future-Ready Learning Pathways</h2>
+            <p class="section-desc">Structured programs that bridge classroom theory and real-world technology skills.</p>
+          </div>
+          
+          <div class="grid-4" id="programs-grid">
+            <!-- Program 1 -->
+            <div class="program-card glass-card">
+              <div class="program-header">
+                <div class="program-icon"><i data-lucide="brain"></i></div>
+                <span class="program-badge">Advanced</span>
+              </div>
+              <h3 class="program-title">Artificial Intelligence</h3>
+              <p class="program-desc">Machine learning, neural networks, computer vision, and AI tools built for real problems.</p>
+              <div class="program-meta">
+                <span class="program-duration"><i data-lucide="clock" style="width: 14px;"></i> 8 Weeks</span>
+                <a href="#courses" class="program-btn">Explore <i data-lucide="chevron-right" style="width: 14px;"></i></a>
+              </div>
+            </div>
+            
+            <!-- Program 2 -->
+            <div class="program-card glass-card">
+              <div class="program-header">
+                <div class="program-icon" style="background: var(--secondary-glow); color: var(--secondary);"><i data-lucide="smartphone"></i></div>
+                <span class="program-badge">Intermediate</span>
+              </div>
+              <h3 class="program-title">AI-Assisted App Dev</h3>
+              <p class="program-desc">Build real apps fast using Flutter and modern AI-assisted development tools.</p>
+              <div class="program-meta">
+                <span class="program-duration"><i data-lucide="clock" style="width: 14px;"></i> 6 Weeks</span>
+                <a href="#courses" class="program-btn">Explore <i data-lucide="chevron-right" style="width: 14px;"></i></a>
+              </div>
+            </div>
+            
+            <!-- Program 3 -->
+            <div class="program-card glass-card">
+              <div class="program-header">
+                <div class="program-icon"><i data-lucide="globe"></i></div>
+                <span class="program-badge">Intermediate</span>
+              </div>
+              <h3 class="program-title">Web Development</h3>
+              <p class="program-desc">HTML, CSS, JavaScript, responsive design, and modern frontend frameworks.</p>
+              <div class="program-meta">
+                <span class="program-duration"><i data-lucide="clock" style="width: 14px;"></i> 10 Weeks</span>
+                <a href="#courses" class="program-btn">Explore <i data-lucide="chevron-right" style="width: 14px;"></i></a>
+              </div>
+            </div>
+            
+            <!-- Program 4 -->
+            <div class="program-card glass-card">
+              <div class="program-header">
+                <div class="program-icon" style="background: var(--secondary-glow); color: var(--secondary);"><i data-lucide="tablet"></i></div>
+                <span class="program-badge">Intermediate</span>
+              </div>
+              <h3 class="program-title">Mobile App Dev</h3>
+              <p class="program-desc">Native iOS and Android apps using Flutter, React Native, and modern UI/UX practices.</p>
+              <div class="program-meta">
+                <span class="program-duration"><i data-lucide="clock" style="width: 14px;"></i> 8 Weeks</span>
+                <a href="#courses" class="program-btn">Explore <i data-lucide="chevron-right" style="width: 14px;"></i></a>
+              </div>
+            </div>
+
+            <!-- Program 5 -->
+            <div class="program-card glass-card">
+              <div class="program-header">
+                <div class="program-icon"><i data-lucide="terminal"></i></div>
+                <span class="program-badge">Beginner</span>
+              </div>
+              <h3 class="program-title">Programming Foundations</h3>
+              <p class="program-desc">Logic, data structures, algorithms, and problem-solving with Python and JavaScript.</p>
+              <div class="program-meta">
+                <span class="program-duration"><i data-lucide="clock" style="width: 14px;"></i> 6 Weeks</span>
+                <a href="#courses" class="program-btn">Explore <i data-lucide="chevron-right" style="width: 14px;"></i></a>
+              </div>
+            </div>
+            
+            <!-- Program 6 -->
+            <div class="program-card glass-card">
+              <div class="program-header">
+                <div class="program-icon" style="background: var(--secondary-glow); color: var(--secondary);"><i data-lucide="lightbulb"></i></div>
+                <span class="program-badge">Beginner</span>
+              </div>
+              <h3 class="program-title">Entrepreneurship</h3>
+              <p class="program-desc">Turn tech projects into startups — pitching, business models, and local ecosystem strategies.</p>
+              <div class="program-meta">
+                <span class="program-duration"><i data-lucide="clock" style="width: 14px;"></i> 6 Weeks</span>
+                <a href="#courses" class="program-btn">Explore <i data-lucide="chevron-right" style="width: 14px;"></i></a>
+              </div>
+            </div>
+            
+            <!-- Program 7 -->
+            <div class="program-card glass-card">
+              <div class="program-header">
+                <div class="program-icon"><i data-lucide="compass"></i></div>
+                <span class="program-badge">Beginner</span>
+              </div>
+              <h3 class="program-title">Leadership Dev</h3>
+              <p class="program-desc">Communication, team management, and community impact strategies for future leaders.</p>
+              <div class="program-meta">
+                <span class="program-duration"><i data-lucide="clock" style="width: 14px;"></i> 4 Weeks</span>
+                <a href="#courses" class="program-btn">Explore <i data-lucide="chevron-right" style="width: 14px;"></i></a>
+              </div>
+            </div>
+            
+            <!-- Program 8 -->
+            <div class="program-card glass-card">
+              <div class="program-header">
+                <div class="program-icon" style="background: var(--secondary-glow); color: var(--secondary);"><i data-lucide="briefcase"></i></div>
+                <span class="program-badge">Beginner</span>
+              </div>
+              <h3 class="program-title">Career Readiness</h3>
+              <p class="program-desc">Resume writing, interview prep, Git/GitHub, and university application guidance.</p>
+              <div class="program-meta">
+                <span class="program-duration"><i data-lucide="clock" style="width: 14px;"></i> 4 Weeks</span>
+                <a href="#courses" class="program-btn">Explore <i data-lucide="chevron-right" style="width: 14px;"></i></a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Success Stories Section -->
+      <div class="section" style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);">
+        <div class="container">
+          <div class="section-header text-center">
+            <span class="section-tag">Success Stories</span>
+            <h2 class="section-title">Builders in Action</h2>
+            <p class="section-desc">How our graduates are building solutions, winning scholarships, and launching startups.</p>
+          </div>
+          
+          <!-- Testimonials Carousel -->
+          <div class="stories-slider-container">
+            <div class="stories-track-wrapper">
+              <div class="stories-track" id="stories-track">
+                
+                <!-- Slide 1 -->
+                <div class="story-slide">
+                  <div class="story-card glass-panel">
+                    <div class="story-image-box">
+                      <!-- Rendered Icon representing student avatar -->
+                      <i data-lucide="user" style="stroke-width: 1.5;"></i>
+                    </div>
+                    <div class="story-details">
+                      <p class="story-quote">"Within 8 weeks I went from zero to building an AI crop-disease detection app for my father's farm. It got me a scholarship."</p>
+                      <h4 class="story-author">Yared Kebede</h4>
+                      <p class="story-info">AI Fundamentals Graduate — Addis Ababa</p>
+                      <span class="story-badge">App Development & AI</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Slide 2 -->
+                <div class="story-slide">
+                  <div class="story-card glass-panel">
+                    <div class="story-image-box">
+                      <i data-lucide="user-check" style="stroke-width: 1.5;"></i>
+                    </div>
+                    <div class="story-details">
+                      <p class="story-quote">"I went from zero coding skills to building web portals for local businesses. EFBI's mentors made it real, not just theory."</p>
+                      <h4 class="story-author">Selamawit Tadesse</h4>
+                      <p class="story-info">Web Development Alumna — Hawassa</p>
+                      <span class="story-badge">Full Stack Web Dev</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Slide 3 -->
+                <div class="story-slide">
+                  <div class="story-card glass-panel">
+                    <div class="story-image-box">
+                      <i data-lucide="user-plus" style="stroke-width: 1.5;"></i>
+                    </div>
+                    <div class="story-details">
+                      <p class="story-quote">"EFBI taught me to turn a digital idea into a real startup pitch. Youth can build solutions for local challenges — and I'm proof."</p>
+                      <h4 class="story-author">Elias Tekle</h4>
+                      <p class="story-info">Entrepreneurship & Innovation Graduate — Mekelle</p>
+                      <span class="story-badge">Tech Entrepreneurship</span>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+            
+            <!-- Slider Navigation -->
+            <div class="slider-nav">
+              <button class="slider-btn" id="prev-story" aria-label="Previous Story"><i data-lucide="chevron-left"></i></button>
+              <div class="slider-dots" id="slider-dots"></div>
+              <button class="slider-btn" id="next-story" aria-label="Next Story"><i data-lucide="chevron-right"></i></button>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      <!-- Gallery Section -->
+      <div id="gallery" class="section">
+        <div class="container">
+          <div class="section-header text-center">
+            <span class="section-tag">Event Gallery</span>
+            <h2 class="section-title">Life at EFBI</h2>
+            <p class="section-desc">Explore visual highlights from our physical workshops, online learning sessions, technology bootcamps, and project presentations.</p>
+          </div>
+          <div class="gallery-masonry">
+            <!-- Gallery Item 1 -->
+            <div class="gallery-item">
+              <svg viewBox="0 0 300 200" width="100%" height="auto" style="background: #090d16; display: block; border-radius: var(--border-radius-md);">
+                <defs>
+                  <linearGradient id="ai-grad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.8"/>
+                    <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#0284c7" stop-opacity="0.9"/>
+                  </linearGradient>
+                  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="6" result="blur"/>
+                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                  </filter>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#ai-grad)"/>
+                <!-- Circuit board connections -->
+                <path d="M 0,100 L 80,100 L 120,60 L 180,60 L 220,100 L 300,100" fill="none" stroke="rgba(59, 130, 246, 0.4)" stroke-width="2"/>
+                <path d="M 120,60 L 150,140 L 250,140" fill="none" stroke="rgba(14, 165, 233, 0.3)" stroke-width="1.5" stroke-dasharray="4,4"/>
+                
+                <!-- Glowing Neural Nodes -->
+                <circle cx="80" cy="100" r="6" fill="#60a5fa" filter="url(#glow)"/>
+                <circle cx="120" cy="60" r="8" fill="#38bdf8" filter="url(#glow)"/>
+                <circle cx="180" cy="60" r="8" fill="#38bdf8" filter="url(#glow)"/>
+                <circle cx="220" cy="100" r="6" fill="#60a5fa" filter="url(#glow)"/>
+                <circle cx="150" cy="140" r="10" fill="#06b6d4" filter="url(#glow)"/>
+                
+                <!-- Brain Core/AI Icon -->
+                <g transform="translate(135, 45) scale(0.6)">
+                  <path d="M24 6c-7.73 0-14 6.27-14 14 0 5.4 3.06 10.1 7.56 12.39L16 38h16l-1.56-5.61C34.94 30.1 38 25.4 38 20c0-7.73-6.27-14-14-14zm0 6c4.42 0 8 3.58 8 8s-3.58 8-8 8-8-3.58-8-8 3.58-8 8-8z" fill="#ffffff" opacity="0.9"/>
+                </g>
+                
+                <text x="15" y="30" fill="rgba(255,255,255,0.5)" font-family="monospace" font-size="8">MODEL: RESNET_50_EFBI</text>
+                <text x="15" y="42" fill="#38bdf8" font-family="monospace" font-size="9" font-weight="bold">>>> EPOCHS: 100/100 [COMPLETE]</text>
+              </svg>
+              <div class="gallery-overlay">
+                <span class="gallery-tag">Workshops</span>
+                <h4 class="gallery-caption">AI & Neural Networks In-Person Bootcamp</h4>
+              </div>
+            </div>
+            
+            <!-- Gallery Item 2 -->
+            <div class="gallery-item">
+              <svg viewBox="0 0 300 320" width="100%" height="auto" style="background: #050b14; display: block; border-radius: var(--border-radius-md);">
+                <defs>
+                  <linearGradient id="proj-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#064e3b" stop-opacity="0.8"/>
+                    <stop offset="50%" stop-color="#10b981" stop-opacity="0.3"/>
+                    <stop offset="100%" stop-color="#022c22" stop-opacity="0.9"/>
+                  </linearGradient>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#proj-grad)"/>
+                
+                <!-- Mock Mobile Dashboard wireframe -->
+                <rect x="50" y="30" width="200" height="260" rx="20" fill="rgba(0,0,0,0.4)" stroke="rgba(16, 185, 129, 0.3)" stroke-width="2"/>
+                <!-- Speaker notch -->
+                <rect x="120" y="40" width="60" height="8" rx="4" fill="rgba(16, 185, 129, 0.2)"/>
+                
+                <!-- Inner charts -->
+                <circle cx="150" cy="120" r="45" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+                <circle cx="150" cy="120" r="45" fill="none" stroke="#10b981" stroke-width="8" stroke-dasharray="210,280" transform="rotate(-90, 150, 120)"/>
+                <text x="150" y="125" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="18" font-weight="bold">84%</text>
+                <text x="150" y="185" dominant-baseline="middle" text-anchor="middle" fill="#a7f3d0" font-family="sans-serif" font-size="10" letter-spacing="1">PROJECT COMPLETE</text>
+                
+                <!-- Stat widgets list -->
+                <rect x="70" y="205" width="160" height="24" rx="6" fill="rgba(16, 185, 129, 0.15)"/>
+                <circle cx="85" cy="217" r="6" fill="#34d399"/>
+                <rect x="100" y="213" width="100" height="8" rx="4" fill="rgba(255,255,255,0.8)"/>
+                
+                <rect x="70" y="238" width="160" height="24" rx="6" fill="rgba(16, 185, 129, 0.15)"/>
+                <circle cx="85" cy="250" r="6" fill="#34d399"/>
+                <rect x="100" y="246" width="70" height="8" rx="4" fill="rgba(255,255,255,0.8)"/>
+                
+                <!-- Floating Graduation Cap icon top-right -->
+                <g transform="translate(220, 15) scale(0.6)">
+                  <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z" fill="#34d399"/>
+                  <path d="M22 10v4.72l-10 5.45-10-5.45V10l10 5.45L22 10z" fill="#059669"/>
+                </g>
+              </svg>
+              <div class="gallery-overlay">
+                <span class="gallery-tag">Student Projects</span>
+                <h4 class="gallery-caption">Mobile App Hackathon Presentations</h4>
+              </div>
+            </div>
+            
+            <!-- Gallery Item 3 -->
+            <div class="gallery-item">
+              <svg viewBox="0 0 300 220" width="100%" height="auto" style="background: #080718; display: block; border-radius: var(--border-radius-md);">
+                <defs>
+                  <linearGradient id="learn-grad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#312e81" stop-opacity="0.8"/>
+                    <stop offset="100%" stop-color="#4c1d95" stop-opacity="0.9"/>
+                  </linearGradient>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#learn-grad)"/>
+                
+                <!-- Grid background -->
+                <path d="M 0,40 H 300 M 0,80 H 300 M 0,120 H 300 M 0,160 H 300 M 0,200 H 300" fill="none" stroke="rgba(99, 102, 241, 0.1)" stroke-width="1"/>
+                <path d="M 50,0 V 220 M 100,0 V 220 M 150,0 V 220 M 200,0 V 220 M 250,0 V 220" fill="none" stroke="rgba(99, 102, 241, 0.1)" stroke-width="1"/>
+                
+                <!-- Mock IDE UI inside online learning -->
+                <rect x="30" y="25" width="240" height="170" rx="10" fill="rgba(0,0,0,0.6)" stroke="rgba(129, 140, 248, 0.3)" stroke-width="1.5"/>
+                <!-- Code text lines -->
+                <rect x="50" y="45" width="140" height="6" rx="3" fill="#818cf8"/>
+                <rect x="50" y="58" width="180" height="6" rx="3" fill="#a5b4fc"/>
+                <rect x="70" y="71" width="100" height="6" rx="3" fill="#c7d2fe"/>
+                
+                <!-- Virtual student bubbles -->
+                <circle cx="65" cy="130" r="16" fill="rgba(99, 102, 241, 0.2)" stroke="#818cf8" stroke-width="1.5"/>
+                <text x="65" y="134" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="10" font-weight="bold">Y</text>
+                
+                <circle cx="110" cy="130" r="16" fill="rgba(139, 92, 246, 0.2)" stroke="#a78bfa" stroke-width="1.5"/>
+                <text x="110" y="134" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="10" font-weight="bold">H</text>
+                
+                <circle cx="155" cy="130" r="16" fill="rgba(236, 72, 153, 0.2)" stroke="#f472b6" stroke-width="1.5"/>
+                <text x="155" y="134" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="10" font-weight="bold">S</text>
+                
+                <!-- Active glowing voice/speaker wave -->
+                <path d="M190,130 C195,120 205,120 210,130 C215,140 225,140 230,130" fill="none" stroke="#22c55e" stroke-width="2" filter="url(#glow)"/>
+              </svg>
+              <div class="gallery-overlay">
+                <span class="gallery-tag">Online Learning</span>
+                <h4 class="gallery-caption">Interactive Online Web Dev Class Q&A</h4>
+              </div>
+            </div>
+            
+            <!-- Gallery Item 4 -->
+            <div class="gallery-item">
+              <svg viewBox="0 0 300 240" width="100%" height="auto" style="background: #0c0804; display: block; border-radius: var(--border-radius-md);">
+                <defs>
+                  <linearGradient id="ent-grad" x1="1" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#b45309" stop-opacity="0.8"/>
+                    <stop offset="50%" stop-color="#d97706" stop-opacity="0.3"/>
+                    <stop offset="100%" stop-color="#451a03" stop-opacity="0.9"/>
+                  </linearGradient>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#ent-grad)"/>
+                
+                <!-- Ascending rocket ship pathway graphic -->
+                <path d="M 60,200 Q 150,150 240,40" fill="none" stroke="rgba(245, 158, 11, 0.2)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M 60,200 Q 150,150 240,40" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" stroke-dasharray="10,6"/>
+                
+                <!-- Rocket ship -->
+                <g transform="translate(225, 25) rotate(45)">
+                  <path d="M0 -15 L10 10 L-10 10 Z" fill="#ffffff"/>
+                  <path d="M-10 10 C-10 15 10 15 10 10 Z" fill="#f59e0b"/>
+                  <rect x="-4" y="5" width="8" height="15" rx="3" fill="#ef4444"/>
+                </g>
+                
+                <!-- Pitch stats tags -->
+                <rect x="40" y="60" width="100" height="34" rx="8" fill="rgba(251, 191, 36, 0.15)" stroke="rgba(251, 191, 36, 0.4)" stroke-width="1"/>
+                <text x="50" y="75" fill="#fef08a" font-family="sans-serif" font-size="9" font-weight="bold">STARTUP PITCH</text>
+                <text x="50" y="87" fill="#ffffff" font-family="sans-serif" font-size="10" font-weight="900">STAGE 1: SEED</text>
+                
+                <!-- Glowing Gear overlay -->
+                <circle cx="70" cy="160" r="24" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="4"/>
+                <circle cx="70" cy="160" r="16" fill="none" stroke="rgba(251, 191, 36, 0.2)" stroke-dasharray="6,4" stroke-width="6"/>
+              </svg>
+              <div class="gallery-overlay">
+                <span class="gallery-tag">Technology Events</span>
+                <h4 class="gallery-caption">Youth Entrepreneurship Pitching Day</h4>
+              </div>
+            </div>
+  
+            <!-- Gallery Item 5 -->
+            <div class="gallery-item">
+              <svg viewBox="0 0 300 180" width="100%" height="auto" style="background: #0a040d; display: block; border-radius: var(--border-radius-md);">
+                <defs>
+                  <linearGradient id="grad-grad" x1="0" y1="1" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#db2777" stop-opacity="0.8"/>
+                    <stop offset="50%" stop-color="#ec4899" stop-opacity="0.3"/>
+                    <stop offset="100%" stop-color="#500724" stop-opacity="0.9"/>
+                  </linearGradient>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grad-grad)"/>
+                
+                <!-- Award Certificate Seal design -->
+                <circle cx="150" cy="90" r="50" fill="none" stroke="rgba(236, 72, 153, 0.2)" stroke-width="4"/>
+                <circle cx="150" cy="90" r="42" fill="rgba(251, 191, 36, 0.1)" stroke="#db2777" stroke-width="2"/>
+                
+                <!-- Ribbon pathways -->
+                <path d="M 135,115 L 125,160 L 140,150 L 155,160 L 148,115 Z" fill="#db2777" opacity="0.8"/>
+                <path d="M 165,115 L 175,160 L 160,150 L 145,160 L 152,115 Z" fill="#f43f5e" opacity="0.8"/>
+                
+                <circle cx="150" cy="90" r="30" fill="radial-gradient(circle, #fde047 0%, #ca8a04 100%)" stroke="#fbbf24" stroke-width="2.5"/>
+                
+                <!-- Star inside seal -->
+                <path d="M 150,78 L 153,85 L 161,86 L 155,91 L 157,99 L 150,95 L 143,99 L 145,91 L 139,86 L 147,85 Z" fill="#ffffff" filter="url(#glow)"/>
+                
+                <text x="15" y="30" fill="rgba(255,255,255,0.4)" font-family="sans-serif" font-size="8" letter-spacing="1">GRADUATION TRACK</text>
+                <text x="15" y="42" fill="#f472b6" font-family="sans-serif" font-size="9" font-weight="bold">IMPACT: 100% CERTIFIED</text>
+              </svg>
+              <div class="gallery-overlay">
+                <span class="gallery-tag">Certificates</span>
+                <h4 class="gallery-caption">Graduates Receiving Completion Credentials</h4>
+              </div>
+            </div>
+          </div>     </div>
+          
+        </div>
+      </div>
+      
+      <!-- Team Section -->
+      <div id="team" class="section" style="background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%); border-top: 1px solid var(--border-color);">
+        <div class="container">
+          <div class="section-header text-center">
+            <span class="section-tag">Our Team</span>
+            <h2 class="section-title">Led by Young Leaders & Mentors</h2>
+            <p class="section-desc">Passionate developers, educators, and advocates dedicated to Ethiopian youth.</p>
+          </div>
+          
+          <div class="team-grid">
+            <!-- Founder -->
+            <div class="team-card glass-panel">
+              <div class="team-photo-box">
+                <i data-lucide="crown"></i>
+              </div>
+              <h3 class="team-name">Henok Tadesse</h3>
+              <p class="team-role">Founder & Program Director</p>
+              <p class="team-bio">Software engineer building tech-education access for Ethiopian youth.</p>
+            </div>
+            
+            <!-- Coordinator -->
+            <div class="team-card glass-panel">
+              <div class="team-photo-box">
+                <i data-lucide="sparkles"></i>
+              </div>
+              <h3 class="team-name">Fasil Assefa</h3>
+              <p class="team-role">Lead Program Coordinator</p>
+              <p class="team-bio">Coordinates mentors and ensures every student gets quality support.</p>
+            </div>
+            
+            <!-- Lead Instructor -->
+            <div class="team-card glass-panel">
+              <div class="team-photo-box">
+                <i data-lucide="code"></i>
+              </div>
+              <h3 class="team-name">Lewam Halefom</h3>
+              <p class="team-role">Lead Web/App Dev Instructor</p>
+              <p class="team-bio">Full-stack developer and advocate for women in computer science.</p>
+            </div>
+            
+            <!-- AI Mentor -->
+            <div class="team-card glass-panel">
+              <div class="team-photo-box">
+                <i data-lucide="brain-circuit"></i>
+              </div>
+              <h3 class="team-name">Dr. Bereket Zewdu</h3>
+              <p class="team-role">AI & Data Science Advisor</p>
+              <p class="team-bio">Researcher guiding curriculum and senior AI student projects.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </section>
+
+    <!-- 2. COURSES PAGE VIEW -->
+    <section id="courses-view" class="router-view">
+      <div class="page-header">
+        <div class="container">
+          <h1 class="page-title">Explore Courses</h1>
+          <p class="page-subtitle">Start your journey. Filter courses by experience levels, search keywords, and begin coding today.</p>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="container">
+          
+          <!-- Catalog controls -->
+          <div class="catalog-controls">
+            <!-- Search -->
+            <div class="search-box">
+              <i data-lucide="search" class="search-icon" style="width: 18px;"></i>
+              <input type="text" id="course-search" class="search-input" placeholder="Search courses (e.g. AI, Python, Web)...">
+            </div>
+            <!-- Filters -->
+            <div class="filter-tags">
+              <button class="filter-tag active" data-filter="all">All levels</button>
+              <button class="filter-tag" data-filter="Beginner">Beginner</button>
+              <button class="filter-tag" data-filter="Intermediate">Intermediate</button>
+              <button class="filter-tag" data-filter="Advanced">Advanced</button>
+            </div>
+          </div>
+          
+          <!-- Courses Grid -->
+          <div id="courses-grid">
+            <!-- Empty state — courses will be populated when available -->
+            <div class="courses-empty-state" id="courses-empty-state">
+              <div class="courses-empty-icon">
+                <i data-lucide="book-open"></i>
+              </div>
+              <h3 class="courses-empty-title">Courses Coming Soon</h3>
+              <p class="courses-empty-desc">No courses are currently available. New courses will be published soon — check back shortly or register your interest below.</p>
+              <a href="#register" class="btn btn-primary" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 8px;">
+                <i data-lucide="user-plus" style="width: 16px; height: 16px;"></i> Register Your Interest
+              </a>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <!-- MY COURSES PAGE VIEW -->
+    <section id="my-courses-view" class="router-view">
+      <div class="page-header">
+        <div class="container">
+          <h1 class="page-title">My Courses</h1>
+          <p class="page-subtitle" id="my-courses-welcome">Pick up where you left off and stay on your path to certification.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="container">
+          <!-- Loading skeleton -->
+          <div id="my-courses-loading" style="display:none;">
+            <div style="max-width:460px; margin: 0 auto;">
+              <div class="skeleton-card" style="border-radius:16px;overflow:hidden;">
+                <div class="skeleton skeleton-img" style="height:180px;"></div>
+                <div style="padding:24px;">
+                  <div class="skeleton skeleton-title" style="margin-bottom:12px;"></div>
+                  <div class="skeleton skeleton-line"></div>
+                  <div class="skeleton skeleton-line" style="width:60%; margin-top:8px;"></div>
+                  <div class="skeleton skeleton-line" style="width:80%; margin-top:20px; height:44px; border-radius:8px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Grid populated by JS -->
+          <div id="my-courses-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEDICATED LEARNING PORTAL VIEW -->
+    <section id="learning-view" class="router-view">
+      
+      <!-- Coursera-style top bar -->
+      <div class="lp-topbar">
+        <div class="lp-topbar-inner">
+          <a href="#my-courses" class="lp-back-btn" id="lp-back-btn">
+            <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
+          </a>
+          <div class="lp-course-info">
+            <div class="lp-course-title" id="learning-course-title">Loading course...</div>
+            <div class="lp-course-meta" id="learning-course-instructor">Instructor: EFBI Faculty</div>
+          </div>
+          <div class="lp-topbar-actions">
+            <div id="lp-cert-badge" class="lp-cert-badge locked">
+              <i data-lucide="lock" style="width:12px;height:12px;"></i> Certificate Locked
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main learning layout -->
+      <div class="lp-body">
+
+        <!-- ── LEFT: Video + Lesson content ── -->
+        <div class="lp-content-area">
+
+          <!-- Video wrapper — custom player skin hiding YouTube branding -->
+          <div class="lp-video-wrapper" id="lp-video-wrapper">
+            <!-- Loading placeholder shown before video loads -->
+            <div class="lp-video-placeholder" id="lp-video-placeholder">
+              <div class="lp-video-placeholder-inner">
+                <div class="lp-loader"></div>
+                <span>Loading lesson...</span>
+              </div>
+            </div>
+            <!-- Top-right overlay clips YouTube logo area -->
+            <div class="lp-video-topright-mask"></div>
+            <!-- Bottom overlay blocks YouTube branding in control bar -->
+            <div class="lp-video-bottomleft-mask"></div>
+            <iframe
+              id="learning-video-frame"
+              src=""
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              style="opacity:0;transition:opacity 0.3s;"
+              onload="this.style.opacity='1'; document.getElementById('lp-video-placeholder').style.display='none';"
+            ></iframe>
+          </div>
+
+          <!-- Lesson header + complete button -->
+          <div class="lp-lesson-header">
+            <div class="lp-lesson-header-left">
+              <span class="lp-module-badge" id="learning-module-badge">Module 1</span>
+              <h1 class="lp-lesson-title" id="learning-lesson-title">Lesson Title</h1>
+            </div>
+            <button id="btn-mark-lesson-complete" class="lp-complete-btn">
+              <i data-lucide="check-circle" style="width:16px;height:16px;"></i>
+              <span id="btn-mark-complete-text">Mark Complete</span>
+            </button>
+          </div>
+
+          <!-- Tabs -->
+          <div class="lp-tabs">
+            <button class="lp-tab active" data-learning-tab="learning-tab-desc">Overview</button>
+            <button class="lp-tab" data-learning-tab="learning-tab-notes">Notes</button>
+            <button class="lp-tab" data-learning-tab="learning-tab-resources">Resources</button>
+            <button class="lp-tab" data-learning-tab="learning-tab-quiz">Quiz</button>
+          </div>
+
+          <div class="lp-tab-body">
+            <div class="lp-tab-panel active" id="learning-tab-desc">
+              <p id="learning-lesson-desc" class="lp-desc-text">Watch the lesson above, then mark it complete when you're ready to move on.</p>
+            </div>
+            <div class="lp-tab-panel" id="learning-tab-notes">
+              <div id="learning-lesson-notes-content" class="lp-notes-box">Notes will appear here once uploaded by your instructor.</div>
+            </div>
+            <div class="lp-tab-panel" id="learning-tab-resources">
+              <div id="learning-lesson-resources-list" class="lp-resources-grid">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+            <div class="lp-tab-panel" id="learning-tab-quiz">
+              <div class="lp-quiz-box">
+                <i data-lucide="help-circle" style="width:36px;height:36px;color:var(--primary-hover);"></i>
+                <h3 style="margin:12px 0 4px;">Practice Quiz</h3>
+                <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:16px;">Pass with 70% or higher to unlock your certificate.</p>
+                <div id="learning-quiz-container"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Prev / Next navigation -->
+          <div class="lp-nav-footer">
+            <button id="btn-prev-lesson" class="lp-nav-btn secondary">
+              <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Previous
+            </button>
+            <button id="btn-next-lesson" class="lp-nav-btn primary">
+              Next <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ── RIGHT: Course content sidebar ── -->
+        <aside class="lp-sidebar" id="learning-sidebar-desktop">
+          <div class="lp-sidebar-inner">
+            <div class="lp-sidebar-header">
+              <span class="lp-sidebar-label">Course Content</span>
+              <span class="lp-sidebar-count" id="lp-sidebar-count">0 / 0 lessons</span>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="lp-sidebar-progress">
+              <div class="lp-sidebar-progress-bar">
+                <div class="lp-sidebar-progress-fill" id="lp-progress-fill" style="width:0%"></div>
+              </div>
+              <span class="lp-sidebar-progress-pct" id="lp-progress-pct">0% complete</span>
+            </div>
+
+            <!-- Lesson list -->
+            <div id="learning-modules-list" class="lp-lesson-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </aside>
+
+        <!-- Mobile sidebar dropdown -->
+        <div id="learning-mobile-sidebar-dropdown" class="lp-mobile-sidebar" style="display:none;">
+          <!-- Populated by JS (mobile) -->
+        </div>
+
+      </div>
+
+      <!-- Mobile bottom bar -->
+      <div class="lp-mobile-bar">
+        <button id="btn-learning-mobile-sidebar" class="lp-mobile-contents-btn">
+          <i data-lucide="list" style="width:16px;height:16px;"></i> Course Contents
+        </button>
+      </div>
+
+    </section>
+
+    <!-- 3. CERTIFICATION DETAIL PAGE -->
+    <section id="certification-view" class="router-view">
+      <div class="page-header">
+        <div class="container">
+          <h1 class="page-title">EFBI Certification</h1>
+          <p class="page-subtitle">Earn a secure, verifiable certificate of completion to showcase your technology accomplishments.</p>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="container">
+          
+          <div class="grid-2 cert-perks">
+            <div class="cert-details-left">
+              <h2 style="font-size: 1.8rem; margin-bottom: 20px;">Certification Pathway</h2>
+              <p style="color: var(--text-secondary); margin-bottom: 24px;">To qualify for an official EFBI Certificate of Completion, students must demonstrate practical capability by completing all criteria in their respective courses:</p>
+              
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 16px;">
+                <li style="display: flex; gap: 12px; align-items: flex-start;">
+                  <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--secondary-glow); color: var(--secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;"><i data-lucide="check" style="width: 14px;"></i></div>
+                  <div>
+                    <strong>Lessons & Attendance</strong>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">Attend or view all interactive video lectures and participate in core Q&A.</p>
+                  </div>
+                </li>
+                <li style="display: flex; gap: 12px; align-items: flex-start;">
+                  <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--secondary-glow); color: var(--secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;"><i data-lucide="check" style="width: 14px;"></i></div>
+                  <div>
+                    <strong>Assignments & Labs</strong>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">Submit weekly practical programming labs and receive approvals from mentors.</p>
+                  </div>
+                </li>
+                <li style="display: flex; gap: 12px; align-items: flex-start;">
+                  <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--secondary-glow); color: var(--secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;"><i data-lucide="check" style="width: 14px;"></i></div>
+                  <div>
+                    <strong>Final Capstone Assessment</strong>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">Build, document, and present a functional technological solution solving a local problem.</p>
+                  </div>
+                </li>
+              </ul>
+              
+              <div style="margin-top: 36px; display: flex; gap: 16px;">
+                <a href="#verify" data-view="verify" class="btn btn-primary">Verify Credentials</a>
+                <a href="#register" data-view="register" class="btn btn-secondary">Apply to Cohort</a>
+              </div>
+            </div>
+            
+            <div class="cert-details-right">
+              <div class="glass-panel" style="padding: 24px; text-align: center;">
+                <h3 style="margin-bottom: 16px;">Live Certificate Preview</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px;">Type your name below to see a live simulation of your official EFBI Certificate:</p>
+                
+                <input type="text" id="cert-preview-name-input" class="form-control" placeholder="Enter name (e.g. Yared Kebede)..." style="margin-bottom: 24px; text-align: center; font-weight: 600;" value="Yared Kebede">
+                  <!-- Interactive Certificate Frame -->
+                <div class="cert-preview-card">
+                  <div class="cert-frame-wrapper">
+                    <!-- Top/Bottom accent bars -->
+                    <div class="cert-top-bar"></div>
+                    <div class="cert-bottom-bar"></div>
+
+                    <!-- Geometric SVG watermark -->
+                    <div class="cert-watermark">
+                      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;">
+                        <defs>
+                          <pattern id="cert-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0b132b" stroke-width="0.3" opacity="0.06"/>
+                          </pattern>
+                          <radialGradient id="cert-vignette" cx="50%" cy="50%" r="70%">
+                            <stop offset="0%" stop-color="transparent"/>
+                            <stop offset="100%" stop-color="#0b132b" stop-opacity="0.04"/>
+                          </radialGradient>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#cert-grid)"/>
+                        <rect width="100%" height="100%" fill="url(#cert-vignette)"/>
+                        <!-- Decorative corner diamonds -->
+                        <polygon points="30,22 22,30 30,38 38,30" fill="none" stroke="#c5a456" stroke-width="0.6" opacity="0.5"/>
+                        <polygon points="calc(100% - 30),22 calc(100% - 22),30 calc(100% - 30),38 calc(100% - 38),30" fill="none" stroke="#c5a456" stroke-width="0.6" opacity="0.5"/>
+                      </svg>
+                    </div>
+
+                    <!-- Certificate Content -->
+                    <div class="cert-preview-content">
+
+                      <!-- Header: Logo + Org name + Tagline -->
+                      <div class="cert-header">
+                        <div class="cert-org-logo">
+                          <svg class="cert-logo-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="14" cy="14" r="12" fill="none" stroke="#0b132b" stroke-width="1.2"/>
+                            <circle cx="14" cy="14" r="4" fill="#c5a456"/>
+                            <line x1="14" y1="2" x2="14" y2="8" stroke="#0b132b" stroke-width="1.2"/>
+                            <line x1="14" y1="20" x2="14" y2="26" stroke="#0b132b" stroke-width="1.2"/>
+                            <line x1="2" y1="14" x2="8" y2="14" stroke="#0b132b" stroke-width="1.2"/>
+                            <line x1="20" y1="14" x2="26" y2="14" stroke="#0b132b" stroke-width="1.2"/>
+                            <line x1="5.5" y1="5.5" x2="9.5" y2="9.5" stroke="#c5a456" stroke-width="0.8" opacity="0.7"/>
+                            <line x1="18.5" y1="18.5" x2="22.5" y2="22.5" stroke="#c5a456" stroke-width="0.8" opacity="0.7"/>
+                            <line x1="22.5" y1="5.5" x2="18.5" y2="9.5" stroke="#c5a456" stroke-width="0.8" opacity="0.7"/>
+                            <line x1="9.5" y1="18.5" x2="5.5" y2="22.5" stroke="#c5a456" stroke-width="0.8" opacity="0.7"/>
+                          </svg>
+                          <div class="cert-logo">Ethiopian Future Builders Initiative</div>
+                        </div>
+                        <div class="cert-tagline">Empowering Ethiopia's Next Generation of Innovators</div>
+                      </div>
+
+                      <div class="cert-divider"></div>
+
+                      <!-- Certificate Title -->
+                      <div class="cert-title-group">
+                        <div class="cert-main-title">Certificate of Completion</div>
+                        <div class="cert-sub-title">This is to officially certify that</div>
+                      </div>
+
+                      <!-- Recipient Name -->
+                      <div>
+                        <div class="cert-presented-to">Proudly Presented To</div>
+                        <div class="cert-recipient" id="cert-recipient-name">Yared Kebede</div>
+                      </div>
+
+                      <!-- Course Info -->
+                      <p class="cert-body-text">
+                        has successfully completed the full curriculum of
+                        <span class="cert-course-name">Artificial Intelligence Fundamentals</span>,
+                        demonstrating outstanding commitment, technical proficiency, and readiness for the future of technology.
+                      </p>
+
+                      <!-- Achievement -->
+                      <div class="cert-achievement-row">
+                        <span class="cert-score-chip">Final Score: 92%</span>
+                        <span class="cert-achievement-badge distinction">★ Distinction</span>
+                      </div>
+
+                      <div class="cert-divider" style="width:100%; opacity:0.4;"></div>
+
+                      <!-- Footer: Date/ID | QR | Signatures -->
+                      <div class="cert-footer-layout">
+                        <!-- Left: Date & ID -->
+                        <div class="cert-footer-col left">
+                          <div class="cert-footer-label">Date of Issuance</div>
+                          <div class="cert-footer-value" id="cert-preview-date">2026-06-25</div>
+                          <div class="cert-footer-label" style="margin-top:6px;">Credential ID</div>
+                          <div class="cert-footer-id">EFBI-2026-001</div>
+                        </div>
+
+                        <!-- Center: QR Code placeholder -->
+                        <div class="cert-footer-col">
+                          <div class="cert-qr-block">
+                            <svg class="cert-qr-svg" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" fill="#0b132b">
+                              <rect x="2" y="2" width="16" height="16" rx="1.5" fill="none" stroke="#0b132b" stroke-width="1.2"/>
+                              <rect x="5" y="5" width="10" height="10" rx="0.5"/>
+                              <rect x="24" y="2" width="16" height="16" rx="1.5" fill="none" stroke="#0b132b" stroke-width="1.2"/>
+                              <rect x="27" y="5" width="10" height="10" rx="0.5"/>
+                              <rect x="2" y="24" width="16" height="16" rx="1.5" fill="none" stroke="#0b132b" stroke-width="1.2"/>
+                              <rect x="5" y="27" width="10" height="10" rx="0.5"/>
+                              <rect x="24" y="24" width="4" height="4"/>
+                              <rect x="30" y="24" width="4" height="4"/>
+                              <rect x="36" y="24" width="4" height="4"/>
+                              <rect x="24" y="30" width="4" height="4"/>
+                              <rect x="30" y="30" width="4" height="4"/>
+                              <rect x="36" y="36" width="4" height="4"/>
+                              <rect x="24" y="36" width="4" height="4"/>
+                              <rect x="30" y="36" width="10" height="4"/>
+                            </svg>
+                            <div class="cert-verify-url">efbi.org/verify</div>
+                          </div>
+                        </div>
+
+                        <!-- Right: Signatures -->
+                        <div class="cert-footer-col right">
+                          <div class="cert-sigs-row">
+                            <div class="cert-sig-unit">
+                              <span class="cert-sig-name">Tamerat Gebeyehu</span>
+                              <div class="cert-sig-line"></div>
+                              <div class="cert-sig-label">Founder &amp; Director</div>
+                            </div>
+                            <div class="cert-sig-unit">
+                              <span class="cert-sig-name" style="font-size:1rem;">EFBI Faculty</span>
+                              <div class="cert-sig-line"></div>
+                              <div class="cert-sig-label">Lead Instructor</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div><!-- /cert-preview-content -->
+                  </div>
+                </div>           </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CERTIFICATE VERIFICATION PAGE VIEW -->
+    <section id="verify-view" class="router-view">
+      <div class="page-header">
+        <div class="container">
+          <h1 class="page-title">Credential Verification</h1>
+          <p class="page-subtitle">Verify the validity of any EFBI certificate. Enter the unique Certificate ID below.</p>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="container">
+          
+          <div class="verifier-box glass-panel">
+            <i data-lucide="shield-check" style="width: 48px; height: 48px; color: var(--secondary); margin-bottom: 16px;"></i>
+            <h2 style="margin-bottom: 8px;">Verify Certificate Authenticity</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 32px;">EFBI issues secure certificates. Partners, recruiters, and universities can verify credentials using this search interface.</p>
+            
+            <div class="verifier-input-group">
+              <input type="text" id="cert-id-input" class="verifier-input" placeholder="e.g. EFBI-2026-001">
+              <button class="btn btn-primary" id="btn-verify-cert">Verify Certificate</button>
+            </div>
+            
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 32px;">
+              Try verification IDs: <code style="color: var(--text-primary); font-weight: 700;">EFBI-2026-001</code>, <code style="color: var(--text-primary); font-weight: 700;">EFBI-2026-002</code>, or <code style="color: var(--text-primary); font-weight: 700;">EFBI-2026-003</code>
+            </div>
+            
+            <!-- Result Panel -->
+            <div class="verifier-result" id="verifier-result-box">
+              <div class="verifier-result-header" id="verifier-result-header">
+                <!-- Icon and text dynamically updated by JS -->
+              </div>
+              <div class="verifier-details-grid" id="verifier-details">
+                <!-- Details grid dynamically updated -->
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. STUDENT REGISTRATION FORM VIEW -->
+    <section id="register-view" class="router-view">
+      <div class="page-header" style="padding: 40px 0 20px;">
+        <div class="container" style="text-align: center;">
+          <h1 class="page-title" style="font-size: 2rem; margin-bottom: 8px;">Join Cohort 2026</h1>
+          <p class="page-subtitle" style="font-size: 0.95rem; opacity: 0.8; max-width: 460px; margin: 0 auto;">Select your technical pathway and start learning with 100% free tuition.</p>
+        </div>
+      </div>
+      
+      <div class="section" style="padding-top: 10px; padding-bottom: 60px;">
+        <div class="container">
+          <div class="register-container" style="max-width: 540px; margin: 0 auto;">
+            
+            <!-- Onboarding Wizard Card -->
+            <div class="register-card glass-panel" id="register-card-panel" style="padding: 36px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);">
+              
+              <!-- Progress Indicator -->
+              <div class="onboarding-progress-container" style="margin-bottom: 28px;">
+                <div class="onboarding-steps" style="display: flex; justify-content: space-between; align-items: center;">
+                  <div class="step-indicator active" data-step="1" style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem;">
+                    <span class="step-num" style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">1</span>
+                    <span>Credentials</span>
+                  </div>
+                  <div class="step-line" style="height: 1px; flex-grow: 1; margin: 0 12px; background: var(--border-color);"></div>
+                  <div class="step-indicator" data-step="2" style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem;">
+                    <span class="step-num" style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">2</span>
+                    <span>Profile</span>
+                  </div>
+                  <div class="step-line" style="height: 1px; flex-grow: 1; margin: 0 12px; background: var(--border-color);"></div>
+                  <div class="step-indicator" data-step="3" style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem;">
+                    <span class="step-num" style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">3</span>
+                    <span>Pathway</span>
+                  </div>
+                </div>
+                <div class="onboarding-progress-bar-bg" style="height: 3px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 14px;">
+                  <div class="onboarding-progress-bar" id="onboarding-progress-bar" style="height: 100%; width: 33%; background: linear-gradient(90deg, var(--primary), #10b981); transition: width 0.3s ease;"></div>
+                </div>
+              </div>
+              
+              <form id="registration-form" novalidate>
+                <!-- Hidden Country Input -->
+                <input type="hidden" id="reg-country" value="Ethiopia">
+                
+                <!-- STEP 1: Account Setup -->
+                <div class="onboarding-step active" data-step-content="1">
+                  <h3 class="step-heading" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 4px;">Create Credentials</h3>
+                  <p class="step-subheading" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Use these credentials to sign in to your dashboard.</p>
+                  
+                  <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="reg-name" class="form-label" style="font-size: 0.85rem;">Full Name *</label>
+                    <div class="input-icon-wrap" style="position: relative;">
+                      <i data-lucide="user" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                      <input type="text" id="reg-name" class="form-control premium-input with-icon" placeholder="Full Name" required>
+                    </div>
+                    <div class="form-error" id="error-reg-name">Please enter your full name.</div>
+                  </div>
+                  
+                  <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="reg-email" class="form-label" style="font-size: 0.85rem;">Email Address *</label>
+                    <div class="input-icon-wrap" style="position: relative;">
+                      <i data-lucide="mail" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                      <input type="email" id="reg-email" class="form-control premium-input with-icon" placeholder="Email Address" required>
+                    </div>
+                    <div class="form-error" id="error-reg-email">Please enter a valid email address.</div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 24px;">
+                    <label for="reg-password" class="form-label" style="font-size: 0.85rem;">Password *</label>
+                    <div class="input-icon-wrap" style="position: relative;">
+                      <i data-lucide="lock" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                      <input type="password" id="reg-password" class="form-control premium-input with-icon" placeholder="Password (min 6 chars)" required autocomplete="new-password">
+                    </div>
+                    <div class="form-error" id="error-reg-password">Password must be at least 6 characters.</div>
+                  </div>
+                  
+                  <div class="onboarding-nav-btns">
+                    <button type="button" class="btn btn-primary btn-next-step" data-next="2" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 600;">
+                      Continue <i data-lucide="arrow-right" style="width: 16px;"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- STEP 2: Academic Profile -->
+                <div class="onboarding-step" data-step-content="2">
+                  <h3 class="step-heading" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 4px;">Academic Details</h3>
+                  <p class="step-subheading" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Helps us match you with regional student groups.</p>
+                  
+                  <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="reg-region" class="form-label" style="font-size: 0.85rem;">Region / City *</label>
+                    <div class="input-icon-wrap" style="position: relative;">
+                      <i data-lucide="map-pin" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                      <select id="reg-region" class="form-control premium-input with-icon" required>
+                        <option value="" disabled selected>Select Region / City</option>
+                        <option value="Addis Ababa">Addis Ababa</option>
+                        <option value="Afar">Afar</option>
+                        <option value="Amhara">Amhara</option>
+                        <option value="Benishangul-Gumuz">Benishangul-Gumuz</option>
+                        <option value="Central Ethiopia">Central Ethiopia</option>
+                        <option value="Dire Dawa">Dire Dawa</option>
+                        <option value="Gambela">Gambela</option>
+                        <option value="Harari">Harari</option>
+                        <option value="Oromia">Oromia</option>
+                        <option value="Sidama">Sidama</option>
+                        <option value="Somali">Somali</option>
+                        <option value="South Ethiopia">South Ethiopia</option>
+                        <option value="South West Ethiopia">South West Ethiopia</option>
+                        <option value="Tigray">Tigray</option>
+                      </select>
+                    </div>
+                    <div class="form-error" id="error-reg-region">Please select your region.</div>
+                  </div>
+                  
+                  <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="reg-school" class="form-label" style="font-size: 0.85rem;">School / University *</label>
+                    <div class="input-icon-wrap" style="position: relative;">
+                      <i data-lucide="building" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                      <input type="text" id="reg-school" class="form-control premium-input with-icon" placeholder="School or University Name" required>
+                    </div>
+                    <div class="form-error" id="error-reg-school">Please enter your school or university.</div>
+                  </div>
+                  
+                  <div class="form-group" style="margin-bottom: 24px;">
+                    <label for="reg-grade" class="form-label" style="font-size: 0.85rem;">Grade / Level *</label>
+                    <div class="input-icon-wrap" style="position: relative;">
+                      <i data-lucide="graduation-cap" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                      <select id="reg-grade" class="form-control premium-input with-icon" required>
+                        <option value="" disabled selected>Select Grade / Level</option>
+                        <option value="Grade 9-10">High School (Grade 9-10)</option>
+                        <option value="Grade 11-12">High School (Grade 11-12)</option>
+                        <option value="University Freshman">University Freshman</option>
+                        <option value="University Sophomore">University Sophomore</option>
+                        <option value="University Junior/Senior">University Junior/Senior</option>
+                        <option value="Graduate/Other">Other / Young Professional</option>
+                      </select>
+                    </div>
+                    <div class="form-error" id="error-reg-grade">Please select your grade level.</div>
+                  </div>
+                  
+                  <div class="onboarding-nav-btns dual-grid" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px;">
+                    <button type="button" class="btn btn-secondary btn-prev-step" data-prev="1" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 46px;">
+                      <i data-lucide="arrow-left" style="width: 16px;"></i> Back
+                    </button>
+                    <button type="button" class="btn btn-primary btn-next-step" data-next="3" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 46px; font-weight: 600;">
+                      Next Step <i data-lucide="arrow-right" style="width: 16px;"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- STEP 3: Pathway Selection -->
+                <div class="onboarding-step" data-step-content="3">
+                  <h3 class="step-heading" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 4px;">Choose Pathway</h3>
+                  <p class="step-subheading" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Pick your primary technical focus area.</p>
+                  
+                  <!-- Master Select (Hidden) -->
+                  <select id="reg-interests" style="display: none;" required>
+                    <option value="" disabled selected>Select primary technical interest</option>
+                  </select>
+                  
+                  <!-- Dynamic Pathway Cards Grid -->
+                  <div class="pathway-cards-grid" id="pathway-cards-container" style="margin-top: 12px; display: grid; gap: 12px;">
+                    <!-- Injected dynamically via JS based on active courses list -->
+                  </div>
+                  <div class="form-error" id="error-reg-interests" style="text-align: center; margin: 12px 0;">Please select a pathway.</div>
+                  
+                  <div class="form-group" style="margin-top: 16px; margin-bottom: 24px;">
+                    <label for="reg-why" class="form-label" style="font-size: 0.85rem;">Goals <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Optional)</span></label>
+                    <textarea id="reg-why" class="form-control premium-input" placeholder="What do you want to learn or build?" rows="2" style="height: auto; resize: none; font-size: 0.85rem; padding: 10px 14px;"></textarea>
+                  </div>
+                  
+                  <div class="onboarding-nav-btns dual-grid" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px;">
+                    <button type="button" class="btn btn-secondary btn-prev-step" data-prev="2" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 46px;">
+                      <i data-lucide="arrow-left" style="width: 16px;"></i> Back
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-registration" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 46px; font-weight: 600;">
+                      Submit Application <i data-lucide="check" style="width: 16px;"></i>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Success State Panel -->
+            <div class="register-success-box glass-panel" id="register-success-panel" style="padding: 40px; border-radius: 20px; text-align: center;">
+              <div class="register-success-icon" style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16,185,129,0.15); color: #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 1px solid rgba(16,185,129,0.3);"><i data-lucide="check" style="width: 32px; height: 32px;"></i></div>
+              <h2 class="register-success-title" style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px;">Application Received!</h2>
+              <p style="color: var(--text-secondary); margin-bottom: 28px; font-size: 0.9rem; line-height: 1.5; max-width: 400px; margin-left: auto; margin-right: auto;">We have registered your application. Our team will contact you via email within 7 days.</p>
+              <div style="display: flex; gap: 12px; justify-content: center;">
+                <a href="#courses" data-view="courses" class="btn btn-primary" style="padding: 10px 20px;">Browse Courses</a>
+                <button class="btn btn-secondary" id="btn-register-reset" style="padding: 10px 20px;">Submit Another</button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- 6. BLOG PAGE VIEW -->
+    <section id="blog-view" class="router-view">
+      <div class="page-header">
+        <div class="container">
+          <h1 class="page-title">Technology & Learning Blog</h1>
+          <p class="page-subtitle">Insights, success metrics, coding guides, and scholarship announcements from our community.</p>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="container">
+          
+          <!-- Featured Article Layout -->
+          <div class="blog-featured">
+            <div class="blog-featured-card glass-panel">
+              <div class="blog-featured-image">
+                <i data-lucide="sparkles" style="stroke: var(--accent); fill: var(--accent-glow);"></i>
+              </div>
+              <div class="blog-featured-content">
+                <span class="blog-tag">Scholarships</span>
+                <div class="blog-meta-info">
+                  <span><i data-lucide="calendar" style="width: 12px; margin-right: 4px; display: inline-block; vertical-align: middle;"></i> June 24, 2026</span>
+                  <span>•</span>
+                  <span>By Henok Tadesse</span>
+                </div>
+                <h2 class="blog-featured-title">How EFBI Students Prepare for Global University Scholarships</h2>
+                <p class="blog-featured-excerpt">Securing international university scholarships requires more than high GPA test scores. Discover how portfolio project builds, community impact initiatives, and technical skills provide applicants with a competitive advantage.</p>
+                <a href="#contact" class="btn btn-primary">Read Article</a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Category Filter tags -->
+          <div class="catalog-controls">
+            <div class="search-box">
+              <i data-lucide="search" class="search-icon" style="width: 18px;"></i>
+              <input type="text" id="blog-search" class="search-input" placeholder="Search articles...">
+            </div>
+            <div class="filter-tags">
+              <button class="filter-tag active" data-blog-filter="all">All posts</button>
+              <button class="filter-tag" data-blog-filter="AI">AI</button>
+              <button class="filter-tag" data-blog-filter="Coding">Coding</button>
+              <button class="filter-tag" data-blog-filter="Scholarships">Scholarships</button>
+              <button class="filter-tag" data-blog-filter="Success">Student Success</button>
+            </div>
+          </div>
+          
+          <!-- Blog grid -->
+          <div class="grid-3" id="blog-grid">
+            <!-- Post 1 -->
+            <div class="blog-card glass-panel" data-category="AI">
+              <div class="blog-card-img"><i data-lucide="brain-circuit"></i></div>
+              <div class="blog-card-body">
+                <span class="blog-tag">AI</span>
+                <h3 class="blog-card-title">Getting Started with Machine Learning: A Student's Guide</h3>
+                <p class="blog-card-desc">An introduction to predictive modeling, computer vision, and NLP frameworks. Learn the coding steps to build models with python libraries.</p>
+                <div class="blog-meta-info" style="margin-bottom: 0; padding-top: 16px; border-top: 1px solid var(--border-color); margin-top: auto;">
+                  <span>June 18, 2026</span>
+                  <span>•</span>
+                  <span>AI Cohort</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Post 2 -->
+            <div class="blog-card glass-panel" data-category="Coding">
+              <div class="blog-card-img" style="background: linear-gradient(135deg, var(--primary-glow) 0%, transparent 100%);"><i data-lucide="smartphone"></i></div>
+              <div class="blog-card-body">
+                <span class="blog-tag">Coding</span>
+                <h3 class="blog-card-title">Why Flutter is Perfect for Rapid Mobile Prototyping</h3>
+                <p class="blog-card-desc">Building cross-platform app projects should be fast. Discover why our student app developers choose Flutter and Dart for hackathons.</p>
+                <div class="blog-meta-info" style="margin-bottom: 0; padding-top: 16px; border-top: 1px solid var(--border-color); margin-top: auto;">
+                  <span>June 10, 2026</span>
+                  <span>•</span>
+                  <span>Lewam H.</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Post 3 -->
+            <div class="blog-card glass-panel" data-category="Success">
+              <div class="blog-card-img"><i data-lucide="users"></i></div>
+              <div class="blog-card-body">
+                <span class="blog-tag">Success</span>
+                <h3 class="blog-card-title">From High School Coding to Building Agritech Solutions</h3>
+                <p class="blog-card-desc">Read about Yared Kebede's project journey building crop-disease detection software using neural networks and local data.</p>
+                <div class="blog-meta-info" style="margin-bottom: 0; padding-top: 16px; border-top: 1px solid var(--border-color); margin-top: auto;">
+                  <span>May 28, 2026</span>
+                  <span>•</span>
+                  <span>Community Team</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. CONTACT VIEW -->
+    <section id="contact-view" class="router-view">
+      <div class="page-header">
+        <div class="container">
+          <h1 class="page-title">Contact Us</h1>
+          <p class="page-subtitle">Have questions? Want to mentor? Get in touch with the EFBI team.</p>
+        </div>
+      </div>
+      
+      <div class="section">
+        <div class="container">
+          
+          <div class="contact-grid">
+            <div class="contact-info-cards">
+              <h2 style="font-size: 1.8rem; margin-bottom: 12px;">Contact Information</h2>
+              <p style="color: var(--text-secondary); margin-bottom: 24px;">Reach out directly via email, social channels, or visit our hubs. We are always looking for mentors, sponsors, and guest instructors.</p>
+              
+              <!-- Info 1 -->
+              <div class="contact-info-card glass-panel">
+                <div class="contact-info-icon"><i data-lucide="mail"></i></div>
+                <div>
+                  <h3 class="contact-info-title">Email</h3>
+                  <div class="contact-info-val">info@efbi-initiative.org</div>
+                </div>
+              </div>
+              
+              <!-- Info 2 -->
+              <div class="contact-info-card glass-panel">
+                <div class="contact-info-icon" style="background: var(--secondary-glow); color: var(--secondary);"><i data-lucide="send"></i></div>
+                <div>
+                  <h3 class="contact-info-title">Telegram</h3>
+                  <div class="contact-info-val"><a href="#" style="text-decoration: underline;">t.me/efbi_initiative</a></div>
+                </div>
+              </div>
+              
+              <!-- Info 3 -->
+              <div class="contact-info-card glass-panel">
+                <div class="contact-info-icon"><i data-lucide="map-pin"></i></div>
+                <div>
+                  <h3 class="contact-info-title">Address</h3>
+                  <div class="contact-info-val">Bole Subcity, Woreda 03, Addis Ababa, Ethiopia</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="contact-form-box glass-panel">
+              <h3 style="margin-bottom: 24px;">Send us a message</h3>
+              <form id="contact-form" novalidate>
+                <div class="form-group">
+                  <label for="contact-name" class="form-label">Full Name *</label>
+                  <input type="text" id="contact-name" class="form-control" placeholder="Your name" required>
+                  <div class="form-error" id="error-contact-name">Please enter your name.</div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="contact-email" class="form-label">Email Address *</label>
+                  <input type="email" id="contact-email" class="form-control" placeholder="yourname@email.com" required>
+                  <div class="form-error" id="error-contact-email">Please enter a valid email.</div>
+                </div>
+
+                <div class="form-group">
+                  <label for="contact-subject" class="form-label">Subject *</label>
+                  <input type="text" id="contact-subject" class="form-control" placeholder="What is this regarding?" required>
+                  <div class="form-error" id="error-contact-subject">Please enter a subject.</div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="contact-msg" class="form-label">Message *</label>
+                  <textarea id="contact-msg" class="form-control" placeholder="Write your inquiry or proposal..." required></textarea>
+                  <div class="form-error" id="error-contact-msg">Please enter a message.</div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
+              </form>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. STUDENT PROFILE & PORTAL VIEW -->
+    <section id="profile-view" class="router-view">
+      <div class="page-header" style="padding: 100px 0 40px 0;">
+        <div class="container">
+          <h1 class="page-title" id="student-dashboard-title">My Profile</h1>
+          <p class="page-subtitle">Manage your personal information, account settings, and view your credentials.</p>
+        </div>
+      </div>
+
+      <div class="section" style="padding-top: 20px;">
+        <div class="container">
+          <div class="admin-layout" id="student-main-layout">
+            
+            <!-- Student Sidebar -->
+            <aside class="admin-sidebar" style="height: auto; border-radius: 12px; padding: 24px; background: var(--bg-secondary);">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="width: 72px; height: 72px; border-radius: 50%; background: var(--primary-glow); color: var(--primary-hover); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                  <i data-lucide="user" style="width: 36px; height: 36px;"></i>
+                </div>
+                <h3 id="profile-student-name" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 4px;">Student Name</h3>
+                <p id="profile-student-email" style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">email@domain.com</p>
+                <span id="profile-status-badge" class="status-badge pending">Pending Approval</span>
+              </div>
+
+              <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 8px;">Academic Info</div>
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem;">
+                  <div><strong style="color: var(--text-secondary);">School:</strong> <span id="profile-school">University</span></div>
+                  <div><strong style="color: var(--text-secondary);">Grade Level:</strong> <span id="profile-grade">Year 2</span></div>
+                  <div><strong style="color: var(--text-secondary);">Region:</strong> <span id="profile-region">Addis Ababa</span></div>
+                  <div><strong style="color: var(--text-secondary);">Joined Date:</strong> <span id="profile-joined-date">2026-06-25</span></div>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px; display: flex; flex-direction: column; gap: 4px;">
+                <div class="admin-menu-item active" data-student-tab="student-settings"><i data-lucide="user-cog" style="width: 16px;"></i> Profile Settings</div>
+                <div class="admin-menu-item" data-student-tab="student-certificates-tab"><i data-lucide="award" style="width: 16px;"></i> Certificates</div>
+                <button id="btn-student-logout-profile" class="btn btn-secondary" style="width: 100%; margin-top: 16px; border-color: var(--danger); color: var(--danger); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <i data-lucide="log-out" style="width: 16px;"></i> Sign Out
+                </button>
+              </div>
+            </aside>
+
+            <!-- Student Dashboard Main Content Panel -->
+            <div class="admin-main-content">
+              
+              <!-- Profile Settings Panel (default active) -->
+              <div id="student-settings" class="student-view-panel active">
+                <div class="glass-panel" style="padding: 24px; max-width: 600px;">
+                  <h3 style="font-size: 1.2rem; margin-bottom: 20px;"><i data-lucide="user-cog" style="color: var(--primary-hover); margin-right: 6px;"></i> Edit Profile Details</h3>
+                  
+                  <form id="student-settings-form" novalidate>
+                    <div class="form-group">
+                      <label for="student-settings-name" class="form-label">Full Name</label>
+                      <input type="text" id="student-settings-name" class="form-control" placeholder="Update your name">
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                      <label for="student-settings-password" class="form-label">Change Password</label>
+                      <input type="password" id="student-settings-password" class="form-control" placeholder="Enter new password (min. 6 characters)">
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                      <label for="student-settings-confirm-password" class="form-label">Confirm New Password</label>
+                      <input type="password" id="student-settings-confirm-password" class="form-control" placeholder="Confirm new password">
+                    </div>
+                    
+                    <div id="student-settings-error" style="display:none; color: var(--danger); font-size:0.85rem; margin-top:12px; padding: 10px; background: rgba(239,68,68,0.1); border-radius: 8px;"></div>
+                    <button type="submit" id="btn-save-student-settings" class="btn btn-primary" style="margin-top: 24px;"><i data-lucide="check" style="width: 14px;"></i> Save Profile Changes</button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Certificates Panel -->
+              <div id="student-certificates-tab" class="student-view-panel">
+
+                <!-- Dashboard Header -->
+                <div class="sc-dashboard-header">
+                  <div>
+                    <h2 class="sc-dashboard-title">
+                      <i data-lucide="award" style="width:22px; height:22px; color:var(--secondary); flex-shrink:0;"></i>
+                      My Certificates &amp; Credentials
+                    </h2>
+                    <p class="sc-dashboard-subtitle">Your earned certificates are official, verifiable credentials from Ethiopian Future Builders Initiative.</p>
+                  </div>
+                  <a href="#verify" class="btn btn-secondary sc-verify-link">
+                    <i data-lucide="shield-check" style="width:15px;"></i> Verify a Certificate
+                  </a>
+                </div>
+
+                <!-- Certificate Cards Grid -->
+                <div id="student-certificates-list">
+                  <!-- Dynamically loaded -->
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. HIDDEN ADMIN DASHBOARD VIEW -->
+    <section id="admin-view" class="router-view">
+
+      <!-- Admin Login Gate Modal -->
+      <div id="admin-login-gate" style="
+        position: absolute; inset: 0; z-index: 200;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--bg-primary);
+        min-height: 100vh;
+      ">
+        <div class="glass-panel" style="width: 100%; max-width: 420px; padding: 40px; text-align: center;">
+          <div style="width: 56px; height: 56px; border-radius: 16px; background: var(--primary-glow); color: var(--primary-hover); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <i data-lucide="shield-check" style="width: 28px; height: 28px;"></i>
+          </div>
+          <h2 style="font-size: 1.6rem; margin-bottom: 6px;">Admin Portal</h2>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 28px;">Sign in to access the EFBI management dashboard.</p>
+
+          <form id="admin-login-form" novalidate>
+            <div class="form-group" style="text-align: left;">
+              <label for="admin-username" class="form-label">Username</label>
+              <div style="position: relative;">
+                <i data-lucide="user" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); width:16px; color: var(--text-muted);"></i>
+                <input type="text" id="admin-username" class="form-control" placeholder="Enter username" style="padding-left: 42px;" autocomplete="username" required>
+              </div>
+            </div>
+            <div class="form-group" style="text-align: left; margin-top: 16px;">
+              <label for="admin-password" class="form-label">Password</label>
+              <div style="position: relative;">
+                <i data-lucide="lock" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); width:16px; color: var(--text-muted);"></i>
+                <input type="password" id="admin-password" class="form-control" placeholder="Enter password" style="padding-left: 42px;" autocomplete="current-password" required>
+              </div>
+            </div>
+            <div id="admin-login-error" style="display:none; color: var(--danger); font-size:0.85rem; margin-top:10px; padding: 10px; background: var(--danger-glow, rgba(239,68,68,0.1)); border-radius: 8px;"></div>
+            <button type="submit" id="admin-login-btn" class="btn btn-primary" style="width:100%; margin-top:24px; padding: 14px;">
+              <i data-lucide="log-in" style="width:16px;"></i> Sign In to Dashboard
+            </button>
+          </form>
+
+          <p style="margin-top: 20px; font-size: 0.78rem; color: var(--text-muted);">This portal is restricted to authorized EFBI administrators only.</p>
+          
+          <!-- Back to main website escape route link -->
+          <div style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <a href="#home" data-view="home" style="font-size: 0.85rem; color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">
+              <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i> Back to Main Website
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-layout" id="admin-main-layout" style="display:none;">
+        
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+          <div class="admin-sidebar-title">Management</div>
+          <div class="admin-menu-item active" data-tab="admin-analytics"><i data-lucide="bar-chart-3" style="width: 18px;"></i> Analytics</div>
+          <div class="admin-menu-item" data-tab="admin-students"><i data-lucide="users" style="width: 18px;"></i> Students</div>
+          <div class="admin-menu-item" data-tab="admin-certificates"><i data-lucide="award" style="width: 18px;"></i> Certificates</div>
+          <div class="admin-menu-item" data-tab="admin-courses"><i data-lucide="book-open" style="width: 18px;"></i> Courses</div>
+          <div class="admin-menu-item" data-tab="admin-notifications" id="admin-notif-tab"><i data-lucide="bell" style="width: 18px;"></i> Notifications <span class="notif-badge" id="admin-notif-badge" style="display:none;">0</span></div>
+          <div class="admin-menu-item" data-tab="admin-messages"><i data-lucide="mail" style="width: 18px;"></i> Messages</div>
+          <div class="admin-menu-item" data-tab="admin-settings"><i data-lucide="settings" style="width: 18px;"></i> Settings & Sync</div>
+          <div class="admin-menu-item" id="btn-admin-logout" style="margin-top: auto; color: var(--danger); border-top: 1px solid var(--border-color); padding-top: 16px;"><i data-lucide="log-out" style="width: 18px;"></i> Logout</div>
+        </aside>
+        
+        <!-- Main Panel -->
+        <div class="admin-main-content">
+          
+          <!-- ANALYTICS PANEL -->
+          <div id="admin-analytics" class="admin-view-panel active">
+            <div class="admin-dashboard-header">
+              <div>
+                <h1 style="font-size: 1.8rem; margin-bottom: 4px; display: flex; align-items: center; gap: 12px;">
+                  EFBI Initiative Portal
+                  <span id="db-status-badge" class="status-badge pending" style="font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                    <i data-lucide="loader" class="spin-animation" style="width: 12px;"></i> Checking Database...
+                  </span>
+                </h1>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Real-time monitoring of students, certificates, and applications.</p>
+              </div>
+              <button class="btn btn-accent" id="btn-admin-refresh"><i data-lucide="refresh-cw" style="width: 14px;"></i> Refresh Analytics</button>
+            </div>
+            
+            <!-- Statistics Widget row -->
+            <div class="admin-widgets">
+              <!-- Widget 1 -->
+              <div class="admin-widget-card glass-panel">
+                <div class="widget-data">
+                  <h4>Total Applications</h4>
+                  <div class="widget-val" id="admin-stat-total-apps">0</div>
+                </div>
+                <div class="widget-icon-box"><i data-lucide="file-text"></i></div>
+              </div>
+              <!-- Widget 2 -->
+              <div class="admin-widget-card glass-panel">
+                <div class="widget-data">
+                  <h4>Approved Students</h4>
+                  <div class="widget-val" id="admin-stat-approved">0</div>
+                </div>
+                <div class="widget-icon-box" style="background: var(--secondary-glow); color: var(--secondary);"><i data-lucide="user-check"></i></div>
+              </div>
+              <!-- Widget 3 -->
+              <div class="admin-widget-card glass-panel">
+                <div class="widget-data">
+                  <h4>Pending Review</h4>
+                  <div class="widget-val" id="admin-stat-pending">0</div>
+                </div>
+                <div class="widget-icon-box" style="background: var(--accent-glow); color: var(--accent);"><i data-lucide="clock"></i></div>
+              </div>
+              <!-- Widget 4 -->
+              <div class="admin-widget-card glass-panel">
+                <div class="widget-data">
+                  <h4>Certificates Issued</h4>
+                  <div class="widget-val" id="admin-stat-certs">0</div>
+                </div>
+                <div class="widget-icon-box"><i data-lucide="award"></i></div>
+              </div>
+            </div>
+            
+            <!-- Analytics Charts Grid -->
+            <div class="admin-charts-grid">
+              <div class="chart-card glass-panel">
+                <h3 style="margin-bottom: 16px; font-size: 1.1rem;">Monthly Registrations (Cohort 2026)</h3>
+                <div class="chart-container">
+                  <canvas id="monthlyRegistrationsChart"></canvas>
+                </div>
+              </div>
+              <div class="chart-card glass-panel">
+                <h3 style="margin-bottom: 16px; font-size: 1.1rem;">Program Share</h3>
+                <div class="chart-container">
+                  <canvas id="coursePopularityChart"></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Live Region Distribution Panel -->
+            <div class="glass-panel" style="padding: 24px;">
+              <h3 style="margin-bottom: 16px; font-size: 1.1rem;">Region Distribution — Live Data</h3>
+              <div id="region-stats-grid" class="grid-4" style="gap: 16px; text-align: center;">
+                <div class="glass-card" style="padding: 16px;">
+                  <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-muted);">—</div>
+                  <div style="font-size: 0.8rem; color: var(--text-secondary);">Loading...</div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+          
+          <!-- STUDENTS PANEL -->
+          <div id="admin-students" class="admin-view-panel">
+            <div class="admin-dashboard-header">
+              <div>
+                <h1 style="font-size: 1.8rem; margin-bottom: 4px;">Student Management</h1>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Approve registrations, update student profiles, and track course enrollments.</p>
+              </div>
+            </div>
+            
+            <div class="glass-panel" style="padding: 24px;">
+              <div class="table-actions">
+                <div class="search-box table-search">
+                  <i data-lucide="search" class="search-icon" style="width: 16px;"></i>
+                  <input type="text" id="admin-student-search" class="search-input" placeholder="Search students..." style="padding: 10px 16px 10px 40px; border-radius: 8px;">
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn-export" id="btn-export-students"><i data-lucide="download" style="width: 14px;"></i> Export CSV</button>
+                  <button class="btn btn-primary" id="btn-admin-add-student" style="padding: 10px 20px;"><i data-lucide="plus" style="width: 14px;"></i> Add Student</button>
+                </div>
+              </div>
+              
+              <div class="table-responsive">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Region</th>
+                      <th>School</th>
+                      <th>Course Path</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-students-table-body">
+                    <!-- Loaded dynamically in app.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <!-- CERTIFICATES PANEL -->
+          <div id="admin-certificates" class="admin-view-panel">
+            <div class="admin-dashboard-header">
+              <div>
+                <h1 style="font-size: 1.8rem; margin-bottom: 4px;">Certificate Registry</h1>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Manage, issue, and verify student completion credentials.</p>
+              </div>
+            </div>
+            
+            <div class="glass-panel" style="padding: 24px;">
+              <div class="table-actions">
+                <div class="search-box table-search">
+                  <i data-lucide="search" class="search-icon" style="width: 16px;"></i>
+                  <input type="text" id="admin-cert-search" class="search-input" placeholder="Search certificates..." style="padding: 10px 16px 10px 40px; border-radius: 8px;">
+                </div>
+                <button class="btn btn-primary" id="btn-admin-issue-cert" style="padding: 10px 20px;"><i data-lucide="award" style="width: 14px;"></i> Issue Certificate</button>
+              </div>
+              
+              <div class="table-responsive">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Credential ID</th>
+                      <th>Student Name</th>
+                      <th>Course Name</th>
+                      <th>Issue Date</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-certs-table-body">
+                    <!-- Loaded dynamically in app.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <!-- NOTIFICATIONS PANEL -->
+          <div id="admin-notifications" class="admin-view-panel">
+            <div class="admin-dashboard-header">
+              <div>
+                <h1 style="font-size: 1.8rem; margin-bottom: 4px;">Notifications</h1>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Recent activity alerts and system events.</p>
+              </div>
+              <button class="btn btn-secondary" id="btn-mark-all-read" style="padding: 10px 20px;"><i data-lucide="check-check" style="width: 14px;"></i> Mark All Read</button>
+            </div>
+            <div class="glass-panel" style="padding: 24px;">
+              <div id="admin-notif-list" class="notif-list">
+                <div class="notif-empty"><i data-lucide="bell-off" style="width: 32px; height: 32px; margin: 0 auto 12px; display: block; color: var(--text-muted);"></i>No notifications yet.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONTACT MESSAGES PANEL -->
+          <div id="admin-messages" class="admin-view-panel">
+            <div class="admin-dashboard-header">
+              <div>
+                <h1 style="font-size: 1.8rem; margin-bottom: 4px;">Contact Messages</h1>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Incoming messages from the public contact form.</p>
+              </div>
+            </div>
+            <div class="glass-panel" style="padding: 24px;">
+              <div class="table-actions">
+                <div class="search-box table-search">
+                  <i data-lucide="search" class="search-icon" style="width: 16px;"></i>
+                  <input type="text" id="admin-messages-search" class="search-input" placeholder="Search messages..." style="padding: 10px 16px 10px 40px; border-radius: 8px;">
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Sender Name</th>
+                      <th>Email</th>
+                      <th>Subject</th>
+                      <th>Date</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-messages-table-body">
+                    <tr>
+                      <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                        <i data-lucide="loader" class="spin-animation" style="width: 24px; margin-bottom: 12px; display: block; margin: 0 auto 12px;"></i> Loading messages...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- COURSES PANEL -->
+          <div id="admin-courses" class="admin-view-panel">
+            <div class="admin-dashboard-header">
+              <div>
+                <h1 style="font-size: 1.8rem; margin-bottom: 4px;">Course Management</h1>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Create, update, and manage curriculum learning paths.</p>
+              </div>
+            </div>
+            
+            <div class="glass-panel" style="padding: 24px;">
+              <div class="table-actions">
+                <div class="search-box table-search">
+                  <i data-lucide="search" class="search-icon" style="width: 16px;"></i>
+                  <input type="text" id="admin-course-search" class="search-input" placeholder="Search curriculum..." style="padding: 10px 16px 10px 40px; border-radius: 8px;">
+                </div>
+                <button class="btn btn-primary" id="btn-admin-add-course" style="padding: 10px 20px;"><i data-lucide="plus" style="width: 14px;"></i> Create Course</button>
+              </div>
+              
+              <div class="table-responsive">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Instructor</th>
+                      <th>Difficulty</th>
+                      <th>Modules</th>
+                      <th>Duration</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-courses-table-body">
+                    <!-- Dynamically populated from EFBIDatabase in app.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- =====================================================
+               SETTINGS & SYNC CENTER PANEL
+               ===================================================== -->
+          <div id="admin-settings" class="admin-view-panel">
+            <div class="admin-dashboard-header">
+              <div>
+                <h1 style="font-size:1.8rem; margin-bottom:4px; display:flex; align-items:center; gap:12px;">
+                  <i data-lucide="settings-2" style="width:28px; color:var(--primary-hover);"></i>
+                  Settings & Sync Center
+                </h1>
+                <p style="font-size:0.85rem; color:var(--text-secondary);">Manage database connections, diagnose sync health, and configure the live Google Sheets backend.</p>
+              </div>
+            </div>
+
+            <div class="grid-2" style="gap:24px; margin-bottom:24px;">
+
+              <!-- Connection Config -->
+              <div class="glass-panel" style="padding:28px; display:flex; flex-direction:column; gap:18px;">
+                <h3 style="font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; margin:0;">
+                  <i data-lucide="database" style="width:20px; color:var(--primary-hover);"></i>
+                  Sync Configuration
+                </h3>
+                <div class="settings-sync-badge" id="settings-sync-badge">
+                  <span class="sync-indicator" id="settings-sync-dot"></span>
+                  <span id="settings-sync-label">Checking...</span>
+                </div>
+
+                <div class="form-group" style="text-align:left;">
+                  <label class="form-label">Database Sync Mode</label>
+                  <select id="settings-sync-mode" class="form-control">
+                    <option value="live">🟢 Live — Google Sheets Sync</option>
+                    <option value="sandbox">🟡 Offline — Local Sandbox (No Internet Required)</option>
+                  </select>
+                  <p style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">In Sandbox mode all data is stored locally in your browser — no connection needed. Perfect for testing.</p>
+                </div>
+
+                <div class="form-group" style="text-align:left;">
+                  <label for="settings-script-url" class="form-label">Google Web App URL</label>
+                  <input type="text" id="settings-script-url" class="form-control" placeholder="https://script.google.com/macros/s/.../exec" style="font-family:monospace; font-size:0.78rem;">
+                </div>
+
+                <button class="btn btn-primary" id="btn-save-settings" style="width:100%; justify-content:center; padding:12px;">
+                  <i data-lucide="save" style="width:16px;"></i> Save Connection Settings
+                </button>
+              </div>
+
+              <!-- Sandbox Utilities -->
+              <div class="glass-panel" style="padding:28px; display:flex; flex-direction:column; gap:18px;">
+                <h3 style="font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; margin:0;">
+                  <i data-lucide="archive" style="width:20px; color:var(--accent);"></i>
+                  Database Backup & Utilities
+                </h3>
+                <p style="font-size:0.85rem; color:var(--text-secondary); margin:0;">Export your entire local sandbox as a JSON file for backup, or import a previous backup to restore data.</p>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <button class="btn btn-secondary" id="btn-export-db" style="justify-content:center; padding:11px; font-size:0.85rem;">
+                    <i data-lucide="download" style="width:15px;"></i> Export JSON
+                  </button>
+                  <label class="btn btn-secondary" style="justify-content:center; padding:11px; font-size:0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:8px; margin:0;">
+                    <i data-lucide="upload" style="width:15px;"></i> Import JSON
+                    <input type="file" id="input-import-db" accept=".json" style="display:none;">
+                  </label>
+                </div>
+
+                <div style="border-top:1px solid var(--border-color); padding-top:16px; margin-top:auto;">
+                  <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px;">⚠ This action permanently clears all local data.</p>
+                  <button class="btn btn-secondary" id="btn-reset-db" style="width:100%; border-color:var(--danger); color:var(--danger); justify-content:center; padding:11px; font-size:0.85rem;">
+                    <i data-lucide="trash-2" style="width:15px;"></i> Reset Sandbox to Empty
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Diagnostics Terminal -->
+            <div class="glass-panel" style="padding:28px; margin-bottom:24px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+                <h3 style="font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:10px; margin:0;">
+                  <i data-lucide="terminal" style="width:20px; color:var(--secondary);"></i>
+                  Live System Diagnostics
+                </h3>
+                <button class="btn btn-secondary" id="btn-run-diagnostics" style="padding:8px 18px; font-size:0.82rem; gap:6px;">
+                  <i data-lucide="play-circle" style="width:14px;"></i> Run Diagnostics
+                </button>
+              </div>
+              <div class="diagnostics-terminal" id="diagnostics-terminal">
+                <div class="terminal-line system">── EFBI Connection Diagnostic Tool [v2.0] ──</div>
+                <div class="terminal-line muted">Press "Run Diagnostics" to verify your Google Sheets endpoint health.</div>
+              </div>
+            </div>
+
+            <!-- Deployment Guide -->
+            <div class="glass-panel" style="padding:28px; text-align:left;">
+              <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+                <i data-lucide="book-marked" style="width:20px; color:var(--primary-hover);"></i>
+                Google Apps Script Deployment Guide
+              </h3>
+              <div style="display:flex; flex-direction:column; gap:0;">
+                <div class="setup-step">
+                  <div class="setup-step-num">1</div>
+                  <div>
+                    <div class="setup-step-title">Open Script Editor in your Google Sheet</div>
+                    <p class="setup-step-desc">In your Google Sheet, go to <strong>Extensions &gt; Apps Script</strong>. Replace all existing code with the contents of <code>google_apps_script.js</code> from this project.</p>
+                  </div>
+                </div>
+                <div class="setup-step">
+                  <div class="setup-step-num">2</div>
+                  <div>
+                    <div class="setup-step-title">Paste your Spreadsheet ID</div>
+                    <p class="setup-step-desc">Copy the long ID from the spreadsheet URL (between <code>/d/</code> and <code>/edit</code>), then paste it into the <code>SPREADSHEET_ID</code> constant at the top of the script.</p>
+                  </div>
+                </div>
+                <div class="setup-step">
+                  <div class="setup-step-num">3</div>
+                  <div>
+                    <div class="setup-step-title">Deploy as Web App</div>
+                    <p class="setup-step-desc">Click <strong>Deploy &gt; New Deployment</strong>. Set type to <strong>Web App</strong>. Execute as: <strong>Me</strong>. Access: <strong>Anyone</strong>. Click Deploy and authorize all permissions.</p>
+                  </div>
+                </div>
+                <div class="setup-step" style="border-bottom:none;">
+                  <div class="setup-step-num">4</div>
+                  <div>
+                    <div class="setup-step-title">Paste the Web App URL above</div>
+                    <p class="setup-step-desc">Copy the Web App URL, paste it into the field above, set Mode to <strong>Live — Google Sheets Sync</strong>, and click <strong>Save Connection Settings</strong>. Your platform is now live! 🎉</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- end admin-settings -->
+          
+        </div>
+      </div>
+    </div><!-- end admin-main-layout -->
+    </section>
+
+  </main>
+
+  <!-- Footer Section -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-brand-title">EFBI <span>Initiative</span></div>
+          <p class="footer-desc">Empowering Ethiopia's next generation of technology builders, software developers, leaders, and innovation catalysts.</p>
+          <div class="footer-socials">
+            <a href="#" class="footer-social" aria-label="Telegram"><i data-lucide="send"></i></a>
+            <a href="#" class="footer-social" aria-label="LinkedIn"><i data-lucide="linkedin"></i></a>
+            <a href="#" class="footer-social" aria-label="GitHub"><i data-lucide="github"></i></a>
+            <a href="#" class="footer-social" aria-label="YouTube"><i data-lucide="youtube"></i></a>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="footer-col-title">Quick Links</h4>
+          <ul class="footer-links">
+            <li><a href="#home" data-view="home">Home</a></li>
+            <li><a href="#courses" data-view="courses">Explore Courses</a></li>
+            <li><a href="#certification" data-view="certification">Certification Details</a></li>
+            <li><a href="#verify" data-view="verify">Verify Certificate</a></li>
+            <li><a href="#blog" data-view="blog">Technology Blog</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="footer-col-title">Our Programs</h4>
+          <ul class="footer-links">
+            <li><a href="#courses">Artificial Intelligence</a></li>
+            <li><a href="#courses">App Development</a></li>
+            <li><a href="#courses">Web Development</a></li>
+            <li><a href="#courses">Programming Foundations</a></li>
+            <li><a href="#courses">Entrepreneurship & Leadership</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="footer-col-title">Contact</h4>
+          <ul class="footer-links" style="pointer-events: none;">
+            <li>Addis Ababa, Ethiopia</li>
+            <li>info@efbi-initiative.org</li>
+            <li>Telegram Support Channel</li>
+            <li>Applications: Cohort 2026 Open</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <div>&copy; 2026 Ethiopian Future Builders Initiative (EFBI). All Rights Reserved.</div>
+        <div>Designed for Educational Excellence & Leadership Impact.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Student Login Modal -->
+  <div id="student-login-modal" class="modal-overlay" style="
+    position: fixed; inset: 0; z-index: 300;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px);
+  ">
+    <div class="glass-panel" style="width: 100%; max-width: 420px; padding: 40px; text-align: center; position: relative;">
+      <button id="btn-close-student-login" style="
+        position: absolute; right: 20px; top: 20px;
+        background: transparent; border: none; color: var(--text-secondary);
+        font-size: 1.5rem; cursor: pointer;
+      ">&times;</button>
+      
+      <div style="width: 56px; height: 56px; border-radius: 16px; background: var(--primary-glow); color: var(--primary-hover); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+        <i data-lucide="user-check" style="width: 28px; height: 28px;"></i>
+      </div>
+      <h2 style="font-size: 1.6rem; margin-bottom: 6px;">Student Portal</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 28px;">Sign in to access your dashboard, syllabus, and learning modules.</p>
+
+      <form id="student-login-form" novalidate>
+        <div class="form-group" style="text-align: left;">
+          <label for="student-email" class="form-label">Email Address</label>
+          <div style="position: relative;">
+            <i data-lucide="mail" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); width:16px; color: var(--text-muted);"></i>
+            <input type="email" id="student-email" class="form-control" placeholder="Enter your registered email" style="padding-left: 42px;" required autocomplete="username">
+          </div>
+        </div>
+        <div class="form-group" style="text-align: left; margin-top: 16px;">
+          <label for="student-password" class="form-label">Password</label>
+          <div style="position: relative;">
+            <i data-lucide="lock" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); width:16px; color: var(--text-muted);"></i>
+            <input type="password" id="student-password" class="form-control" placeholder="Enter your password" style="padding-left: 42px;" required autocomplete="current-password">
+          </div>
+        </div>
+        <div id="student-login-error" style="display:none; color: var(--danger); font-size:0.85rem; margin-top:10px; padding: 10px; background: rgba(239,68,68,0.1); border-radius: 8px;"></div>
+        
+        <button type="submit" id="student-login-submit-btn" class="btn btn-primary" style="width:100%; margin-top:24px; padding: 14px;">
+          <i data-lucide="log-in" style="width:16px;"></i> Sign In
+        </button>
+      </form>
+
+      <p style="margin-top: 24px; font-size: 0.85rem; color: var(--text-muted);">
+        Not registered yet? <a href="#register" id="link-go-register" style="color: var(--primary-hover); font-weight: 600; text-decoration: underline;">Apply for Cohort 2026</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Course Modal (Create & Edit) -->
+  <div id="admin-course-modal" class="modal-overlay" style="
+    position: fixed; inset: 0; z-index: 300;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px);
+    overflow-y: auto; padding: 20px;
+  ">
+    <div class="glass-panel" style="width: 100%; max-width: 960px; padding: 32px; position: relative;">
+      <button id="btn-close-course-modal" style="
+        position: absolute; right: 20px; top: 20px;
+        background: transparent; border: none; color: var(--text-secondary);
+        font-size: 1.5rem; cursor: pointer;
+      ">&times;</button>
+      
+      <h2 id="course-modal-title" style="font-size: 1.4rem; margin-bottom: 24px; text-align: left;">Create New Course</h2>
+      
+      <div style="display: grid; grid-template-columns: 1fr 300px; gap: 28px; align-items: start;">
+
+        <!-- Left: Form -->
+        <form id="admin-course-form" novalidate>
+          <input type="hidden" id="course-id">
+          
+          <!-- Editor Tabs Header -->
+          <div class="course-editor-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+            <button type="button" class="btn btn-secondary active course-editor-tab-btn" data-editor-tab="course-tab-info" style="padding: 6px 14px; font-size: 0.85rem; border-radius: 6px 6px 0 0; background: var(--bg-secondary); border: 1px solid var(--border-color); border-bottom: none; cursor: pointer;">Course Details</button>
+            <button type="button" class="btn btn-secondary course-editor-tab-btn" data-editor-tab="course-tab-modules" style="padding: 6px 14px; font-size: 0.85rem; border-radius: 6px 6px 0 0; border: 1px solid transparent; border-bottom: none; cursor: pointer;">Modules &amp; Syllabus</button>
+          </div>
+
+          <!-- Tab 1: Course Info -->
+          <div id="course-tab-info" class="course-editor-tab-content">
+            <div class="grid-2" style="gap: 16px; margin-bottom: 16px;">
+              <div class="form-group" style="text-align: left;">
+                <label for="course-title" class="form-label">Course Title *</label>
+                <input type="text" id="course-title" class="form-control" placeholder="e.g. Web Development" required>
+              </div>
+              <div class="form-group" style="text-align: left;">
+                <label for="course-instructor" class="form-label">Instructor *</label>
+                <input type="text" id="course-instructor" class="form-control" placeholder="e.g. Lewam Halefom" required>
+              </div>
+            </div>
+            
+            <div class="grid-3" style="gap: 16px; margin-bottom: 16px;">
+              <div class="form-group" style="text-align: left;">
+                <label for="course-category" class="form-label">Category *</label>
+                <select id="course-category" class="form-control" required>
+                  <option value="" disabled selected>Select Category</option>
+                  <option value="AI & Machine Learning">AI & Machine Learning</option>
+                  <option value="App Development">App Development</option>
+                  <option value="Web Development">Web Development</option>
+                  <option value="Foundations">Foundations</option>
+                  <option value="Entrepreneurship">Entrepreneurship</option>
+                  <option value="Soft Skills">Soft Skills</option>
+                </select>
+              </div>
+              <div class="form-group" style="text-align: left;">
+                <label for="course-level" class="form-label">Difficulty *</label>
+                <select id="course-level" class="form-control" required>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+              </div>
+              <div class="form-group" style="text-align: left;">
+                <label for="course-status" class="form-label">Status *</label>
+                <select id="course-status" class="form-control" required>
+                  <option value="Draft">Draft</option>
+                  <option value="Published">Published</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="grid-3" style="gap: 16px; margin-bottom: 16px;">
+              <div class="form-group" style="text-align: left;">
+                <label for="course-duration" class="form-label">Duration *</label>
+                <input type="text" id="course-duration" class="form-control" placeholder="e.g. 8 Weeks" required>
+              </div>
+              <div class="form-group" style="text-align: left;">
+                <label for="course-modules" class="form-label">Modules *</label>
+                <input type="number" id="course-modules" class="form-control" placeholder="e.g. 5" min="1" required>
+              </div>
+              <div class="form-group" style="text-align: left;">
+                <label for="course-icon" class="form-label">Thumbnail Icon *</label>
+                <select id="course-icon" class="form-control" required>
+                  <option value="book-open">Book (General)</option>
+                  <option value="brain">Brain (AI)</option>
+                  <option value="smartphone">Phone (Mobile)</option>
+                  <option value="globe">Globe (Web)</option>
+                  <option value="terminal">Terminal (Foundations)</option>
+                  <option value="lightbulb">Lightbulb (Innovation)</option>
+                  <option value="compass">Compass (Leadership)</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+              <label for="course-short-desc" class="form-label">Short Description *</label>
+              <input type="text" id="course-short-desc" class="form-control" placeholder="Brief summary for catalog card..." required>
+            </div>
+            
+            <div class="form-group" style="text-align: left; margin-bottom: 24px;">
+              <label for="course-full-desc" class="form-label">Full Description *</label>
+              <textarea id="course-full-desc" class="form-control" placeholder="Detailed syllabus breakdown and what students will learn..." style="height: 100px; resize: vertical;" required></textarea>
+            </div>
+          </div>
+
+          <!-- Tab 2: Modules Syllabus & Quiz Editor -->
+          <div id="course-tab-modules" class="course-editor-tab-content" style="display: none;">
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px; margin-bottom: 20px; text-align: left;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
+                <label for="course-module-select" class="form-label" style="font-weight: 700; margin: 0;">Select Module to Edit:</label>
+                <select id="course-module-select" class="form-control" style="width: auto; min-width: 160px; font-weight: 600;"></select>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">Configure title, lesson notes, and interactive quiz for this module index.</p>
+            </div>
+
+            <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+              <label for="module-edit-title" class="form-label">Module Title *</label>
+              <input type="text" id="module-edit-title" class="form-control" placeholder="e.g. Module 1: Introduction to JavaScript">
+            </div>
+
+            <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+              <label for="module-edit-video" class="form-label">YouTube Video URL (Public/Unlisted) *</label>
+              <input type="text" id="module-edit-video" class="form-control" placeholder="e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+            </div>
+
+            <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+              <label for="module-edit-desc" class="form-label">Lesson Description *</label>
+              <textarea id="module-edit-desc" class="form-control" placeholder="Short description of the video lesson and syllabus topics..." style="height: 60px; resize: vertical;"></textarea>
+            </div>
+
+            <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+              <label for="module-edit-notes" class="form-label">Detailed Notes</label>
+              <textarea id="module-edit-notes" class="form-control" placeholder="Detailed module reference notes for students to read..." style="height: 100px; resize: vertical;"></textarea>
+            </div>
+
+            <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+              <label for="module-edit-resources" class="form-label">Resources &amp; Downloads</label>
+              <textarea id="module-edit-resources" class="form-control" placeholder="Format: Title|URL (one per line, e.g. Download Slides|https://drive.google.com/...)" style="height: 60px; resize: vertical;"></textarea>
+            </div>
+
+            <!-- Quiz Questions Section -->
+            <div class="quiz-questions-editor" style="margin-top: 24px; border-top: 1px dashed var(--border-color); padding-top: 20px;">
+              <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="help-circle" style="width: 18px; height: 18px; color: var(--primary-hover);"></i>
+                Practice Quiz Questions
+              </h4>
+              <div id="module-questions-container" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px;">
+                <!-- Dynamically generated list of questions -->
+              </div>
+              <button type="button" class="btn btn-secondary" id="btn-add-quiz-question" style="padding: 8px 16px; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 6px;">
+                <i data-lucide="plus" style="width: 14px;"></i> Add Quiz Question
+              </button>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <button type="button" id="btn-cancel-course" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</button>
+            <button type="submit" id="btn-save-course" class="btn btn-primary" style="padding: 10px 24px;">
+              <i data-lucide="save" style="width:14px;"></i> Save Course
+            </button>
+          </div>
+        </form>
+
+        <!-- Right: Live Preview -->
+        <div style="position: sticky; top: 20px;">
+          <p style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:12px;">Live Preview</p>
+          <div class="course-preview-card">
+            <div class="course-preview-header">
+              <span class="preview-badge" id="preview-category">Category</span>
+              <div class="course-preview-title" id="preview-title">Course Title</div>
+              <div class="course-preview-instructor" id="preview-instructor">Instructor Name</div>
+            </div>
+            <div class="course-preview-body">
+              <p class="course-preview-desc" id="preview-desc">Your short description will appear here as you type.</p>
+              <div class="course-preview-meta">
+                <div class="course-preview-meta-item">
+                  <i data-lucide="layers" style="width:12px;"></i>
+                  <span id="preview-level">Beginner</span>
+                </div>
+                <div class="course-preview-meta-item">
+                  <i data-lucide="clock" style="width:12px;"></i>
+                  <span id="preview-duration">Duration</span>
+                </div>
+                <div class="course-preview-meta-item">
+                  <i data-lucide="grid" style="width:12px;"></i>
+                  <span id="preview-modules">— modules</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.72rem; color:var(--text-muted); margin-top:10px; text-align:center;">Updates in real-time as you fill the form</p>
+        </div>
+
+      </div><!-- end two-col grid -->
+    </div>
+  </div>
+
+  <!-- JavaScript Logics -->
+  <script src="api.js?v=20"></script>
+  <script src="app.js?v=20"></script>
+
+  <!-- =========================================================
+       QUIZ MODAL
+       ========================================================= -->
+  <div id="quiz-modal" class="quiz-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="quiz-modal-title-text">
+    <div class="quiz-modal-box">
+      <div class="quiz-header">
+        <div class="quiz-module-tag"><i data-lucide="graduation-cap" style="width:12px;"></i> <span id="quiz-module-label">Module Quiz</span></div>
+        <h2 class="quiz-title" id="quiz-modal-title-text">Module Quiz</h2>
+        <div style="font-size:0.82rem; color:var(--text-muted); margin-bottom:4px;">Question <span id="quiz-q-current">1</span> of <span id="quiz-q-total">5</span></div>
+        <div class="quiz-progress-track"><div class="quiz-progress-fill" id="quiz-progress-fill" style="width:20%;"></div></div>
+      </div>
+
+      <!-- Question View -->
+      <div id="quiz-question-view">
+        <p class="quiz-question-text" id="quiz-question-text">Loading question...</p>
+        <div class="quiz-options" id="quiz-options-list"></div>
+        <div class="quiz-actions">
+          <button class="btn btn-secondary" id="btn-quiz-skip" style="padding:10px 20px;">Skip</button>
+          <button class="btn btn-primary" id="btn-quiz-next" style="padding:10px 24px;" disabled>Next <i data-lucide="arrow-right" style="width:14px;"></i></button>
+        </div>
+      </div>
+
+      <!-- Result View -->
+      <div id="quiz-result-view" class="quiz-result-box" style="display:none;">
+        <div class="quiz-score-circle" id="quiz-score-circle">0%</div>
+        <h3 id="quiz-result-title" style="font-size:1.4rem; margin-bottom:8px;">Quiz Complete!</h3>
+        <p id="quiz-result-desc" style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:24px;"></p>
+        <div class="quiz-actions" style="justify-content:center;">
+          <button class="btn btn-secondary" id="btn-quiz-retry" style="padding:10px 20px;"><i data-lucide="refresh-cw" style="width:14px;"></i> Try Again</button>
+          <button class="btn btn-primary" id="btn-quiz-close" style="padding:10px 24px;">Continue Learning <i data-lucide="check" style="width:14px;"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       ADD STUDENT MODAL (Replaces prompt())
+       ========================================================= -->
+  <div id="add-student-modal" class="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="add-student-modal-title">
+    <div class="admin-modal-box wide">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" id="add-student-modal-title"><i data-lucide="user-plus" style="width:20px; vertical-align:middle; margin-right:8px;"></i>Add Student</h2>
+        <button class="admin-modal-close" id="btn-close-add-student">&times;</button>
+      </div>
+
+      <form id="add-student-form" novalidate>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div class="form-group">
+            <label for="add-s-name" class="form-label">Full Name *</label>
+            <input type="text" id="add-s-name" class="form-control" placeholder="Student full name" required>
+          </div>
+          <div class="form-group">
+            <label for="add-s-email" class="form-label">Email Address *</label>
+            <input type="email" id="add-s-email" class="form-control" placeholder="email@domain.com" required>
+          </div>
+          <div class="form-group">
+            <label for="add-s-password" class="form-label">Password *</label>
+            <input type="text" id="add-s-password" class="form-control" placeholder="e.g. efbi2026" required>
+          </div>
+          <div class="form-group">
+            <label for="add-s-region" class="form-label">Region / City *</label>
+            <select id="add-s-region" class="form-control" required>
+              <option value="" disabled selected>Select Region</option>
+              <option value="Addis Ababa">Addis Ababa</option>
+              <option value="Oromia">Oromia</option>
+              <option value="Amhara">Amhara</option>
+              <option value="Tigray">Tigray</option>
+              <option value="SNNPR">SNNPR</option>
+              <option value="Somali">Somali</option>
+              <option value="Afar">Afar</option>
+              <option value="Benishangul-Gumuz">Benishangul-Gumuz</option>
+              <option value="Gambela">Gambela</option>
+              <option value="Harari">Harari</option>
+              <option value="Dire Dawa">Dire Dawa</option>
+              <option value="Sidama">Sidama</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="add-s-school" class="form-label">School / University *</label>
+            <input type="text" id="add-s-school" class="form-control" placeholder="e.g. AAU" required>
+          </div>
+          <div class="form-group">
+            <label for="add-s-grade" class="form-label">Grade Level *</label>
+            <select id="add-s-grade" class="form-control" required>
+              <option value="" disabled selected>Select Grade</option>
+              <option value="Grade 9-10">High School (Grade 9-10)</option>
+              <option value="Grade 11-12">High School (Grade 11-12)</option>
+              <option value="University Freshman">University Freshman</option>
+              <option value="University Sophomore">University Sophomore</option>
+              <option value="University Junior/Senior">University Junior/Senior</option>
+              <option value="Graduate/Other">Other / Young Professional</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label for="add-s-interest" class="form-label">Course Interest *</label>
+            <input type="text" id="add-s-interest" class="form-control" placeholder="e.g. Artificial Intelligence" required>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label for="add-s-status" class="form-label">Initial Status</label>
+            <select id="add-s-status" class="form-control">
+              <option value="Approved">Approved (Active)</option>
+              <option value="Pending">Pending (Awaiting Review)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="add-student-error" style="display:none; color:var(--danger); font-size:0.85rem; margin-top:12px; padding:10px; background:var(--danger-glow); border-radius:8px;"></div>
+
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:24px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-add-student" style="padding:10px 20px;">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-add-student" style="padding:10px 28px;"><i data-lucide="user-plus" style="width:14px;"></i> Add Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       ISSUE CERTIFICATE MODAL (Replaces prompt())
+       ========================================================= -->
+  <div id="issue-cert-modal" class="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="issue-cert-modal-title">
+    <div class="admin-modal-box">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" id="issue-cert-modal-title"><i data-lucide="award" style="width:20px; vertical-align:middle; margin-right:8px;"></i>Issue Certificate</h2>
+        <button class="admin-modal-close" id="btn-close-issue-cert">&times;</button>
+      </div>
+
+      <form id="issue-cert-form" novalidate>
+        <div class="form-group">
+          <label for="cert-student-name" class="form-label">Student Full Name *</label>
+          <input type="text" id="cert-student-name" class="form-control" placeholder="Enter graduate's full name" required>
+          <div style="font-size:0.78rem; color:var(--text-muted); margin-top:6px;">Must match the exact registered name for proper verification.</div>
+        </div>
+        <div class="form-group" style="margin-top:16px;">
+          <label for="cert-course-name" class="form-label">Completed Course *</label>
+          <select id="cert-course-name" class="form-control" required>
+            <option value="" disabled selected>Select completed course</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-top:16px;">
+          <label for="cert-custom-id" class="form-label">Custom Credential ID <span style="color:var(--text-muted); font-weight:400;">(optional)</span></label>
+          <input type="text" id="cert-custom-id" class="form-control" placeholder="Auto-generated if left empty (e.g. EFBI-2026-001)">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px;">
+          <div class="form-group">
+            <label for="cert-score" class="form-label">Final Score (%) <span style="color:var(--text-muted); font-weight:400;">(optional)</span></label>
+            <input type="number" id="cert-score" class="form-control" placeholder="e.g. 92" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label for="cert-level" class="form-label">Achievement Level <span style="color:var(--text-muted); font-weight:400;">(optional)</span></label>
+            <select id="cert-level" class="form-control">
+              <option value="">Auto-calculate from score</option>
+              <option value="Pass">Pass (70–79%)</option>
+              <option value="Merit">Merit (80–89%)</option>
+              <option value="Distinction">Distinction (90–100%)</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px; padding:8px 10px; background:var(--bg-tertiary); border-radius:6px;">
+          💡 Leave Achievement Level as "Auto-calculate" and the system will determine Pass / Merit / Distinction based on the Final Score.
+        </div>
+
+        <div id="issue-cert-error" style="display:none; color:var(--danger); font-size:0.85rem; margin-top:12px; padding:10px; background:var(--danger-glow); border-radius:8px;"></div>
+
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:24px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-issue-cert" style="padding:10px 20px;">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-issue-cert" style="padding:10px 28px;"><i data-lucide="award" style="width:14px;"></i> Issue Certificate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       STUDENT DETAIL MODAL (Admin — click row to view)
+       ========================================================= -->
+  <div id="student-detail-modal" class="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="student-detail-modal-title">
+    <div class="admin-modal-box wide">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" id="student-detail-modal-title"><i data-lucide="user" style="width:20px; vertical-align:middle; margin-right:8px;"></i>Student Profile</h2>
+        <button class="admin-modal-close" id="btn-close-student-detail">&times;</button>
+      </div>
+
+      <div class="student-detail-grid" id="student-detail-grid">
+        <!-- Populated dynamically -->
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:8px;">Statement / Motivation</div>
+        <p id="student-detail-why" style="font-size:0.9rem; color:var(--text-secondary); background:var(--bg-tertiary); border-radius:10px; padding:14px; line-height:1.6; font-style:italic;"></p>
+      </div>
+
+      <div class="student-detail-actions" id="student-detail-actions">
+        <button class="btn btn-primary" id="btn-detail-approve" style="padding:10px 20px;"><i data-lucide="check-circle" style="width:14px;"></i> Approve</button>
+        <button class="btn btn-secondary" id="btn-detail-issue-cert" style="padding:10px 20px;"><i data-lucide="award" style="width:14px;"></i> Issue Certificate</button>
+        <button class="btn btn-secondary" id="btn-detail-close" style="padding:10px 20px; margin-left:auto;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CONTACT MESSAGE DETAIL MODAL (Admin - click row to view)
+       ============================================================ -->
+  <div id="message-detail-modal" class="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="message-detail-modal-title" style="display:none; align-items:center; justify-content:center; z-index:9999;">
+    <div class="admin-modal-box">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" id="message-detail-modal-title"><i data-lucide="mail-open" style="width:20px; vertical-align:middle; margin-right:8px; color:var(--primary);"></i>Message Details</h2>
+        <button class="admin-modal-close" id="btn-close-message-detail">&times;</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:16px;">
+        <div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px;">From</div>
+          <div id="message-detail-name" style="font-weight:700; font-size:1.05rem; color:var(--text-primary);"></div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px;">Email</div>
+          <div id="message-detail-email" style="font-size:0.95rem; color:var(--text-secondary);"></div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px;">Subject</div>
+          <div id="message-detail-subject" style="font-weight:600; font-size:0.95rem; color:var(--primary-light);"></div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px;">Date Submitted</div>
+          <div id="message-detail-date" style="font-size:0.95rem; color:var(--text-secondary);"></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:8px;">Message</div>
+        <p id="message-detail-body" style="font-size:0.95rem; color:var(--text-secondary); background:var(--bg-tertiary); border-radius:10px; padding:18px; line-height:1.6; white-space:pre-wrap; border:1px solid var(--border-color);"></p>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn btn-secondary" id="btn-detail-close-msg" style="padding:10px 20px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       NOTIFICATION DETAIL MODAL (Admin - click notification to view)
+       ============================================================ -->
+  <div id="notif-detail-modal" class="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="notif-detail-modal-title" style="display:none; align-items:center; justify-content:center; z-index:9999;">
+    <div class="admin-modal-box">
+      <div class="admin-modal-header">
+        <h2 class="admin-modal-title" id="notif-detail-modal-title"><i data-lucide="bell" style="width:20px; vertical-align:middle; margin-right:8px; color:var(--primary);"></i>Notification Details</h2>
+        <button class="admin-modal-close" id="btn-close-notif-detail">&times;</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:16px;">
+        <div style="grid-column: 1/-1;">
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px;">Type</div>
+          <div><span id="notif-detail-type-badge" class="status-badge" style="font-size: 0.8rem; padding: 4px 10px;">System Announcement</span></div>
+        </div>
+        <div style="grid-column: 1/-1;">
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px;">Title</div>
+          <div id="notif-detail-title-text" style="font-weight:700; font-size:1.1rem; color:var(--text-primary); line-height: 1.4;"></div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px;">Date</div>
+          <div id="notif-detail-date" style="font-size:0.95rem; color:var(--text-secondary);"></div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px;">Time</div>
+          <div id="notif-detail-time" style="font-size:0.95rem; color:var(--text-secondary);"></div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px;">Related User</div>
+          <div id="notif-detail-user" style="font-size:0.95rem; color:var(--text-secondary); font-weight:600;">N/A</div>
+        </div>
+        <div>
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px;">Related Course</div>
+          <div id="notif-detail-course" style="font-size:0.95rem; color:var(--text-secondary); font-weight:600;">N/A</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:8px;">Description</div>
+        <p id="notif-detail-desc" style="font-size:0.95rem; color:var(--text-secondary); background:var(--bg-tertiary); border-radius:10px; padding:18px; line-height:1.6; white-space:pre-wrap; border:1px solid var(--border-color);"></p>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:12px;">
+        <button class="btn btn-primary" id="btn-detail-mark-read" style="padding:10px 20px;"><i data-lucide="check" style="width:14px; margin-right:4px;"></i> Mark as Read</button>
+        <button class="btn btn-secondary" id="btn-detail-close-notif" style="padding:10px 20px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SYNC RECOVERY MODAL — Smart connection failure handler
+       ============================================================ -->
+  <div class="modal-overlay" id="sync-recovery-modal" style="display:none; z-index:10000;">
+    <div class="modal-card" style="max-width:480px; text-align:center;">
+      <div style="width:60px; height:60px; border-radius:16px; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 18px;">
+        <i data-lucide="wifi-off" style="width:28px; color:var(--danger);"></i>
+      </div>
+      <h3 style="font-size:1.2rem; font-weight:800; margin-bottom:8px;">Connection Error Detected</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:4px;" id="sync-recovery-message">
+        The system could not reach the Google Sheets backend. What would you like to do?
+      </p>
+
+      <div class="recovery-options">
+        <button class="recovery-option-btn" id="btn-recovery-retry">
+          <div class="recovery-icon">
+            <i data-lucide="refresh-cw" style="width:18px; color:var(--primary-hover);"></i>
+          </div>
+          <div>
+            <div class="recovery-option-title">Retry Connection</div>
+            <div class="recovery-option-desc">Try the request again — useful if this was a temporary outage.</div>
+          </div>
+        </button>
+        <button class="recovery-option-btn" id="btn-recovery-sandbox">
+          <div class="recovery-icon">
+            <i data-lucide="hard-drive" style="width:18px; color:var(--accent);"></i>
+          </div>
+          <div>
+            <div class="recovery-option-title">Switch to Sandbox Mode</div>
+            <div class="recovery-option-desc">Save locally and sync to Google Sheets when connection is restored.</div>
+          </div>
+        </button>
+        <button class="recovery-option-btn" id="btn-recovery-settings">
+          <div class="recovery-icon">
+            <i data-lucide="settings" style="width:18px; color:var(--secondary);"></i>
+          </div>
+          <div>
+            <div class="recovery-option-title">Open Settings & Sync Center</div>
+            <div class="recovery-option-desc">Review your Web App URL, run diagnostics, or check deployment.</div>
+          </div>
+        </button>
+      </div>
+
+      <button class="btn btn-secondary" id="btn-recovery-dismiss" style="width:100%; justify-content:center; margin-top:16px; padding:10px;">
+        Dismiss
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CERTIFICATE VIEWER MODAL — Premium Full-Screen Viewer
+       ============================================================ -->
+  <div id="cert-viewer-modal" class="cert-viewer-overlay" role="dialog" aria-modal="true" aria-labelledby="cert-viewer-modal-title" style="display:none;">
+    <div class="cert-viewer-container">
+      <button class="cert-viewer-close" id="btn-close-cert-viewer">&times;</button>
+      
+      <div class="cert-viewer-grid">
+        <!-- Left: Certificate Preview Pane -->
+        <div class="cert-viewer-preview-pane">
+          <div id="cert-viewer-render-target" style="width: 100%;">
+            <!-- Dynamically populated certificate HTML -->
+          </div>
+        </div>
+
+        <!-- Right: Actions Sidebar -->
+        <div class="cert-viewer-actions-sidebar">
+          <div>
+            <div class="cert-badge-active">
+              <i data-lucide="shield-check" style="width:14px; height:14px; vertical-align:middle; margin-right:4px;"></i> VERIFIED CREDENTIAL
+            </div>
+            <h2 class="cert-viewer-title" id="cert-viewer-modal-title">Certificate Viewer</h2>
+            <p class="cert-viewer-subtitle">Official verifiable student credential issued by Ethiopian Future Builders Initiative.</p>
+            
+            <div class="cert-viewer-meta-box">
+              <div class="cert-meta-item">
+                <span class="cert-meta-label">Graduate</span>
+                <span class="cert-meta-value" id="cv-student-name">-</span>
+              </div>
+              <div class="cert-meta-item">
+                <span class="cert-meta-label">Program Completed</span>
+                <span class="cert-meta-value" id="cv-course-name">-</span>
+              </div>
+              <div class="cert-meta-item">
+                <span class="cert-meta-label">Date Issued</span>
+                <span class="cert-meta-value" id="cv-issue-date">-</span>
+              </div>
+              <div class="cert-meta-item">
+                <span class="cert-meta-label">Credential ID</span>
+                <span class="cert-meta-value cv-id-mono" id="cv-cert-id">-</span>
+              </div>
+              <div class="cert-meta-item">
+                <span class="cert-meta-label">Score / Level</span>
+                <span class="cert-meta-value" id="cv-score-level">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="cert-viewer-action-list">
+              <button class="cert-action-btn primary" id="btn-cv-download">
+                <i data-lucide="download" style="width:16px;"></i> Download PDF
+              </button>
+              <button class="cert-action-btn secondary" id="btn-cv-print">
+                <i data-lucide="printer" style="width:16px;"></i> Print Certificate
+              </button>
+              <button class="cert-action-btn secondary" id="btn-cv-verify">
+                <i data-lucide="external-link" style="width:16px;"></i> Verify on Registry
+              </button>
+              <button class="cert-action-btn secondary" id="btn-cv-share">
+                <i data-lucide="share-2" style="width:16px;"></i> Share Verifiable Link
+              </button>
+            </div>
+
+            <div class="cert-viewer-trust-footer">
+              <i data-lucide="lock" style="width:12px; height:12px; margin-right:4px;"></i>
+              Secured by EFBI cryptographic verification database.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
