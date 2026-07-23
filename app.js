@@ -1141,6 +1141,10 @@ function initLearningVideoPlayer(videoUrl, placeholder) {
 
   ctrlsEl.style.display = '';
 
+  // Show speed selector now that a video is loading
+  const speedWrap = document.getElementById('lp-speed-wrap');
+  if (speedWrap) speedWrap.style.display = '';
+
   // Ensure the mount div exists
   let mountEl = document.getElementById('lp-yt-player-mount');
   if (!mountEl) {
@@ -1279,26 +1283,22 @@ function initLearningVideoPlayer(videoUrl, placeholder) {
     // Scroll-on-video = volume control
     wrapper.addEventListener('wheel', (e) => {
       e.preventDefault();
-      const delta   = e.deltaY < 0 ? 5 : -5;
-      const newVol  = Math.max(0, Math.min(100, (_ytPlayer.getVolume?.() || 100) + delta));
+      const delta  = e.deltaY < 0 ? 5 : -5;
+      const newVol = Math.max(0, Math.min(100, (_ytPlayer.getVolume?.() || 100) + delta));
       _ytPlayer.setVolume?.(newVol);
       if (newVol === 0) _ytPlayer.mute?.(); else _ytPlayer.unMute?.();
       if (volSlider) volSlider.value = newVol;
       updateVolIcon();
 
-      // Show a brief toast hint on first use
-      let hint = wrapper.querySelector('.lp-scroll-hint');
-      if (!hint) {
-        hint = document.createElement('div');
-        hint.className = 'lp-scroll-hint';
-        hint.innerHTML = `<i data-lucide="volume-2" style="width:14px;height:14px;"></i> Volume: ${newVol}%`;
-        wrapper.appendChild(hint);
-        lucide.createIcons({ nodes: [hint.querySelector('i')] });
-      } else {
-        hint.querySelector('i').nextSibling.textContent = ` Volume: ${newVol}%`;
+      // Update the static scroll-hint element
+      const hint    = document.getElementById('lp-scroll-hint');
+      const hintTxt = document.getElementById('lp-scroll-hint-txt');
+      if (hint) {
+        if (hintTxt) hintTxt.textContent = `Volume: ${newVol}%`;
+        hint.style.display = 'flex';
+        clearTimeout(hint._hideTimer);
+        hint._hideTimer = setTimeout(() => { hint.style.display = 'none'; }, 1500);
       }
-      clearTimeout(hint._hideTimer);
-      hint._hideTimer = setTimeout(() => hint.remove(), 1500);
     }, { passive: false });
 
     // Keyboard shortcuts (only when learning view is active)

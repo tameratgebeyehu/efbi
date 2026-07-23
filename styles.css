@@ -5393,7 +5393,12 @@ a:focus-visible {
    Ethiopian-inspired premium dark glassmorphism
    ========================================================================== */
 
-/* Body learning mode — hides main navbar/footer, gives full viewport */
+/* Learning view fills the full viewport — overrides router-view animation */
+#learning-view.active {
+  animation: none;
+  min-height: 100vh;
+}
+
 body.learning-mode {
   overflow: hidden;
 }
