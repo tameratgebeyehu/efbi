@@ -6153,14 +6153,14 @@ a:focus-visible {
   transition: width 0.3s ease;
 }
 
-/* Onboarding Step Container */
+/* Onboarding Step Container — Strictly Separated Multi-Step Form */
 .onboarding-step {
-  display: none;
-  animation: stepFade 0.3s ease forwards;
+  display: none !important;
+  animation: stepFade 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .onboarding-step.active {
-  display: block;
+  display: block !important;
 }
 
 @keyframes stepFade {

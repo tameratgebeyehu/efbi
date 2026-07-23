@@ -2026,7 +2026,6 @@ function initRegistrationForm() {
     { id: 'reg-name', errorId: 'error-reg-name', validate: (val) => val.trim().length > 3, step: 1 },
     { id: 'reg-email', errorId: 'error-reg-email', validate: (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()), step: 1 },
     { id: 'reg-password', errorId: 'error-reg-password', validate: (val) => val.trim().length >= 6, step: 1 },
-    { id: 'reg-country', errorId: 'error-reg-country', validate: (val) => val.trim().length > 2, step: 2 },
     { id: 'reg-region', errorId: 'error-reg-region', validate: (val) => val !== '', step: 2 },
     { id: 'reg-school', errorId: 'error-reg-school', validate: (val) => val.trim().length > 2, step: 2 },
     { id: 'reg-grade', errorId: 'error-reg-grade', validate: (val) => val !== '', step: 2 },
@@ -2040,14 +2039,16 @@ function initRegistrationForm() {
   const showStep = (step) => {
     currentStep = step;
     
-    // Switch active containers
+    // Switch active step content panels
     const containers = form.querySelectorAll('.onboarding-step');
     containers.forEach(c => {
       const stepIdx = parseInt(c.getAttribute('data-step-content'));
       if (stepIdx === step) {
         c.classList.add('active');
+        c.style.display = 'block';
       } else {
         c.classList.remove('active');
+        c.style.display = 'none';
       }
     });
 
@@ -2081,6 +2082,9 @@ function initRegistrationForm() {
     }
   };
 
+  // Explicitly initialize Step 1 active state
+  showStep(1);
+
   const validateStep = (step) => {
     let stepValid = true;
     fields.forEach(field => {
@@ -2112,7 +2116,7 @@ function initRegistrationForm() {
       if (validateStep(activeStep)) {
         showStep(nextStep);
       } else {
-        showToast('Please correct the highlighted fields.', 'error');
+        showToast('Please fill out all required fields before proceeding.', 'error');
       }
     });
   });
@@ -2123,6 +2127,22 @@ function initRegistrationForm() {
     btn.addEventListener('click', () => {
       const prevStep = parseInt(btn.getAttribute('data-prev'));
       showStep(prevStep);
+    });
+  });
+
+  // Step indicator click navigation
+  const stepIndicators = cardPanel.querySelectorAll('.step-indicator');
+  stepIndicators.forEach(ind => {
+    ind.style.cursor = 'pointer';
+    ind.addEventListener('click', () => {
+      const targetStep = parseInt(ind.getAttribute('data-step'));
+      if (targetStep < currentStep) {
+        showStep(targetStep);
+      } else if (targetStep > currentStep) {
+        if (validateStep(currentStep)) {
+          showStep(targetStep);
+        }
+      }
     });
   });
 
