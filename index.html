@@ -7,7 +7,7 @@
   <meta name="description" content="Empowering Ethiopian youth with future-ready skills: AI, Software Development, Web/Mobile Apps, Entrepreneurship, and Leadership. Build the future with EFBI.">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=202">
+  <link rel="stylesheet" href="styles.css?v=205">
   
   <!-- Chart.js CDN for Admin Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1257,24 +1257,24 @@
               
               <!-- Progress Indicator -->
               <div class="onboarding-progress-container" style="margin-bottom: 28px;">
-                <div class="onboarding-steps" style="display: flex; justify-content: space-between; align-items: center;">
-                  <div class="step-indicator active" data-step="1" style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem;">
-                    <span class="step-num" style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">1</span>
+                <div class="onboarding-steps">
+                  <div class="step-indicator active" data-step="1">
+                    <span class="step-num">1</span>
                     <span>Credentials</span>
                   </div>
-                  <div class="step-line" style="height: 1px; flex-grow: 1; margin: 0 12px; background: var(--border-color);"></div>
-                  <div class="step-indicator" data-step="2" style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem;">
-                    <span class="step-num" style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">2</span>
+                  <div class="step-line"></div>
+                  <div class="step-indicator" data-step="2">
+                    <span class="step-num">2</span>
                     <span>Profile</span>
                   </div>
-                  <div class="step-line" style="height: 1px; flex-grow: 1; margin: 0 12px; background: var(--border-color);"></div>
-                  <div class="step-indicator" data-step="3" style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem;">
-                    <span class="step-num" style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">3</span>
+                  <div class="step-line"></div>
+                  <div class="step-indicator" data-step="3">
+                    <span class="step-num">3</span>
                     <span>Pathway</span>
                   </div>
                 </div>
-                <div class="onboarding-progress-bar-bg" style="height: 3px; background: var(--border-color); border-radius: 2px; overflow: hidden; margin-top: 14px;">
-                  <div class="onboarding-progress-bar" id="onboarding-progress-bar" style="height: 100%; width: 33%; background: linear-gradient(90deg, var(--primary), #10b981); transition: width 0.3s ease;"></div>
+                <div class="onboarding-progress-bar-bg">
+                  <div class="onboarding-progress-bar" id="onboarding-progress-bar"></div>
                 </div>
               </div>
               
@@ -1289,8 +1289,8 @@
                   
                   <div class="form-group" style="margin-bottom: 16px;">
                     <label for="reg-name" class="form-label" style="font-size: 0.85rem;">Full Name *</label>
-                    <div class="input-icon-wrap" style="position: relative;">
-                      <i data-lucide="user" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                    <div class="input-icon-wrap">
+                      <i data-lucide="user" class="input-field-icon"></i>
                       <input type="text" id="reg-name" class="form-control premium-input with-icon" placeholder="Full Name" required>
                     </div>
                     <div class="form-error" id="error-reg-name">Please enter your full name.</div>
@@ -1298,8 +1298,8 @@
                   
                   <div class="form-group" style="margin-bottom: 16px;">
                     <label for="reg-email" class="form-label" style="font-size: 0.85rem;">Email Address *</label>
-                    <div class="input-icon-wrap" style="position: relative;">
-                      <i data-lucide="mail" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                    <div class="input-icon-wrap">
+                      <i data-lucide="mail" class="input-field-icon"></i>
                       <input type="email" id="reg-email" class="form-control premium-input with-icon" placeholder="Email Address" required>
                     </div>
                     <div class="form-error" id="error-reg-email">Please enter a valid email address.</div>
@@ -1307,15 +1307,15 @@
 
                   <div class="form-group" style="margin-bottom: 24px;">
                     <label for="reg-password" class="form-label" style="font-size: 0.85rem;">Password *</label>
-                    <div class="input-icon-wrap" style="position: relative;">
-                      <i data-lucide="lock" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                    <div class="input-icon-wrap">
+                      <i data-lucide="lock" class="input-field-icon"></i>
                       <input type="password" id="reg-password" class="form-control premium-input with-icon" placeholder="Password (min 6 chars)" required autocomplete="new-password">
                     </div>
                     <div class="form-error" id="error-reg-password">Password must be at least 6 characters.</div>
                   </div>
                   
                   <div class="onboarding-nav-btns">
-                    <button type="button" class="btn btn-primary btn-next-step" data-next="2" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; font-weight: 600;">
+                    <button type="button" class="btn btn-primary btn-next-step" data-next="2" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; font-weight: 600;">
                       Continue <i data-lucide="arrow-right" style="width: 16px;"></i>
                     </button>
                   </div>
@@ -1328,8 +1328,8 @@
                   
                   <div class="form-group" style="margin-bottom: 16px;">
                     <label for="reg-region" class="form-label" style="font-size: 0.85rem;">Region / City *</label>
-                    <div class="input-icon-wrap" style="position: relative;">
-                      <i data-lucide="map-pin" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                    <div class="input-icon-wrap">
+                      <i data-lucide="map-pin" class="input-field-icon"></i>
                       <select id="reg-region" class="form-control premium-input with-icon" required>
                         <option value="" disabled selected>Select Region / City</option>
                         <option value="Addis Ababa">Addis Ababa</option>
@@ -1353,8 +1353,8 @@
                   
                   <div class="form-group" style="margin-bottom: 16px;">
                     <label for="reg-school" class="form-label" style="font-size: 0.85rem;">School / University *</label>
-                    <div class="input-icon-wrap" style="position: relative;">
-                      <i data-lucide="building" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                    <div class="input-icon-wrap">
+                      <i data-lucide="building" class="input-field-icon"></i>
                       <input type="text" id="reg-school" class="form-control premium-input with-icon" placeholder="School or University Name" required>
                     </div>
                     <div class="form-error" id="error-reg-school">Please enter your school or university.</div>
@@ -1362,8 +1362,8 @@
                   
                   <div class="form-group" style="margin-bottom: 24px;">
                     <label for="reg-grade" class="form-label" style="font-size: 0.85rem;">Grade / Level *</label>
-                    <div class="input-icon-wrap" style="position: relative;">
-                      <i data-lucide="graduation-cap" class="input-field-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; pointer-events: none;"></i>
+                    <div class="input-icon-wrap">
+                      <i data-lucide="graduation-cap" class="input-field-icon"></i>
                       <select id="reg-grade" class="form-control premium-input with-icon" required>
                         <option value="" disabled selected>Select Grade / Level</option>
                         <option value="Grade 9-10">High School (Grade 9-10)</option>
@@ -1378,10 +1378,10 @@
                   </div>
                   
                   <div class="onboarding-nav-btns dual-grid" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px;">
-                    <button type="button" class="btn btn-secondary btn-prev-step" data-prev="1" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 46px;">
+                    <button type="button" class="btn btn-secondary btn-prev-step" data-prev="1" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 48px;">
                       <i data-lucide="arrow-left" style="width: 16px;"></i> Back
                     </button>
-                    <button type="button" class="btn btn-primary btn-next-step" data-next="3" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 46px; font-weight: 600;">
+                    <button type="button" class="btn btn-primary btn-next-step" data-next="3" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 48px; font-weight: 600;">
                       Next Step <i data-lucide="arrow-right" style="width: 16px;"></i>
                     </button>
                   </div>
@@ -1405,14 +1405,14 @@
                   
                   <div class="form-group" style="margin-top: 16px; margin-bottom: 24px;">
                     <label for="reg-why" class="form-label" style="font-size: 0.85rem;">Goals <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Optional)</span></label>
-                    <textarea id="reg-why" class="form-control premium-input" placeholder="What do you want to learn or build?" rows="2" style="height: auto; resize: none; font-size: 0.85rem; padding: 10px 14px;"></textarea>
+                    <textarea id="reg-why" class="form-control premium-input" placeholder="What do you want to learn or build?" rows="2" style="height: auto; resize: none; font-size: 0.85rem; padding: 12px 16px;"></textarea>
                   </div>
                   
                   <div class="onboarding-nav-btns dual-grid" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px;">
-                    <button type="button" class="btn btn-secondary btn-prev-step" data-prev="2" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 46px;">
+                    <button type="button" class="btn btn-secondary btn-prev-step" data-prev="2" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 48px;">
                       <i data-lucide="arrow-left" style="width: 16px;"></i> Back
                     </button>
-                    <button type="submit" class="btn btn-primary" id="btn-submit-registration" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 46px; font-weight: 600;">
+                    <button type="submit" class="btn btn-primary" id="btn-submit-registration" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 48px; font-weight: 600;">
                       Submit Application <i data-lucide="check" style="width: 16px;"></i>
                     </button>
                   </div>
@@ -2479,8 +2479,8 @@
   </div>
 
   <!-- JavaScript Logics -->
-  <script src="api.js?v=202"></script>
-  <script src="app.js?v=202"></script>
+  <script src="api.js?v=205"></script>
+  <script src="app.js?v=205"></script>
 
   <!-- =========================================================
        QUIZ MODAL
