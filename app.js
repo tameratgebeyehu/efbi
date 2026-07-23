@@ -2056,12 +2056,38 @@ function initRegistrationForm() {
     const indicators = cardPanel.querySelectorAll('.step-indicator');
     indicators.forEach(ind => {
       const indStep = parseInt(ind.getAttribute('data-step'));
+      const circle = ind.querySelector('.step-num-circle');
+      const textSpan = ind.querySelector('span:not(.step-num-circle)');
       if (indStep < step) {
         ind.className = 'step-indicator completed';
+        if (circle) {
+          circle.style.background = '#10b981';
+          circle.style.border = 'none';
+          circle.style.color = '#fff';
+          circle.style.boxShadow = '0 4px 12px rgba(16,185,129,0.35)';
+          circle.innerHTML = '✓';
+        }
+        if (textSpan) textSpan.style.color = '#10b981';
       } else if (indStep === step) {
         ind.className = 'step-indicator active';
+        if (circle) {
+          circle.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
+          circle.style.border = 'none';
+          circle.style.color = '#fff';
+          circle.style.boxShadow = '0 4px 12px rgba(99,102,241,0.45)';
+          circle.innerHTML = indStep;
+        }
+        if (textSpan) textSpan.style.color = '#a5b4fc';
       } else {
         ind.className = 'step-indicator';
+        if (circle) {
+          circle.style.background = 'rgba(99,102,241,0.15)';
+          circle.style.border = '2px solid rgba(99,102,241,0.3)';
+          circle.style.color = 'rgba(255,255,255,0.45)';
+          circle.style.boxShadow = 'none';
+          circle.innerHTML = indStep;
+        }
+        if (textSpan) textSpan.style.color = 'rgba(255,255,255,0.4)';
       }
     });
 
@@ -2071,7 +2097,7 @@ function initRegistrationForm() {
       if (idx < step - 1) {
         line.style.background = '#10b981';
       } else {
-        line.style.background = 'var(--border-color)';
+        line.style.background = 'rgba(99,102,241,0.2)';
       }
     });
 
