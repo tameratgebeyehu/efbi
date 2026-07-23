@@ -6193,6 +6193,16 @@ body.learning-mode #learning-view {
   min-height: calc(100vh - 60px);
   align-items: start;
   background: #060912;
+  transition: grid-template-columns 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lp-body.sidebar-collapsed {
+  grid-template-columns: 1fr 0px;
+}
+.lp-body.sidebar-collapsed .lp-sidebar {
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  transform: translateX(20px);
 }
 .lp-content-area {
   padding: 0 0 80px;
@@ -6209,7 +6219,8 @@ body.learning-mode #learning-view {
 .lp-video-wrapper {
   position: relative;
   width: 100%;
-  padding-top: 56.25%;
+  aspect-ratio: 16 / 9;
+  padding-top: 0;
   background: #000;
   overflow: hidden;
 }
@@ -6250,29 +6261,13 @@ body.learning-mode #learning-view {
 }
 @keyframes lpSpin { to { transform: rotate(360deg); } }
 
-/* Branding overlay masks */
+/* Subtle top overlay for title/channel mask */
 .lp-video-top-overlay {
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 62px;
-  background: linear-gradient(to bottom, #000 20%, transparent);
+  height: 48px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, transparent 100%);
   z-index: 5;
-  pointer-events: auto;
-}
-.lp-video-topright-mask {
-  position: absolute;
-  top: 0; right: 0;
-  width: 200px; height: 62px;
-  background: #000;
-  z-index: 6;
-  pointer-events: auto;
-}
-.lp-video-bottomleft-mask {
-  position: absolute;
-  bottom: 0; left: 0;
-  width: 160px; height: 54px;
-  background: #000;
-  z-index: 6;
   pointer-events: auto;
 }
 .lp-video-shield {
@@ -6679,6 +6674,7 @@ body.learning-mode #learning-view {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 .lp-sidebar-inner {
   display: flex;

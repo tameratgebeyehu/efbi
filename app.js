@@ -1231,8 +1231,6 @@ function initLearningVideoPlayer(videoUrl, placeholder) {
         </div>
       </div>
       <div class="lp-video-top-overlay"></div>
-      <div class="lp-video-topright-mask"></div>
-      <div class="lp-video-bottomleft-mask"></div>
       <div id="lp-yt-player-mount"></div>`;
     mountEl = document.getElementById('lp-yt-player-mount');
   }
@@ -1355,27 +1353,6 @@ function initLearningVideoPlayer(videoUrl, placeholder) {
       updateVolIcon();
     }, 500);
 
-    // Scroll-on-video = volume control
-    wrapper.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const delta  = e.deltaY < 0 ? 5 : -5;
-      const newVol = Math.max(0, Math.min(100, (_ytPlayer.getVolume?.() || 100) + delta));
-      _ytPlayer.setVolume?.(newVol);
-      if (newVol === 0) _ytPlayer.mute?.(); else _ytPlayer.unMute?.();
-      if (volSlider) volSlider.value = newVol;
-      updateVolIcon();
-
-      // Update the static scroll-hint element
-      const hint    = document.getElementById('lp-scroll-hint');
-      const hintTxt = document.getElementById('lp-scroll-hint-txt');
-      if (hint) {
-        if (hintTxt) hintTxt.textContent = `Volume: ${newVol}%`;
-        hint.style.display = 'flex';
-        clearTimeout(hint._hideTimer);
-        hint._hideTimer = setTimeout(() => { hint.style.display = 'none'; }, 1500);
-      }
-    }, { passive: false });
-
     // Keyboard shortcuts (only when learning view is active)
     window._lpKeyHandler && document.removeEventListener('keydown', window._lpKeyHandler);
     window._lpKeyHandler = (e) => {
@@ -1462,6 +1439,17 @@ let _learningState = {
   lessons: [],
   student: null
 };
+
+/** Update the sidebar toggle button icon based on collapsed state */
+function updateSidebarToggleIcon(btn, isCollapsed) {
+  if (!btn) return;
+  const icon = btn.querySelector('i[data-lucide]');
+  if (icon) {
+    icon.setAttribute('data-lucide', isCollapsed ? 'panel-right-open' : 'panel-right-close');
+    lucide.createIcons({ nodes: [icon] });
+  }
+  btn.title = isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar';
+}
 
 async function renderLearningPage(courseId, moduleIdx) {
   const session = localStorage.getItem(STUDENT_SESSION_KEY);
@@ -1679,12 +1667,12 @@ async function renderLearningPage(courseId, moduleIdx) {
       btnComplete.onclick = async () => {
         const fresh = getLocalProgress(student.email);
         let updated;
-        if (fresh.includes(safeIdx)) {
+        const isMarking = !fresh.includes(safeIdx);
+        if (isMarking) {
+          updated = [...fresh, safeIdx];
+        } else {
           updated = fresh.filter(i => i !== safeIdx);
           showToast('Lesson unmarked.', 'error');
-        } else {
-          updated = [...fresh, safeIdx];
-          showToast('Lesson complete! 🎉', 'success');
         }
         saveLocalProgress(student.email, updated);
 
@@ -1694,11 +1682,34 @@ async function renderLearningPage(courseId, moduleIdx) {
 
         try {
           await EFBIDatabase.request('saveProgress', {
-            email: student.email, courseId, moduleIdx: safeIdx, completed: !fresh.includes(safeIdx)
+            email: student.email, courseId, moduleIdx: safeIdx, completed: isMarking
           });
         } catch { /* silent */ }
 
-        renderLearningPage(courseId, safeIdx);
+        if (isMarking) {
+          const isLast = safeIdx >= lessons.length - 1;
+          if (isLast) {
+            // ── Last lesson completed → request certificate approval ──
+            showToast('🎉 Course complete! Certificate pending admin approval.', 'success');
+            try {
+              await EFBIDatabase.request('issueCertificate', {
+                name: student.name,
+                course: course.title,
+                status: 'Pending Approval',
+                email: student.email
+              });
+            } catch { /* non-fatal: cert request may already exist */ }
+            renderLearningPage(courseId, safeIdx);
+          } else {
+            // ── Auto-advance to next lesson ──
+            showToast('Lesson complete! 🎉 Moving to next lesson…', 'success');
+            setTimeout(() => {
+              window.location.hash = `#learning/${courseId}/${safeIdx + 1}`;
+            }, 600);
+          }
+        } else {
+          renderLearningPage(courseId, safeIdx);
+        }
       };
     }
 
@@ -1737,7 +1748,29 @@ async function renderLearningPage(courseId, moduleIdx) {
       };
     });
 
+    // ── Desktop Sidebar Collapse Toggle ──────────────────────────────────── //
+    const sidebarToggleBtn = document.getElementById('btn-toggle-sidebar');
+    const lpBody = document.querySelector('.lp-body');
+    if (sidebarToggleBtn && lpBody) {
+      // Restore saved collapsed state
+      const savedCollapsed = localStorage.getItem('efbi_sidebar_collapsed') === 'true';
+      if (savedCollapsed) lpBody.classList.add('sidebar-collapsed');
+      updateSidebarToggleIcon(sidebarToggleBtn, lpBody.classList.contains('sidebar-collapsed'));
+
+      // Wire up the toggle (only attach once)
+      if (!sidebarToggleBtn._wired) {
+        sidebarToggleBtn._wired = true;
+        sidebarToggleBtn.addEventListener('click', () => {
+          lpBody.classList.toggle('sidebar-collapsed');
+          const collapsed = lpBody.classList.contains('sidebar-collapsed');
+          localStorage.setItem('efbi_sidebar_collapsed', collapsed);
+          updateSidebarToggleIcon(sidebarToggleBtn, collapsed);
+        });
+      }
+    }
+
     lucide.createIcons();
+
 
   } catch (err) {
     console.error('Error rendering learning page:', err);
@@ -3668,21 +3701,30 @@ async function renderAdminTables(studentSearch = '', certSearch = '', courseSear
 
       filteredCerts.forEach(cert => {
         const tr = document.createElement('tr');
+        const isPending = (cert.status || '').toLowerCase().includes('pending');
+        const statusBadge = isPending
+          ? `<span class="status-badge pending" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">⏳ Pending Approval</span>`
+          : `<span class="status-badge verified">${cert.status || 'Active'}</span>`;
+        const actionBtns = isPending
+          ? `<div style="display:flex;gap:8px;">
+               <button class="btn btn-accent" onclick="approveCertificate('${cert.id}')" style="padding:6px 12px;font-size:0.75rem;"><i data-lucide="check" style="width:12px;vertical-align:middle;"></i> Approve</button>
+               <button class="btn btn-secondary" onclick="revokeCert('${cert.id}')" style="padding:6px 12px;font-size:0.75rem;border-color:var(--danger);color:var(--danger);"><i data-lucide="x" style="width:12px;vertical-align:middle;"></i> Reject</button>
+             </div>`
+          : `<div style="display:flex;gap:8px;">
+               <button class="btn btn-secondary" onclick="openCertificateViewer('${cert.id}')" style="padding:6px 12px;font-size:0.75rem;"><i data-lucide="eye" style="width:12px;vertical-align:middle;"></i> View</button>
+               <button class="btn btn-secondary" onclick="revokeCert('${cert.id}')" style="padding:6px 12px;font-size:0.75rem;border-color:var(--danger);color:var(--danger);"><i data-lucide="x" style="width:12px;vertical-align:middle;"></i> Revoke</button>
+             </div>`;
         tr.innerHTML = `
-          <td style="font-weight: bold; color: var(--primary-hover); font-family: monospace;">${cert.id}</td>
-          <td style="font-weight: 700;">${cert.name}</td>
+          <td style="font-weight:bold;color:var(--primary-hover);font-family:monospace;">${cert.id}</td>
+          <td style="font-weight:700;">${cert.name}</td>
           <td>${cert.course}</td>
           <td>${cert.date}</td>
-          <td><span class="status-badge verified">${cert.status}</span></td>
-          <td>
-            <div style="display: flex; gap: 8px;">
-              <button class="btn btn-secondary" onclick="openCertificateViewer('${cert.id}')" style="padding: 6px 12px; font-size: 0.75rem;"><i data-lucide="eye" style="width: 12px; vertical-align: middle;"></i> View</button>
-              <button class="btn btn-secondary" onclick="revokeCert('${cert.id}')" style="padding: 6px 12px; font-size: 0.75rem; border-color: var(--danger); color: var(--danger);"><i data-lucide="x" style="width: 12px; vertical-align: middle;"></i> Revoke</button>
-            </div>
-          </td>
+          <td>${statusBadge}</td>
+          <td>${actionBtns}</td>
         `;
         certsTbody.appendChild(tr);
       });
+      lucide.createIcons();
     }
 
     // Render Courses
@@ -3771,6 +3813,17 @@ window.revokeCert = async (id) => {
     showToast(`Revoked certificate ID: ${id}`, 'error');
   } catch (err) {
     showToast(getFriendlyErrorMessage(err, 'admin-revoke-cert'), 'error');
+  }
+};
+
+window.approveCertificate = async (id) => {
+  try {
+    await EFBIDatabase.request('updateCertificateStatus', { id, status: 'Active' });
+    renderAdminTables();
+    updateNotifBadge();
+    showToast(`✅ Certificate ${id} approved and activated!`, 'success');
+  } catch (err) {
+    showToast(getFriendlyErrorMessage(err, 'admin-approve-cert'), 'error');
   }
 };
 

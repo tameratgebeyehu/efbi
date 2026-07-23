@@ -7,7 +7,7 @@
   <meta name="description" content="Empowering Ethiopian youth with future-ready skills: AI, Software Development, Web/Mobile Apps, Entrepreneurship, and Leadership. Build the future with EFBI.">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=235">
+  <link rel="stylesheet" href="styles.css?v=236">
   
   <!-- Chart.js CDN for Admin Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -904,6 +904,10 @@
               <i data-lucide="lock" style="width:12px;height:12px;"></i>
               <span>Certificate Locked</span>
             </div>
+            <!-- Sidebar collapse toggle -->
+            <button id="btn-toggle-sidebar" class="lp-back-btn" title="Collapse Sidebar" style="margin-left:4px;">
+              <i data-lucide="panel-right-close" style="width:16px;height:16px;"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -931,11 +935,7 @@
 
               <!-- Overlay: blocks top YouTube title / channel link area -->
               <div class="lp-video-top-overlay" id="lp-video-top-overlay"></div>
-              <!-- Overlay: blocks YouTube watermark logo (top-right) -->
-              <div class="lp-video-topright-mask"></div>
-              <!-- Overlay: blocks YouTube branding bottom-left -->
-              <div class="lp-video-bottomleft-mask"></div>
-              <!-- Overlay: right-click shield on entire video -->
+              <!-- Right-click shield on entire video -->
               <div class="lp-video-shield" id="lp-video-shield" oncontextmenu="return false;"></div>
 
             </div>
@@ -985,12 +985,7 @@
               </div>
             </div>
 
-            <!-- Scroll-volume hint -->
-            <div class="lp-scroll-hint" id="lp-scroll-hint" style="display:none;">
-              <i data-lucide="volume-2" style="width:16px;height:16px;"></i>
-              <span id="lp-scroll-hint-txt">Volume: 100%</span>
-            </div>
-          </div>
+          </div><!-- /lp-video-section -->
 
           <!-- ── ZONE 2: LESSON HEADER + MARK COMPLETE ── -->
           <div class="lp-lesson-header">
@@ -2646,8 +2641,8 @@
   </div>
 
   <!-- JavaScript Logics -->
-  <script src="api.js?v=235"></script>
-  <script src="app.js?v=235"></script>
+  <script src="api.js?v=236"></script>
+  <script src="app.js?v=236"></script>
 
   <!-- =========================================================
        QUIZ MODAL

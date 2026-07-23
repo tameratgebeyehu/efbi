@@ -80,6 +80,10 @@ function doPost(e) {
         responseData = deleteCertificateRow(ss, requestData.id);
         break;
 
+      case 'updateCertificateStatus':
+        responseData = updateCertificateStatus(ss, requestData.id, requestData.status);
+        break;
+
       case 'sendContactMessage':
         responseData = addContactRow(ss, requestData);
         break;
@@ -786,9 +790,23 @@ function addCertificateRow(ss, data) {
   const totalRows = sheet.getLastRow();
   const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   const certId = data.id || ('EFBI-' + new Date().getFullYear() + '-' + String(totalRows).padStart(3, '0'));
+  const status = data.status || 'Active';
 
-  sheet.appendRow([certId, data.name, data.course, today, 'Active']);
-  return { id: certId, name: data.name, course: data.course, date: today, status: 'Active' };
+  sheet.appendRow([certId, data.name, data.course, today, status]);
+  return { id: certId, name: data.name, course: data.course, date: today, status: status };
+}
+
+function updateCertificateStatus(ss, id, newStatus) {
+  const sheet = ss.getSheetByName('Certificates');
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0].toString().trim().toUpperCase() === id.toString().trim().toUpperCase()) {
+      sheet.getRange(i + 1, 5).setValue(newStatus); // Column E = status
+      return { id: id, status: newStatus, updated: true };
+    }
+  }
+  throw new Error('Certificate ID ' + id + ' not found.');
 }
 
 function deleteCertificateRow(ss, id) {
