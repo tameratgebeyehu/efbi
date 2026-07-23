@@ -5986,6 +5986,7 @@ html[data-theme="light"] .mc-lesson-list-header { color: #64748b; border-color: 
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
+}
 .cert-action-btn.primary {
   background: var(--primary);
   color: #fff;
