@@ -5557,7 +5557,7 @@ const QUIZ_BANK = {
   ]
 };
 
-let quizState = { questions:[], currentQ:0, selectedAnswer:null, answers:[], moduleIdx:0, moduleName:'', studentEmail:'', courseTitle:'' };
+let quizState = { questions:[], currentQ:0, selectedAnswer:null, answers:[], moduleIdx:0, moduleName:'', studentEmail:'', courseTitle:'', courseId:'', timerSecs:0, answeredCorrectly:[] };
 
 function initQuizSystem() {
   const modal    = document.getElementById('quiz-modal');
@@ -5565,14 +5565,17 @@ function initQuizSystem() {
   const btnSkip  = document.getElementById('btn-quiz-skip');
   const btnRetry = document.getElementById('btn-quiz-retry');
   const btnClose = document.getElementById('btn-quiz-close');
+  const btnCloseX= document.getElementById('btn-quiz-close-x');
 
   if (!modal) return;
 
-  btnNext.addEventListener('click',  () => advanceQuiz());
-  btnSkip.addEventListener('click',  () => advanceQuiz(true));
-  btnRetry.addEventListener('click', () => startQuiz(quizState.moduleIdx, quizState.moduleName, quizState.studentEmail, quizState.courseTitle));
-  btnClose.addEventListener('click', () => modal.classList.remove('open'));
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+  btnNext?.addEventListener('click',  () => advanceQuiz());
+  btnSkip?.addEventListener('click',  () => advanceQuiz(true));
+  btnRetry?.addEventListener('click', () => startQuiz(quizState.moduleIdx, quizState.moduleName, quizState.studentEmail, quizState.courseTitle, quizState.questions));
+  btnClose?.addEventListener('click', () => closeQuizModal());
+  btnCloseX?.addEventListener('click',() => closeQuizModal());
+  // Click backdrop to close
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeQuizModal(); });
 }
 
 window.openQuiz = async (moduleIdx, moduleName, studentEmail, courseTitle, courseId = '') => {
@@ -5585,13 +5588,15 @@ window.openQuiz = async (moduleIdx, moduleName, studentEmail, courseTitle, cours
   } catch (err) {
     console.warn('Fallback to local QUIZ_BANK:', err);
   }
-  
+
   if (!questions || questions.length === 0) {
     const key = courseTitle.toLowerCase().trim();
     const bank = QUIZ_BANK[key] || QUIZ_BANK['default'];
     questions = [...bank].sort(() => Math.random() - 0.5).slice(0, 5);
   }
-  
+
+  // Store courseId in state for saving score
+  quizState.courseId = courseId;
   startQuiz(moduleIdx, moduleName, studentEmail, courseTitle, questions);
 };
 
@@ -5610,53 +5615,216 @@ function startQuiz(moduleIdx, moduleName, studentEmail, courseTitle = '', questi
     }
   }
 
-  quizState = { questions: activeQuestions, currentQ:0, selectedAnswer:null, answers:[], moduleIdx, moduleName, studentEmail, courseTitle };
+  quizState = {
+    questions: activeQuestions,
+    currentQ: 0,
+    selectedAnswer: null,
+    answers: [],
+    moduleIdx, moduleName, studentEmail, courseTitle,
+    timerSecs: 0,
+    answeredCorrectly: []
+  };
 
+  // Header
   document.getElementById('quiz-module-label').textContent = `Module ${moduleIdx + 1}`;
   document.getElementById('quiz-modal-title-text').textContent = moduleName;
   document.getElementById('quiz-question-view').style.display = '';
   document.getElementById('quiz-result-view').style.display = 'none';
+  document.getElementById('quiz-feedback').className = 'quiz-feedback';
+
+  // Build step dots
+  const dotsEl = document.getElementById('quiz-step-dots');
+  if (dotsEl) {
+    dotsEl.innerHTML = activeQuestions.map((_, i) =>
+      `<div class="quiz-step-dot ${i === 0 ? 'active' : ''}" id="quiz-dot-${i}"></div>`
+    ).join('');
+  }
+
+  // Start timer
+  clearInterval(window._quizTimerInt);
+  quizState.timerSecs = 0;
+  window._quizTimerInt = setInterval(() => {
+    quizState.timerSecs++;
+    const m = Math.floor(quizState.timerSecs / 60);
+    const s = quizState.timerSecs % 60;
+    const display = document.getElementById('quiz-timer-display');
+    const timerEl = document.getElementById('quiz-timer');
+    if (display) display.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (timerEl) {
+      const total = activeQuestions.length * 30; // 30s per question budget
+      const ratio = quizState.timerSecs / total;
+      timerEl.className = `quiz-timer${ratio > 0.85 ? ' danger' : ratio > 0.65 ? ' warning' : ''}`;
+    }
+  }, 1000);
 
   renderQuizQuestion();
   modal.classList.add('open');
+
+  // Wire close button
+  const closeX = document.getElementById('btn-quiz-close-x');
+  if (closeX) closeX.onclick = closeQuizModal;
+
+  // Wire keyboard shortcuts
+  window._quizKeyHandler && document.removeEventListener('keydown', window._quizKeyHandler);
+  window._quizKeyHandler = (e) => {
+    const modal = document.getElementById('quiz-modal');
+    if (!modal?.classList.contains('open')) return;
+
+    const qView = document.getElementById('quiz-question-view');
+    const rView = document.getElementById('quiz-result-view');
+
+    if (e.key === 'Escape') { closeQuizModal(); return; }
+
+    if (qView && qView.style.display !== 'none') {
+      // 1–4: pick option
+      if (['1','2','3','4'].includes(e.key)) {
+        const idx = parseInt(e.key) - 1;
+        const opts = document.querySelectorAll('.quiz-option:not([data-revealed])');
+        if (opts[idx]) { e.preventDefault(); window.selectQuizOption(idx); }
+      }
+      // Enter / Space: confirm
+      if ((e.key === 'Enter' || e.key === ' ') && !document.getElementById('btn-quiz-next')?.disabled) {
+        e.preventDefault();
+        advanceQuiz();
+      }
+    }
+
+    if (rView && rView.style.display !== 'none') {
+      if (e.key === 'Enter') document.getElementById('btn-quiz-close')?.click();
+      if (e.key === 'r' || e.key === 'R') document.getElementById('btn-quiz-retry')?.click();
+    }
+  };
+  document.addEventListener('keydown', window._quizKeyHandler);
+
   lucide.createIcons();
+}
+
+function closeQuizModal() {
+  const modal = document.getElementById('quiz-modal');
+  if (modal) modal.classList.remove('open');
+  clearInterval(window._quizTimerInt);
+  window._quizKeyHandler && document.removeEventListener('keydown', window._quizKeyHandler);
 }
 
 function renderQuizQuestion() {
   const { questions, currentQ } = quizState;
   const q = questions[currentQ];
+  const total = questions.length;
 
+  // Counter + progress
   document.getElementById('quiz-q-current').textContent = currentQ + 1;
-  document.getElementById('quiz-q-total').textContent   = questions.length;
-  document.getElementById('quiz-progress-fill').style.width = `${((currentQ + 1) / questions.length) * 100}%`;
-  document.getElementById('quiz-question-text').textContent = q.q;
+  document.getElementById('quiz-q-total').textContent   = total;
+  document.getElementById('quiz-progress-fill').style.width = `${((currentQ + 1) / total) * 100}%`;
 
+  // Step dots
+  for (let i = 0; i < total; i++) {
+    const dot = document.getElementById(`quiz-dot-${i}`);
+    if (!dot) continue;
+    dot.className = 'quiz-step-dot' +
+      (i < currentQ
+        ? (quizState.answeredCorrectly[i] === true ? ' done' : ' wrong-dot')
+        : i === currentQ ? ' active' : '');
+  }
+
+  // Question text
+  document.getElementById('quiz-question-text').textContent = q.q || q.question || '';
+
+  // Hide feedback banner
+  const fb = document.getElementById('quiz-feedback');
+  if (fb) fb.className = 'quiz-feedback';
+
+  // Options
   const letters = ['A','B','C','D'];
-  document.getElementById('quiz-options-list').innerHTML = q.opts.map((opt, i) => `
-    <button class="quiz-option" onclick="selectQuizOption(${i})">
+  const optsList = document.getElementById('quiz-options-list');
+  optsList.innerHTML = q.opts.map((opt, i) => `
+    <button class="quiz-option" onclick="window.selectQuizOption(${i})" id="quiz-opt-${i}">
       <span class="quiz-option-letter">${letters[i]}</span>${opt}
     </button>`).join('');
 
   quizState.selectedAnswer = null;
   const btnNext = document.getElementById('btn-quiz-next');
   btnNext.disabled = true;
-  btnNext.innerHTML = currentQ < questions.length - 1
-    ? 'Next <i data-lucide="arrow-right" style="width:14px;"></i>'
-    : 'Finish <i data-lucide="check" style="width:14px;"></i>';
+  btnNext.innerHTML = currentQ < total - 1
+    ? 'Next <i data-lucide="arrow-right" style="width:14px;height:14px;vertical-align:middle;"></i>'
+    : 'Finish <i data-lucide="check" style="width:14px;height:14px;vertical-align:middle;"></i>';
+
   lucide.createIcons();
 }
 
 window.selectQuizOption = (idx) => {
+  // Don't re-select if already revealed
+  if (document.querySelector('.quiz-option[data-revealed]')) return;
+
   quizState.selectedAnswer = idx;
-  document.querySelectorAll('.quiz-option').forEach((btn, i) => btn.classList.toggle('selected', i === idx));
+  document.querySelectorAll('.quiz-option').forEach((btn, i) =>
+    btn.classList.toggle('selected', i === idx)
+  );
   document.getElementById('btn-quiz-next').disabled = false;
 };
 
 function advanceQuiz(skip = false) {
   const { currentQ, selectedAnswer, questions } = quizState;
-  quizState.answers.push(skip ? null : selectedAnswer);
+  const q = questions[currentQ];
+  const correctIdx = q.a;
+
+  if (skip) {
+    quizState.answers.push(null);
+    quizState.answeredCorrectly[currentQ] = false;
+    _doAdvanceQuiz();
+    return;
+  }
+
+  // Reveal correct / wrong with animation BEFORE advancing
+  const opts = document.querySelectorAll('.quiz-option');
+  opts.forEach(btn => {
+    btn.setAttribute('data-revealed', '1');
+    btn.disabled = true;
+  });
+
+  const isCorrect = selectedAnswer === correctIdx;
+  quizState.answers.push(selectedAnswer);
+  quizState.answeredCorrectly[currentQ] = isCorrect;
+
+  // Highlight correct answer always
+  const correctBtn = document.getElementById(`quiz-opt-${correctIdx}`);
+  if (correctBtn) correctBtn.classList.add('correct');
+
+  // Highlight wrong if chosen
+  if (!isCorrect && selectedAnswer !== null) {
+    const wrongBtn = document.getElementById(`quiz-opt-${selectedAnswer}`);
+    if (wrongBtn) wrongBtn.classList.add('wrong');
+  }
+
+  // Feedback banner
+  const fb     = document.getElementById('quiz-feedback');
+  const fbIcon = document.getElementById('quiz-feedback-icon');
+  const fbText = document.getElementById('quiz-feedback-text');
+  if (fb && fbIcon && fbText) {
+    if (isCorrect) {
+      fb.className = 'quiz-feedback correct-fb';
+      fbIcon.setAttribute('data-lucide', 'check-circle');
+      fbText.textContent = ['Correct! 🎉', 'Excellent!', 'Spot on! ✓', 'Well done!'][Math.floor(Math.random()*4)];
+    } else {
+      fb.className = 'quiz-feedback wrong-fb';
+      fbIcon.setAttribute('data-lucide', 'x-circle');
+      fbText.textContent = selectedAnswer === null
+        ? 'Skipped — the correct answer is highlighted above.'
+        : `Not quite — the correct answer is ${['A','B','C','D'][correctIdx]}.`;
+    }
+    lucide.createIcons({ nodes: [fbIcon] });
+  }
+
+  // Auto-advance after 1.1s so user can see the feedback
+  setTimeout(_doAdvanceQuiz, 1100);
+}
+
+function _doAdvanceQuiz() {
+  const { currentQ, questions } = quizState;
   if (currentQ < questions.length - 1) {
     quizState.currentQ++;
+    // Re-animate question view
+    const qv = document.getElementById('quiz-question-view');
+    if (qv) { qv.style.animation = 'none'; void qv.offsetWidth; qv.style.animation = ''; }
     renderQuizQuestion();
   } else {
     showQuizResult();
@@ -5664,46 +5832,128 @@ function advanceQuiz(skip = false) {
 }
 
 async function showQuizResult() {
-  const { questions, answers, moduleIdx, studentEmail } = quizState;
-  let score = 0;
-  answers.forEach((ans, i) => { if (ans === questions[i].a) score++; });
-  const percent = Math.round((score / questions.length) * 100);
+  clearInterval(window._quizTimerInt);
 
+  const { questions, answers, moduleIdx, studentEmail, answeredCorrectly } = quizState;
+
+  let correct = 0, wrong = 0, skipped = 0;
+  answers.forEach((ans, i) => {
+    if (ans === null) skipped++;
+    else if (ans === questions[i].a) correct++;
+    else wrong++;
+  });
+  const percent = Math.round((correct / questions.length) * 100);
+  const passed  = percent >= 70;
+
+  // Switch views
   document.getElementById('quiz-question-view').style.display = 'none';
   document.getElementById('quiz-result-view').style.display = '';
 
-  const circle = document.getElementById('quiz-score-circle');
-  circle.textContent = `${percent}%`;
-  circle.className   = 'quiz-score-circle ' + (percent >= 70 ? 'pass' : percent >= 40 ? 'neutral' : 'fail');
+  // Animate SVG score ring (circumference = 2π × 58 ≈ 364.4)
+  const ringFill = document.getElementById('quiz-score-ring-fill');
+  const scoreEl  = document.getElementById('quiz-score-pct');
+  const labelEl  = document.getElementById('quiz-score-label');
+  if (ringFill) {
+    const circ   = 364.4;
+    const offset = circ - (circ * percent / 100);
+    ringFill.style.stroke = passed ? '#10b981' : percent >= 40 ? '#6366f1' : '#ef4444';
+    // Animate counter 0 → percent
+    let cur = 0;
+    const step = () => {
+      cur = Math.min(cur + 2, percent);
+      if (scoreEl) scoreEl.textContent = `${cur}%`;
+      ringFill.style.strokeDashoffset = circ - (circ * cur / 100);
+      if (cur < percent) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  if (labelEl) labelEl.textContent = passed ? 'Passed!' : 'Score';
 
-  const title = document.getElementById('quiz-result-title');
-  const desc  = document.getElementById('quiz-result-desc');
-
-  if (percent >= 70) {
-    title.textContent = 'Excellent Work! 🎉';
-    desc.textContent  = `You scored ${score}/${questions.length}. Outstanding performance!`;
-  } else if (percent >= 40) {
-    title.textContent = 'Good Effort! 👍';
-    desc.textContent  = `You scored ${score}/${questions.length}. Review the material and try again.`;
-  } else {
-    title.textContent = 'Keep Practicing 💪';
-    desc.textContent  = `You scored ${score}/${questions.length}. Don't give up — revisit this module!`;
+  // Badge
+  const badge     = document.getElementById('quiz-result-badge');
+  const badgeIcon = document.getElementById('quiz-result-badge-icon');
+  const badgeTxt  = document.getElementById('quiz-result-badge-text');
+  if (badge && badgeIcon && badgeTxt) {
+    badge.className = `quiz-result-badge ${passed ? 'pass' : 'fail'}`;
+    badgeIcon.setAttribute('data-lucide', passed ? 'award' : 'refresh-cw');
+    badgeTxt.textContent = passed ? 'Passed ✓' : 'Try Again';
+    lucide.createIcons({ nodes: [badgeIcon] });
   }
 
+  // Result text
+  const title = document.getElementById('quiz-result-title');
+  const desc  = document.getElementById('quiz-result-desc');
+  if (percent >= 70) {
+    title.textContent = 'Outstanding! 🎉';
+    desc.textContent  = `You answered ${correct} of ${questions.length} questions correctly in ${Math.floor(quizState.timerSecs/60)}m ${quizState.timerSecs%60}s. Keep up the great work!`;
+  } else if (percent >= 40) {
+    title.textContent = 'Good Effort! 💪';
+    desc.textContent  = `You scored ${correct}/${questions.length}. Review the lesson notes and try again — you are almost there!`;
+  } else {
+    title.textContent = 'Keep Going! 📚';
+    desc.textContent  = `You scored ${correct}/${questions.length}. Revisit this module and give it another shot — practice makes perfect!`;
+  }
+
+  // Stat pills
+  const sc = document.getElementById('quiz-stat-correct');
+  const sw = document.getElementById('quiz-stat-wrong');
+  const ss = document.getElementById('quiz-stat-skipped');
+  if (sc) sc.textContent = correct;
+  if (sw) sw.textContent = wrong;
+  if (ss) ss.textContent = skipped;
+
+  // Confetti on pass
+  if (passed) spawnQuizConfetti();
+
+  // Save score
   try {
     if (studentEmail) {
       await EFBIDatabase.request('saveQuizScore', {
-        email: studentEmail, moduleIdx, score, total: questions.length, percent
+        email: studentEmail, moduleIdx, courseId: quizState.courseId || '',
+        score: correct, total: questions.length, percent
       });
     }
   } catch { /* silent */ }
+
+  // Notify learning page callback if present
+  if (typeof window._learningPageQuizCallback === 'function') {
+    window._learningPageQuizCallback({ score: correct, total: questions.length, percent });
+    window._learningPageQuizCallback = null;
+  }
 
   const session = localStorage.getItem('efbi_student_session');
   if (session) {
     setTimeout(() => renderStudentSyllabus(JSON.parse(session)), 600);
   }
+
   lucide.createIcons();
 }
+
+/** Launch confetti particles for a pass result */
+function spawnQuizConfetti() {
+  const container = document.getElementById('quiz-confetti-container');
+  if (!container) return;
+  container.innerHTML = '';
+  const colors = ['#6366f1','#34d399','#fbbf24','#f472b6','#38bdf8','#a78bfa'];
+  for (let i = 0; i < 48; i++) {
+    const el = document.createElement('div');
+    el.className = 'quiz-confetti-particle';
+    el.style.cssText = `
+      left: ${Math.random()*100}%;
+      top: ${-10 - Math.random()*40}px;
+      background: ${colors[Math.floor(Math.random()*colors.length)]};
+      width: ${6 + Math.random()*8}px;
+      height: ${6 + Math.random()*8}px;
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      animation-duration: ${1.2 + Math.random()*1.4}s;
+      animation-delay: ${Math.random()*0.6}s;
+    `;
+    container.appendChild(el);
+  }
+  setTimeout(() => { if (container) container.innerHTML = ''; }, 3000);
+}
+
+
 
 /* ==========================================================================
    ADMIN TAB SWITCH HOOKS — render panels on demand
