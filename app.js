@@ -365,12 +365,11 @@ function initRouter() {
   const handleRouting = () => {
     const hash = window.location.hash || '#home';
 
-    // Handle dynamic learning route: #learning/<courseId>/<moduleIdx>/<step>
-    const learningMatch = hash.match(/^#learning\/([^/]+)\/(\d+)(?:\/([^/]+))?$/);
+    // Handle dynamic learning route: #learning/<courseId>/<moduleIdx>
+    const learningMatch = hash.match(/^#learning\/([^/]+)\/(\d+)$/);
     if (learningMatch) {
       const courseId   = learningMatch[1];
       const moduleIdx  = parseInt(learningMatch[2]) || 0;
-      const step       = learningMatch[3] || 'video';
 
       const views = document.querySelectorAll('.router-view');
       views.forEach(view => {
@@ -381,25 +380,14 @@ function initRouter() {
         }
       });
 
-      // Distraction-Free Full-Screen Learning Mode: Hide global header and footer
-      document.body.classList.add('learning-mode-active');
-      const header = document.querySelector('header.navbar');
-      const footer = document.querySelector('footer.footer');
-      if (header) header.style.display = 'none';
-      if (footer) footer.style.display = 'none';
+      // Immersive mode: hide navbar/footer via CSS class
+      document.body.classList.add('learning-mode');
 
       syncNavigationLinks('my-courses');
       window.scrollTo({ top: 0, behavior: 'instant' });
-      renderLearningPage(courseId, moduleIdx, step);
+      renderLearningPage(courseId, moduleIdx);
       return;
     }
-
-    // Leaving learning portal -> Restore global navbar & footer
-    document.body.classList.remove('learning-mode-active');
-    const globalHeader = document.querySelector('header.navbar');
-    const globalFooter = document.querySelector('footer.footer');
-    if (globalHeader) globalHeader.style.display = '';
-    if (globalFooter) globalFooter.style.display = '';
 
     // Handle dynamic verify route: #verify/<certId>
     const verifyMatch = hash.match(/^#verify\/([^/]+)$/);
@@ -462,6 +450,9 @@ function initRouter() {
     // Scroll window to top
     window.scrollTo({ top: 0, behavior: 'instant' });
     
+    // Remove learning immersive mode when leaving learning view
+    document.body.classList.remove('learning-mode');
+
     // Hide/Show public header & footer for Admin back-office isolation
     const header = document.querySelector('header.navbar');
     const footer = document.querySelector('footer.footer');
@@ -1024,252 +1015,366 @@ async function getLessonsForCourse(course) {
   return placeholders;
 }
 
+
 /* ==========================================================================
-   YOUTUBE IFRAME PLAYER API INTEGRATION & CUSTOM CONTROLS MANAGER
+   YOUTUBE IFRAME API — CUSTOM PLAYER CONTROLLER
    ========================================================================== */
-let _ytPlayer = null;
-let _ytApiLoadingPromise = null;
+
+// Global YT player instance (one player at a time)
+let _ytPlayer        = null;
+let _ytReady         = false;
 let _ytProgressTimer = null;
 
-function loadYouTubeIFrameAPI() {
-  if (window.YT && window.YT.Player) {
-    return Promise.resolve();
-  }
-  if (_ytApiLoadingPromise) {
-    return _ytApiLoadingPromise;
-  }
-  _ytApiLoadingPromise = new Promise((resolve) => {
-    if (!document.getElementById('yt-api-script')) {
-      const tag = document.createElement('script');
-      tag.id = 'yt-api-script';
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    }
-    const checkInterval = setInterval(() => {
-      if (window.YT && window.YT.Player) {
-        clearInterval(checkInterval);
-        resolve();
-      }
-    }, 100);
-  });
-  return _ytApiLoadingPromise;
+/** Called by YouTube's IFrame API once it has fully loaded */
+window.onYouTubeIframeAPIReady = function () {
+  _ytReady = true;
+};
+
+/**
+ * Extract bare YouTube video ID from any YT URL format.
+ */
+function getYouTubeVideoId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:youtube\.com\/(?:watch\?.*v=|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
 }
 
-function formatTime(seconds) {
-  if (isNaN(seconds) || seconds < 0) return '00:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+/**
+ * Build all custom player controls HTML and inject into the wrapper.
+ * Called once per lesson load.
+ */
+function buildPlayerControlsHTML() {
+  return `
+    <!-- Seek bar row -->
+    <div class="lp-seek-container">
+      <span class="lp-time-label" id="lp-time-current">0:00</span>
+      <div class="lp-seek-bar" id="lp-seek-bar" title="Click to seek">
+        <div class="lp-seek-fill" id="lp-seek-fill"></div>
+        <div class="lp-seek-thumb" id="lp-seek-thumb"></div>
+      </div>
+      <span class="lp-time-label" id="lp-time-total">0:00</span>
+    </div>
+    <!-- Button row -->
+    <div class="lp-controls-row">
+      <div class="lp-controls-left">
+        <button class="lp-ctrl-btn" id="lp-btn-play" title="Play / Pause (Space)">
+          <i data-lucide="play" id="lp-play-icon" style="width:20px;height:20px;"></i>
+        </button>
+        <button class="lp-ctrl-btn" id="lp-btn-skip-back" title="Back 10s (J)">
+          <i data-lucide="rotate-ccw" style="width:18px;height:18px;"></i>
+          <span class="lp-skip-label">10</span>
+        </button>
+        <button class="lp-ctrl-btn" id="lp-btn-skip-fwd" title="Forward 10s (L)">
+          <i data-lucide="rotate-cw" style="width:18px;height:18px;"></i>
+          <span class="lp-skip-label">10</span>
+        </button>
+        <div class="lp-volume-group">
+          <button class="lp-ctrl-btn" id="lp-btn-mute" title="Mute (M)">
+            <i data-lucide="volume-2" id="lp-vol-icon" style="width:18px;height:18px;"></i>
+          </button>
+          <input type="range" class="lp-vol-slider" id="lp-vol-slider" min="0" max="100" value="100" title="Volume">
+        </div>
+      </div>
+      <div class="lp-controls-right">
+        <button class="lp-ctrl-btn" id="lp-btn-fullscreen" title="Fullscreen (F)">
+          <i data-lucide="maximize-2" id="lp-fs-icon" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+    </div>
+  `;
 }
 
-async function initEFBIVideoPlayer(url) {
-  const videoId = getYouTubeId(url);
-  const placeholder = document.getElementById('lp-video-placeholder');
-  const playBtn = document.getElementById('efbi-btn-play');
-  const rewindBtn = document.getElementById('efbi-btn-rewind');
-  const forwardBtn = document.getElementById('efbi-btn-forward');
-  const seekSlider = document.getElementById('efbi-seek-slider');
-  const timeDisplay = document.getElementById('efbi-time-display');
-  const volumeBtn = document.getElementById('efbi-btn-volume');
-  const volumeSlider = document.getElementById('efbi-volume-slider');
-  const speedSelect = document.getElementById('efbi-speed-select');
-  const brightnessBtn = document.getElementById('efbi-btn-brightness');
-  const brightnessMask = document.getElementById('efbi-brightness-mask');
-  const fullscreenBtn = document.getElementById('efbi-btn-fullscreen');
-  const clickMask = document.getElementById('efbi-click-mask');
-  const ripple = document.getElementById('efbi-play-ripple');
-  const container = document.getElementById('efbi-player-container');
+/** Format seconds → M:SS */
+function lpFmtTime(sec) {
+  if (!isFinite(sec) || sec < 0) return '0:00';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
 
-  if (_ytProgressTimer) clearInterval(_ytProgressTimer);
+/**
+ * Main player initializer. Called once per lesson.
+ * @param {string} videoUrl  – raw YouTube URL from DB
+ * @param {HTMLElement} placeholder – loading spinner element
+ */
+function initLearningVideoPlayer(videoUrl, placeholder) {
+  const wrapper = document.getElementById('lp-video-wrapper');
+  if (!wrapper) return;
+
+  // Stop existing progress timer
+  if (_ytProgressTimer) { clearInterval(_ytProgressTimer); _ytProgressTimer = null; }
+
+  // Destroy old player if any
   if (_ytPlayer && typeof _ytPlayer.destroy === 'function') {
-    try { _ytPlayer.destroy(); } catch {}
+    try { _ytPlayer.destroy(); } catch { /* ignore */ }
+    _ytPlayer = null;
   }
 
+  const videoId = getYouTubeVideoId(videoUrl);
+
+  // Inject custom controls into the wrapper (below the iframe/mount area)
+  let ctrlsEl = document.getElementById('lp-player-controls');
+  if (!ctrlsEl) {
+    ctrlsEl = document.createElement('div');
+    ctrlsEl.className = 'lp-player-controls';
+    ctrlsEl.id = 'lp-player-controls';
+    wrapper.insertAdjacentElement('afterend', ctrlsEl);
+  }
+  ctrlsEl.innerHTML = buildPlayerControlsHTML();
+
+  // Update speed selector in topbar if present
+  const speedSel = document.getElementById('lp-speed-select');
+  if (speedSel) { speedSel.value = '1'; }
+
+  // No video URL — show placeholder message
   if (!videoId) {
-    if (placeholder) placeholder.style.display = 'none';
-    if (container) {
-      container.innerHTML = `
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-             background:var(--bg-secondary);color:var(--text-muted);gap:12px;font-size:0.95rem;">
-          <i data-lucide="video-off" style="width:44px;height:44px;color:var(--primary);"></i>
-          <span>Video lecture coming soon! Review the lesson notes and resources below.</span>
-        </div>`;
-      lucide.createIcons();
-    }
+    wrapper.innerHTML = `
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+                  justify-content:center;background:#060912;color:rgba(255,255,255,0.3);gap:12px;">
+        <i data-lucide="video-off" style="width:44px;height:44px;color:var(--primary,#6366f1);"></i>
+        <span style="font-size:0.9rem;font-weight:600;">Video lesson coming soon — check back shortly!</span>
+      </div>`;
+    ctrlsEl.style.display = 'none';
+    lucide.createIcons();
     return;
   }
 
-  await loadYouTubeIFrameAPI();
+  ctrlsEl.style.display = '';
 
-  _ytPlayer = new YT.Player('learning-video-player', {
-    videoId: videoId,
-    playerVars: {
-      autoplay: 0,
-      controls: 0,
-      modestbranding: 1,
-      rel: 0,
-      showinfo: 0,
-      iv_load_policy: 3,
-      enablejsapi: 1,
-      fs: 0,
-      disablekb: 1
-    },
-    events: {
-      onReady: (event) => {
-        if (placeholder) placeholder.style.display = 'none';
-        
-        // Progress updater
-        _ytProgressTimer = setInterval(() => {
-          if (_ytPlayer && typeof _ytPlayer.getCurrentTime === 'function') {
-            const current = _ytPlayer.getCurrentTime() || 0;
-            const duration = _ytPlayer.getDuration() || 0;
-            if (timeDisplay) timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
-            if (seekSlider && duration > 0) {
-              seekSlider.value = (current / duration) * 100;
-            }
-          }
-        }, 500);
-      },
-      onStateChange: (event) => {
-        if (playBtn) {
-          if (event.data === YT.PlayerState.PLAYING) {
-            playBtn.innerHTML = '<i data-lucide="pause" style="width:18px;height:18px;"></i>';
-          } else {
-            playBtn.innerHTML = '<i data-lucide="play" style="width:18px;height:18px;"></i>';
-          }
-          lucide.createIcons();
-        }
-      }
-    }
-  });
+  // Ensure the mount div exists
+  let mountEl = document.getElementById('lp-yt-player-mount');
+  if (!mountEl) {
+    wrapper.innerHTML = `
+      <div class="lp-video-placeholder" id="lp-video-placeholder">
+        <div class="lp-video-placeholder-inner">
+          <div class="lp-loader"></div>
+          <span>Loading video lesson...</span>
+        </div>
+      </div>
+      <div class="lp-video-top-overlay"></div>
+      <div class="lp-video-topright-mask"></div>
+      <div class="lp-video-bottomleft-mask"></div>
+      <div id="lp-yt-player-mount"></div>`;
+    mountEl = document.getElementById('lp-yt-player-mount');
+  }
 
-  // Play / Pause Toggle
-  const togglePlay = () => {
-    if (!_ytPlayer || typeof _ytPlayer.getPlayerState !== 'function') return;
-    const state = _ytPlayer.getPlayerState();
-    if (state === YT.PlayerState.PLAYING) {
-      _ytPlayer.pauseVideo();
-      showRipple('pause');
-    } else {
-      _ytPlayer.playVideo();
-      showRipple('play');
-    }
-  };
+  if (placeholder) placeholder.style.display = 'flex';
 
-  const showRipple = (type) => {
-    if (!ripple) return;
-    ripple.innerHTML = `<i data-lucide="${type === 'play' ? 'play' : 'pause'}" style="width:48px;height:48px;"></i>`;
-    lucide.createIcons();
-    ripple.classList.add('show');
-    setTimeout(() => ripple.classList.remove('show'), 500);
-  };
+  // Helper to wire up controls once player is ready
+  const wireControls = () => {
+    const placeholderEl = document.getElementById('lp-video-placeholder');
+    if (placeholderEl) placeholderEl.style.display = 'none';
 
-  if (playBtn) playBtn.onclick = togglePlay;
-  if (clickMask) {
-    let lastClickTime = 0;
-    clickMask.onclick = (e) => {
-      const now = Date.now();
-      if (now - lastClickTime < 300) {
-        // Double click -> Skip 10s
-        const rect = clickMask.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        if (clickX < rect.width / 2) {
-          skip(-10);
+    const playBtn   = document.getElementById('lp-btn-play');
+    const playIcon  = document.getElementById('lp-play-icon');
+    const skipBack  = document.getElementById('lp-btn-skip-back');
+    const skipFwd   = document.getElementById('lp-btn-skip-fwd');
+    const muteBtn   = document.getElementById('lp-btn-mute');
+    const volIcon   = document.getElementById('lp-vol-icon');
+    const volSlider = document.getElementById('lp-vol-slider');
+    const seekBar   = document.getElementById('lp-seek-bar');
+    const seekFill  = document.getElementById('lp-seek-fill');
+    const timeCur   = document.getElementById('lp-time-current');
+    const timeTotal = document.getElementById('lp-time-total');
+    const fsBtn     = document.getElementById('lp-btn-fullscreen');
+
+    if (!playBtn) return; // controls not yet in DOM
+
+    // Play / Pause
+    const syncPlayIcon = () => {
+      const state = _ytPlayer.getPlayerState?.();
+      const playing = state === 1; // YT.PlayerState.PLAYING
+      if (playIcon) playIcon.setAttribute('data-lucide', playing ? 'pause' : 'play');
+      lucide.createIcons({ nodes: [playIcon] });
+    };
+
+    if (playBtn) playBtn.onclick = () => {
+      const state = _ytPlayer.getPlayerState?.();
+      if (state === 1) _ytPlayer.pauseVideo?.(); else _ytPlayer.playVideo?.();
+    };
+
+    // Skip ±10s
+    if (skipBack) skipBack.onclick = () => _ytPlayer.seekTo?.(_ytPlayer.getCurrentTime?.() - 10, true);
+    if (skipFwd)  skipFwd.onclick  = () => _ytPlayer.seekTo?.(_ytPlayer.getCurrentTime?.() + 10, true);
+
+    // Volume slider
+    if (volSlider) {
+      volSlider.oninput = () => {
+        _ytPlayer.setVolume?.(parseInt(volSlider.value));
+        if (_ytPlayer.getVolume?.() === 0 || volSlider.value === '0') {
+          _ytPlayer.mute?.();
         } else {
-          skip(10);
+          _ytPlayer.unMute?.();
         }
-      } else {
-        togglePlay();
-      }
-      lastClickTime = now;
-    };
-  }
+        updateVolIcon();
+      };
+    }
 
-  // Seek Functionality
-  const skip = (delta) => {
-    if (!_ytPlayer || typeof _ytPlayer.getCurrentTime !== 'function') return;
-    const current = _ytPlayer.getCurrentTime() || 0;
-    _ytPlayer.seekTo(current + delta, true);
+    const updateVolIcon = () => {
+      if (!volIcon) return;
+      const vol   = _ytPlayer.getVolume?.() || 0;
+      const muted = _ytPlayer.isMuted?.() || vol === 0;
+      volIcon.setAttribute('data-lucide', muted ? 'volume-x' : vol < 50 ? 'volume-1' : 'volume-2');
+      lucide.createIcons({ nodes: [volIcon] });
+    };
+
+    // Mute toggle
+    if (muteBtn) muteBtn.onclick = () => {
+      if (_ytPlayer.isMuted?.()) {
+        _ytPlayer.unMute?.();
+        if (volSlider) volSlider.value = _ytPlayer.getVolume?.() || 100;
+      } else {
+        _ytPlayer.mute?.();
+        if (volSlider) volSlider.value = 0;
+      }
+      updateVolIcon();
+    };
+
+    // Speed selector in topbar
+    if (speedSel) speedSel.onchange = () => {
+      _ytPlayer.setPlaybackRate?.(parseFloat(speedSel.value));
+    };
+
+    // Fullscreen
+    if (fsBtn) fsBtn.onclick = () => {
+      const iframe = wrapper.querySelector('iframe');
+      const target = iframe || wrapper;
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        target.requestFullscreen?.();
+      }
+    };
+    document.addEventListener('fullscreenchange', () => {
+      const fsIcon = document.getElementById('lp-fs-icon');
+      if (fsIcon) {
+        fsIcon.setAttribute('data-lucide', document.fullscreenElement ? 'minimize-2' : 'maximize-2');
+        lucide.createIcons({ nodes: [fsIcon] });
+      }
+    });
+
+    // Seek bar click
+    if (seekBar) {
+      seekBar.addEventListener('click', (e) => {
+        const rect  = seekBar.getBoundingClientRect();
+        const ratio = (e.clientX - rect.left) / rect.width;
+        const dur   = _ytPlayer.getDuration?.() || 0;
+        _ytPlayer.seekTo?.(ratio * dur, true);
+      });
+    }
+
+    // Progress timer — updates seek bar + time labels every 500ms
+    _ytProgressTimer = setInterval(() => {
+      if (!_ytPlayer || !_ytPlayer.getCurrentTime) return;
+      const cur = _ytPlayer.getCurrentTime() || 0;
+      const dur = _ytPlayer.getDuration()    || 0;
+      const pct = dur > 0 ? (cur / dur) * 100 : 0;
+      if (seekFill) seekFill.style.width = `${pct}%`;
+      if (timeCur)  timeCur.textContent  = lpFmtTime(cur);
+      if (timeTotal && dur > 0) timeTotal.textContent = lpFmtTime(dur);
+      syncPlayIcon();
+      updateVolIcon();
+    }, 500);
+
+    // Scroll-on-video = volume control
+    wrapper.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta   = e.deltaY < 0 ? 5 : -5;
+      const newVol  = Math.max(0, Math.min(100, (_ytPlayer.getVolume?.() || 100) + delta));
+      _ytPlayer.setVolume?.(newVol);
+      if (newVol === 0) _ytPlayer.mute?.(); else _ytPlayer.unMute?.();
+      if (volSlider) volSlider.value = newVol;
+      updateVolIcon();
+
+      // Show a brief toast hint on first use
+      let hint = wrapper.querySelector('.lp-scroll-hint');
+      if (!hint) {
+        hint = document.createElement('div');
+        hint.className = 'lp-scroll-hint';
+        hint.innerHTML = `<i data-lucide="volume-2" style="width:14px;height:14px;"></i> Volume: ${newVol}%`;
+        wrapper.appendChild(hint);
+        lucide.createIcons({ nodes: [hint.querySelector('i')] });
+      } else {
+        hint.querySelector('i').nextSibling.textContent = ` Volume: ${newVol}%`;
+      }
+      clearTimeout(hint._hideTimer);
+      hint._hideTimer = setTimeout(() => hint.remove(), 1500);
+    }, { passive: false });
+
+    // Keyboard shortcuts (only when learning view is active)
+    window._lpKeyHandler && document.removeEventListener('keydown', window._lpKeyHandler);
+    window._lpKeyHandler = (e) => {
+      if (!document.body.classList.contains('learning-mode')) return;
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      switch (e.code) {
+        case 'Space': case 'KeyK':
+          e.preventDefault();
+          if (_ytPlayer.getPlayerState?.() === 1) _ytPlayer.pauseVideo?.();
+          else _ytPlayer.playVideo?.();
+          break;
+        case 'KeyJ': _ytPlayer.seekTo?.(_ytPlayer.getCurrentTime?.() - 10, true); break;
+        case 'KeyL': _ytPlayer.seekTo?.(_ytPlayer.getCurrentTime?.() + 10, true); break;
+        case 'KeyM': muteBtn?.click(); break;
+        case 'KeyF': fsBtn?.click(); break;
+        case 'ArrowUp':
+          e.preventDefault();
+          { const v = Math.min(100, (_ytPlayer.getVolume?.() || 100) + 10);
+            _ytPlayer.setVolume?.(v);
+            if (volSlider) volSlider.value = v;
+            updateVolIcon(); }
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          { const v = Math.max(0, (_ytPlayer.getVolume?.() || 100) - 10);
+            _ytPlayer.setVolume?.(v);
+            if (volSlider) volSlider.value = v;
+            updateVolIcon(); }
+          break;
+      }
+    };
+    document.addEventListener('keydown', window._lpKeyHandler);
+
+    lucide.createIcons();
   };
 
-  if (rewindBtn) rewindBtn.onclick = () => skip(-10);
-  if (forwardBtn) forwardBtn.onclick = () => skip(10);
+  // Create the YT player using the IFrame API
+  const tryCreatePlayer = () => {
+    if (!window.YT || !window.YT.Player) {
+      // API not yet loaded — retry in 200ms
+      setTimeout(tryCreatePlayer, 200);
+      return;
+    }
 
-  if (seekSlider) {
-    seekSlider.oninput = () => {
-      if (!_ytPlayer || typeof _ytPlayer.getDuration !== 'function') return;
-      const duration = _ytPlayer.getDuration() || 0;
-      const targetTime = duration * (seekSlider.value / 100);
-      _ytPlayer.seekTo(targetTime, true);
-    };
-  }
-
-  // Volume & Mute Controls
-  if (volumeSlider) {
-    volumeSlider.oninput = () => {
-      if (_ytPlayer && typeof _ytPlayer.setVolume === 'function') {
-        _ytPlayer.setVolume(volumeSlider.value);
-        if (_ytPlayer.isMuted()) _ytPlayer.unMute();
+    _ytPlayer = new window.YT.Player('lp-yt-player-mount', {
+      videoId,
+      playerVars: {
+        rel:             0,
+        modestbranding:  1,
+        controls:        0,   // hide native controls (we use our own)
+        showinfo:        0,
+        iv_load_policy:  3,
+        fs:              0,   // disable native fullscreen button
+        cc_load_policy:  0,
+        playsinline:     1,
+        origin:          window.location.origin
+      },
+      events: {
+        onReady: (e) => {
+          wireControls();
+        },
+        onStateChange: (e) => {
+          const playIcon = document.getElementById('lp-play-icon');
+          if (playIcon) {
+            playIcon.setAttribute('data-lucide', e.data === 1 ? 'pause' : 'play');
+            lucide.createIcons({ nodes: [playIcon] });
+          }
+        }
       }
-    };
-  }
+    });
+  };
 
-  if (volumeBtn) {
-    volumeBtn.onclick = () => {
-      if (!_ytPlayer) return;
-      if (_ytPlayer.isMuted()) {
-        _ytPlayer.unMute();
-        volumeBtn.innerHTML = '<i data-lucide="volume-2" style="width:18px;height:18px;"></i>';
-      } else {
-        _ytPlayer.mute();
-        volumeBtn.innerHTML = '<i data-lucide="volume-x" style="width:18px;height:18px;"></i>';
-      }
-      lucide.createIcons();
-    };
-  }
-
-  // Playback Speed Selector
-  if (speedSelect) {
-    speedSelect.onchange = () => {
-      if (_ytPlayer && typeof _ytPlayer.setPlaybackRate === 'function') {
-        _ytPlayer.setPlaybackRate(parseFloat(speedSelect.value));
-      }
-    };
-  }
-
-  // Brightness Control Overlay
-  let brightnessLevel = 1.0;
-  if (brightnessBtn && brightnessMask) {
-    brightnessBtn.onclick = () => {
-      brightnessLevel = brightnessLevel === 1.0 ? 0.6 : brightnessLevel === 0.6 ? 0.3 : 1.0;
-      brightnessMask.style.background = `rgba(0,0,0,${1 - brightnessLevel})`;
-      showToast(`Brightness set to ${Math.round(brightnessLevel * 100)}%`, 'info');
-    };
-  }
-
-  // Mouse Wheel Gesture over Video Player (adjust volume)
-  if (container) {
-    container.onwheel = (e) => {
-      e.preventDefault();
-      if (!_ytPlayer || typeof _ytPlayer.getVolume !== 'function') return;
-      let vol = _ytPlayer.getVolume();
-      vol = e.deltaY < 0 ? Math.min(100, vol + 5) : Math.max(0, vol - 5);
-      _ytPlayer.setVolume(vol);
-      if (volumeSlider) volumeSlider.value = vol;
-    };
-  }
-
-  // Fullscreen Container Toggle
-  if (fullscreenBtn && container) {
-    fullscreenBtn.onclick = () => {
-      if (!document.fullscreenElement) {
-        container.requestFullscreen().catch(err => console.error(err));
-      } else {
-        document.exitFullscreen().catch(err => console.error(err));
-      }
-    };
-  }
+  tryCreatePlayer();
 }
 
 /* ==========================================================================
@@ -1278,13 +1383,12 @@ async function initEFBIVideoPlayer(url) {
 let _learningState = {
   courseId: null,
   moduleIdx: 0,
-  step: 'video',
   course: null,
   lessons: [],
   student: null
 };
 
-async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
+async function renderLearningPage(courseId, moduleIdx) {
   const session = localStorage.getItem(STUDENT_SESSION_KEY);
   if (!session) {
     window.location.hash = '#home';
@@ -1293,11 +1397,13 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
 
   const student = JSON.parse(session);
 
-  // Header & Stepper elements
+  // Header & Navigation elements
   const titleEl       = document.getElementById('learning-course-title');
   const instructorEl  = document.getElementById('learning-course-instructor');
   const modulesList   = document.getElementById('learning-modules-list');
   const mobileDd      = document.getElementById('learning-mobile-sidebar-dropdown');
+  const videoFrame    = document.getElementById('learning-video-frame');
+  const videoPlaceholder = document.getElementById('lp-video-placeholder');
   const lessonTitle   = document.getElementById('learning-lesson-title');
   const moduleBadge   = document.getElementById('learning-module-badge');
   const lessonDesc    = document.getElementById('learning-lesson-desc');
@@ -1306,17 +1412,23 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
   const quizContainer = document.getElementById('learning-quiz-container');
   const btnComplete   = document.getElementById('btn-mark-lesson-complete');
   const btnCompleteText = document.getElementById('btn-mark-complete-text');
+  const btnPrev       = document.getElementById('btn-prev-lesson');
+  const btnNext       = document.getElementById('btn-next-lesson');
   
-  // Progress Ring & Cert Elements
+  // Coursera layout elements
   const sidebarCount  = document.getElementById('lp-sidebar-count');
   const progressFill  = document.getElementById('lp-progress-fill');
   const progressPct   = document.getElementById('lp-progress-pct');
-  const ringFill      = document.getElementById('lp-ring-fill');
-  const headerProgText = document.getElementById('lp-header-progress-text');
   const certBadge     = document.getElementById('lp-cert-badge');
-  const themeToggle   = document.getElementById('theme-toggle-learning');
 
   if (!titleEl) return;
+
+  // Show loading state for video
+  if (videoPlaceholder) videoPlaceholder.style.display = 'flex';
+  if (videoFrame) {
+    videoFrame.style.opacity = '0';
+    videoFrame.src = '';
+  }
 
   try {
     // 1. Fetch/Cache Course Data
@@ -1335,10 +1447,10 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
     const safeIdx = Math.max(0, Math.min(moduleIdx, lessons.length - 1));
 
     // Cache state
-    _learningState = { courseId, moduleIdx: safeIdx, step: currentStep, course, lessons, student };
+    _learningState = { courseId, moduleIdx: safeIdx, course, lessons, student };
 
     if (safeIdx !== moduleIdx) {
-      window.location.hash = `#learning/${courseId}/${safeIdx}/${currentStep}`;
+      window.location.hash = `#learning/${courseId}/${safeIdx}`;
       return;
     }
 
@@ -1348,36 +1460,15 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
     if (titleEl) titleEl.textContent = course.title;
     if (instructorEl) instructorEl.textContent = `Instructor: ${course.instructor || 'EFBI Faculty'}`;
 
-    // ── Theme Switcher Listener ───────────────────────────────────────────── //
-    if (themeToggle) {
-      themeToggle.onclick = () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-        const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', nextTheme);
-        localStorage.setItem('theme', nextTheme);
-        if (typeof populateRegistrationInterests === 'function') {
-          populateRegistrationInterests();
-        }
-      };
-    }
-
     // ── Progress & Certificate Badge ──────────────────────────────────────── //
     const completedIndices = getLocalProgress(student.email);
     const doneCount = completedIndices.filter(i => i < lessons.length).length;
     const totalMods = lessons.length;
     const pct = totalMods > 0 ? Math.round((doneCount / totalMods) * 100) : 0;
 
-    if (sidebarCount) sidebarCount.textContent = `${doneCount} / ${totalMods} modules`;
+    if (sidebarCount) sidebarCount.textContent = `${doneCount} / ${totalMods} lessons`;
     if (progressFill) progressFill.style.width = `${pct}%`;
     if (progressPct)  progressPct.textContent  = `${pct}% complete`;
-    if (headerProgText) headerProgText.textContent = `${pct}%`;
-
-    // SVG Circular Progress Ring Update (r=12, circumference = ~75.4)
-    if (ringFill) {
-      const circumference = 75.4;
-      const offset = circumference - (pct / 100) * circumference;
-      ringFill.style.strokeDashoffset = offset;
-    }
 
     if (certBadge) {
       if (pct >= 100) {
@@ -1388,32 +1479,6 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
         certBadge.innerHTML = `<i data-lucide="lock" style="width:14px;height:14px;"></i> Certificate Locked (${pct}%)`;
       }
     }
-
-    // ── 3-STEP LESSON WIZARD STEPPER SWITCHING ────────────────────────────── //
-    const activeStep = ['video', 'notes', 'quiz'].includes(currentStep) ? currentStep : 'video';
-
-    // Update Step Pills
-    ['video', 'notes', 'quiz'].forEach(s => {
-      const pill = document.getElementById(`pill-step-${s}`);
-      const panel = document.getElementById(`learning-step-panel-${s}`);
-      if (pill) {
-        if (s === activeStep) {
-          pill.className = 'step-pill active';
-        } else {
-          pill.className = 'step-pill';
-        }
-        pill.onclick = () => {
-          window.location.hash = `#learning/${courseId}/${safeIdx}/${s}`;
-        };
-      }
-      if (panel) {
-        if (s === activeStep) {
-          panel.classList.add('active');
-        } else {
-          panel.classList.remove('active');
-        }
-      }
-    });
 
     // ── Sidebar Lesson List ────────────────────────────────────────────────── //
     const renderLessonList = (container) => {
@@ -1426,7 +1491,7 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
 
         return `
           <button class="lp-lesson-item ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}"
-                  onclick="window.location.hash='#learning/${courseId}/${i}/video'">
+                  onclick="window.location.hash='#learning/${courseId}/${i}'">
             <div class="lp-lesson-item-icon ${statusClass}">
               <i data-lucide="${iconName}" style="width:16px;height:16px;"></i>
             </div>
@@ -1439,14 +1504,12 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
     renderLessonList(modulesList);
     renderLessonList(mobileDd);
 
-    // ── Video Player Initialization ───────────────────────────────────────── //
-    if (activeStep === 'video') {
-      initEFBIVideoPlayer(lesson.videourl || '');
-    }
+    // ── Video Player (YouTube IFrame API + Custom Controls) ──────────────── //
+    initLearningVideoPlayer(lesson.videourl || '', videoPlaceholder);
 
-    // ── Lesson Metadata & Titles ───────────────────────────────────────────── //
+    // ── Lesson Info & Tabs ────────────────────────────────────────────────── //
     if (lessonTitle) lessonTitle.textContent = lesson.title;
-    if (moduleBadge) moduleBadge.textContent = `Module ${safeIdx + 1} of ${lessons.length}`;
+    if (moduleBadge) moduleBadge.textContent = `Lesson ${safeIdx + 1} of ${lessons.length}`;
     if (lessonDesc) {
       lessonDesc.textContent = lesson.notestext && lesson.notestext.length < 250
         ? lesson.notestext
@@ -1458,7 +1521,7 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
       notesContent.textContent = lesson.notestext || 'Lesson notes will be provided by your instructor.';
     }
 
-    // Resources grid
+    // Resources tab
     if (resourcesList) {
       const links = (lesson.resourceslinks || '').split('\n').filter(l => l.trim() !== '');
       if (links.length > 0) {
@@ -1483,7 +1546,7 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
       }
     }
 
-    // Quiz Panel Setup
+    // Quiz tab
     if (quizContainer) {
       let quizScores = {};
       try {
@@ -1495,10 +1558,10 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
         const passed = scoreInfo.percent >= 70;
         quizContainer.innerHTML = `
           <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-            <div style="font-size:2.4rem;font-weight:800;color:${passed ? 'var(--secondary)' : 'var(--danger)'};">${scoreInfo.percent}%</div>
-            <div style="font-size:0.95rem;font-weight:700;color:${passed ? 'var(--secondary)' : 'var(--danger)'};">${passed ? '✓ Passed' : '✗ Try Again'}</div>
-            <div style="font-size:0.85rem;color:var(--text-muted);">${scoreInfo.score} of ${scoreInfo.total} correct</div>
-            <button class="lp-nav-btn secondary" style="margin-top:8px;"
+            <div style="font-size:2.2rem;font-weight:800;color:${passed ? 'var(--secondary)' : 'var(--danger)'};">${scoreInfo.percent}%</div>
+            <div style="font-size:0.92rem;font-weight:700;color:${passed ? 'var(--secondary)' : 'var(--danger)'};">${passed ? '✓ Passed' : '✗ Try Again'}</div>
+            <div style="font-size:0.82rem;color:var(--text-muted);">${scoreInfo.score} of ${scoreInfo.total} correct</div>
+            <button class="lp-nav-btn secondary" style="margin-top:6px;"
               onclick="window.openQuizForLesson(${safeIdx}, '${(lesson.title || '').replace(/'/g,"\\'")}', '${student.email}', '${(course.title || '').replace(/'/g,"\\'")}')">
               Retake Quiz
             </button>
@@ -1521,7 +1584,7 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
               score: scoreData.score, total: scoreData.total, percent: scoreData.percent
             });
           } catch { /* silent */ }
-          setTimeout(() => renderLearningPage(courseId, mIdx, 'quiz'), 500);
+          setTimeout(() => renderLearningPage(courseId, mIdx), 500);
         };
         window.openQuiz(mIdx, mName, sEmail, cTitle, courseId);
       };
@@ -1543,10 +1606,10 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
         let updated;
         if (fresh.includes(safeIdx)) {
           updated = fresh.filter(i => i !== safeIdx);
-          showToast('Module unmarked.', 'error');
+          showToast('Lesson unmarked.', 'error');
         } else {
           updated = [...fresh, safeIdx];
-          showToast('Module completed! 🎉', 'success');
+          showToast('Lesson complete! 🎉', 'success');
         }
         saveLocalProgress(student.email, updated);
 
@@ -1560,35 +1623,21 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
           });
         } catch { /* silent */ }
 
-        renderLearningPage(courseId, safeIdx, activeStep);
+        renderLearningPage(courseId, safeIdx);
       };
     }
 
-    // ── Step Navigation Buttons ────────────────────────────────────────────── //
-    const btnGotoNotes  = document.getElementById('btn-goto-notes');
-    const btnBacktoVid  = document.getElementById('btn-backto-video');
-    const btnGotoQuiz   = document.getElementById('btn-goto-quiz');
-    const btnBacktoNotes = document.getElementById('btn-backto-notes');
-    const btnNextLesson = document.getElementById('btn-next-lesson');
-
-    if (btnGotoNotes) {
-      btnGotoNotes.onclick = () => window.location.hash = `#learning/${courseId}/${safeIdx}/notes`;
+    // ── Prev / Next Navigation ────────────────────────────────────────────── //
+    if (btnPrev) {
+      btnPrev.disabled = safeIdx === 0;
+      btnPrev.onclick  = () => {
+        if (safeIdx > 0) window.location.hash = `#learning/${courseId}/${safeIdx - 1}`;
+      };
     }
-    if (btnBacktoVid) {
-      btnBacktoVid.onclick = () => window.location.hash = `#learning/${courseId}/${safeIdx}/video`;
-    }
-    if (btnGotoQuiz) {
-      btnGotoQuiz.onclick = () => window.location.hash = `#learning/${courseId}/${safeIdx}/quiz`;
-    }
-    if (btnBacktoNotes) {
-      btnBacktoNotes.onclick = () => window.location.hash = `#learning/${courseId}/${safeIdx}/notes`;
-    }
-    if (btnNextLesson) {
-      btnNextLesson.disabled = safeIdx >= lessons.length - 1;
-      btnNextLesson.onclick = () => {
-        if (safeIdx < lessons.length - 1) {
-          window.location.hash = `#learning/${courseId}/${safeIdx + 1}/video`;
-        }
+    if (btnNext) {
+      btnNext.disabled = safeIdx >= lessons.length - 1;
+      btnNext.onclick  = () => {
+        if (safeIdx < lessons.length - 1) window.location.hash = `#learning/${courseId}/${safeIdx + 1}`;
       };
     }
 
@@ -1600,6 +1649,18 @@ async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
         mobileDd.style.display = isOpen ? 'none' : 'block';
       };
     }
+
+    // ── Tab Switching ─────────────────────────────────────────────────────── //
+    document.querySelectorAll('.lp-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.lp-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.lp-tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        const targetId = tab.getAttribute('data-learning-tab');
+        const targetPanel = document.getElementById(targetId);
+        if (targetPanel) targetPanel.classList.add('active');
+      };
+    });
 
     lucide.createIcons();
 
