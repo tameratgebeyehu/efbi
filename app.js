@@ -1320,96 +1320,158 @@ async function renderLearningPage(courseId, moduleIdx) {
   }
 }
 
-function populateRegistrationInterests(courses) {
+const DEFAULT_TECHNICAL_PATHWAYS = [
+  { title: "AI Engineering & Machine Learning", shortDesc: "Learn neural networks, machine learning basics, and modern AI engineering." },
+  { title: "Full-Stack Web Development", shortDesc: "Build beautiful, interactive responsive web apps using HTML, CSS, JavaScript, and APIs." },
+  { title: "Mobile App Engineering", shortDesc: "Create high-performance native and cross-platform mobile apps for Android and iOS." },
+  { title: "Python & Data Science", shortDesc: "Master Python fundamentals, data structures, analysis, and standard algorithms." },
+  { title: "Tech Leadership & Entrepreneurship", shortDesc: "Develop core technical competencies, product design, and launch innovative tech startups." }
+];
+
+function populateRegistrationInterests(fetchedCourses = []) {
   const select = document.getElementById('reg-interests');
   const container = document.getElementById('pathway-cards-container');
   if (!select) return;
-  
-  select.innerHTML = '<option value="" disabled selected>Select primary technical interest</option>';
-  
-  const published = courses.filter(c => c.status && c.status.toLowerCase() === 'published');
-  
-  // Icon and description helpers based on course title keywords
-  const getPathwayIcon = (title) => {
-    const t = title.toLowerCase();
-    if (t.includes('ai') || t.includes('artificial')) return 'cpu';
-    if (t.includes('web') || t.includes('html') || t.includes('css')) return 'globe';
-    if (t.includes('mobile') || t.includes('android') || t.includes('app')) return 'smartphone';
-    if (t.includes('foundation') || t.includes('python') || t.includes('coding') || t.includes('programming')) return 'terminal';
-    return 'rocket';
+
+  // Detect current theme
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
+  // Color tokens per theme
+  const colors = isLight ? {
+    cardBg:         '#f8f9ff',
+    cardBgSel:      '#ede9fe',
+    cardBorder:     '#c7d2fe',
+    cardBorderSel:  '#6366f1',
+    iconBg:         '#e0e7ff',
+    iconColor:      '#4f46e5',
+    checkBorder:    '#a5b4fc',
+    checkBgSel:     '#6366f1',
+    titleColor:     '#1e1b4b',
+    descColor:      '#4b5563'
+  } : {
+    cardBg:         'rgba(99,102,241,0.06)',
+    cardBgSel:      'rgba(99,102,241,0.18)',
+    cardBorder:     'rgba(99,102,241,0.25)',
+    cardBorderSel:  '#6366f1',
+    iconBg:         'rgba(99,102,241,0.15)',
+    iconColor:      '#818cf8',
+    checkBorder:    'rgba(255,255,255,0.3)',
+    checkBgSel:     '#6366f1',
+    titleColor:     '#f1f5f9',
+    descColor:      'rgba(255,255,255,0.6)'
   };
 
-  const getPathwayDesc = (course) => {
-    if (course.shortDesc) return course.shortDesc;
-    const t = course.title.toLowerCase();
-    if (t.includes('ai')) return 'Learn neural networks, machine learning basics, and modern AI engineering.';
-    if (t.includes('web')) return 'Build beautiful, interactive responsive sites using HTML, CSS, and JS.';
-    if (t.includes('mobile')) return 'Create high-performance native and cross-platform apps from scratch.';
-    if (t.includes('foundation') || t.includes('python')) return 'Master Python fundamentals, loops, functions, and standard algorithms.';
-    return 'Develop core competencies, business strategies, and launch tech startups.';
-  };
+  // Combine fetched database courses with default pathways so options are always available
+  let combined = [...(Array.isArray(fetchedCourses) ? fetchedCourses : [])];
+  
+  // Include all active or published courses
+  let activeCourses = combined.filter(c => !c.status || c.status.toLowerCase() === 'published' || c.status.toLowerCase() === 'active');
+  
+  // Create a map by lowercased title to eliminate duplicates while combining default & custom courses
+  const courseMap = new Map();
 
-  if (published.length === 0) {
-    const opt = document.createElement('option');
-    opt.value = "";
-    opt.disabled = true;
-    opt.textContent = "No courses available at the moment";
-    select.appendChild(opt);
-    
-    if (container) {
-      container.innerHTML = `
-        <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 32px;">
-          <i data-lucide="info" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
-          <p>No learning pathways are published yet. Check back soon!</p>
-        </div>`;
-      lucide.createIcons();
-    }
-  } else {
-    // Populate select
-    published.forEach(course => {
-      const opt = document.createElement('option');
-      opt.value = course.title;
-      opt.textContent = course.title;
-      select.appendChild(opt);
-    });
+  // Add default pathways first
+  DEFAULT_TECHNICAL_PATHWAYS.forEach(p => courseMap.set(p.title.toLowerCase(), p));
 
-    // Populate visual cards
-    if (container) {
-      container.innerHTML = published.map(course => {
-        const icon = getPathwayIcon(course.title);
-        const desc = getPathwayDesc(course);
-        return `
-          <div class="pathway-card" data-pathway-title="${course.title}">
-            <div class="pathway-card-check"></div>
-            <div class="pathway-card-icon">
-              <i data-lucide="${icon}" style="width: 20px; height: 20px;"></i>
-            </div>
-            <div class="pathway-card-title">${course.title}</div>
-            <div class="pathway-card-desc">${desc}</div>
-          </div>
-        `;
-      }).join('');
-      lucide.createIcons();
-
-      // Click behavior for pathway cards
-      const cards = container.querySelectorAll('.pathway-card');
-      cards.forEach(card => {
-        card.addEventListener('click', () => {
-          const title = card.getAttribute('data-pathway-title');
-          select.value = title;
-          
-          // Clear active classes
-          cards.forEach(c => c.classList.remove('selected'));
-          card.classList.add('selected');
-          
-          // Clear error border if any
-          const errorEl = document.getElementById('error-reg-interests');
-          if (errorEl) errorEl.style.display = 'none';
-        });
+  // Merge database/custom admin courses dynamically
+  activeCourses.forEach(c => {
+    if (c.title && c.title.trim()) {
+      courseMap.set(c.title.trim().toLowerCase(), {
+        title: c.title.trim(),
+        shortDesc: c.shortDesc || c.description || 'Master core technical skills and build real-world portfolio projects.'
       });
     }
+  });
+
+  const finalPathways = Array.from(courseMap.values());
+
+  // Reset master select element
+  const currentVal = select.value;
+  select.innerHTML = '<option value="" disabled selected>Select primary technical interest</option>';
+
+  finalPathways.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.title;
+    opt.textContent = p.title;
+    if (currentVal === p.title) opt.selected = true;
+    select.appendChild(opt);
+  });
+
+  // Render pathway cards grid
+  if (container) {
+    const getPathwayIcon = (title) => {
+      const t = title.toLowerCase();
+      if (t.includes('ai') || t.includes('artificial') || t.includes('machine')) return 'cpu';
+      if (t.includes('web') || t.includes('html') || t.includes('css') || t.includes('stack')) return 'globe';
+      if (t.includes('mobile') || t.includes('android') || t.includes('app')) return 'smartphone';
+      if (t.includes('python') || t.includes('code') || t.includes('foundation') || t.includes('data')) return 'terminal';
+      return 'rocket';
+    };
+
+    container.innerHTML = finalPathways.map(p => {
+      const icon = getPathwayIcon(p.title);
+      const isSelected = select.value === p.title;
+      const bg     = isSelected ? colors.cardBgSel     : colors.cardBg;
+      const border  = isSelected ? colors.cardBorderSel : colors.cardBorder;
+      const chkBg   = isSelected ? colors.checkBgSel    : 'transparent';
+      const chkBord = isSelected ? colors.cardBorderSel : colors.checkBorder;
+      return `
+        <div class="pathway-card ${isSelected ? 'selected' : ''}" data-pathway-title="${p.title}"
+             style="display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 14px; border: 1.5px solid ${border}; background: ${bg}; cursor: pointer; transition: all 0.2s ease;">
+          <div class="pathway-card-icon" style="width: 38px; height: 38px; border-radius: 10px; background: ${colors.iconBg}; color: ${colors.iconColor}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="${icon}" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div style="flex: 1;">
+            <div class="pathway-card-title" style="font-weight: 700; font-size: 0.92rem; margin-bottom: 2px; color: ${colors.titleColor};">${p.title}</div>
+            <div class="pathway-card-desc" style="font-size: 0.78rem; color: ${colors.descColor}; line-height: 1.35;">${p.shortDesc}</div>
+          </div>
+          <div class="pathway-card-check" style="width: 22px; height: 22px; border-radius: 50%; border: 2px solid ${chkBord}; background: ${chkBg}; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75rem; font-weight: 800; flex-shrink: 0;">
+            ${isSelected ? '✓' : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (window.lucide) lucide.createIcons();
+
+    // Wire up interactive card selection listeners
+    const cards = container.querySelectorAll('.pathway-card');
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        const title = card.getAttribute('data-pathway-title');
+        select.value = title;
+
+        // Update visual checkmark and highlight selection
+        cards.forEach(c => {
+          c.classList.remove('selected');
+          c.style.borderColor = colors.cardBorder;
+          c.style.background  = colors.cardBg;
+          const chk = c.querySelector('.pathway-card-check');
+          if (chk) {
+            chk.style.borderColor = colors.checkBorder;
+            chk.style.background  = 'transparent';
+            chk.innerHTML = '';
+          }
+        });
+
+        card.classList.add('selected');
+        card.style.borderColor = colors.cardBorderSel;
+        card.style.background  = colors.cardBgSel;
+        const chk = card.querySelector('.pathway-card-check');
+        if (chk) {
+          chk.style.borderColor = colors.cardBorderSel;
+          chk.style.background  = colors.checkBgSel;
+          chk.innerHTML = '✓';
+        }
+
+        // Hide validation error message
+        const errorEl = document.getElementById('error-reg-interests');
+        if (errorEl) errorEl.style.display = 'none';
+      });
+    });
   }
 }
+
 
 /* ==========================================================================
    COURSES CATALOG SEARCH & FILTER FUNCTIONALITY
@@ -2110,6 +2172,14 @@ function initRegistrationForm() {
 
   // Explicitly initialize Step 1 active state
   showStep(1);
+
+  // Populate pathway cards immediately with defaults, then refresh from live DB
+  populateRegistrationInterests([]);
+  EFBIDatabase.request('getCourses').then(courses => {
+    populateRegistrationInterests(courses || []);
+  }).catch(() => {
+    // Defaults already rendered above — no action needed
+  });
 
   const validateStep = (step) => {
     let stepValid = true;
