@@ -365,11 +365,12 @@ function initRouter() {
   const handleRouting = () => {
     const hash = window.location.hash || '#home';
 
-    // Handle dynamic learning route: #learning/<courseId>/<moduleIdx>
-    const learningMatch = hash.match(/^#learning\/([^/]+)\/(\d+)$/);
+    // Handle dynamic learning route: #learning/<courseId>/<moduleIdx>/<step>
+    const learningMatch = hash.match(/^#learning\/([^/]+)\/(\d+)(?:\/([^/]+))?$/);
     if (learningMatch) {
       const courseId   = learningMatch[1];
       const moduleIdx  = parseInt(learningMatch[2]) || 0;
+      const step       = learningMatch[3] || 'video';
 
       const views = document.querySelectorAll('.router-view');
       views.forEach(view => {
@@ -380,16 +381,25 @@ function initRouter() {
         }
       });
 
+      // Distraction-Free Full-Screen Learning Mode: Hide global header and footer
+      document.body.classList.add('learning-mode-active');
       const header = document.querySelector('header.navbar');
       const footer = document.querySelector('footer.footer');
-      if (header) header.style.display = '';
-      if (footer) footer.style.display = '';
+      if (header) header.style.display = 'none';
+      if (footer) footer.style.display = 'none';
 
       syncNavigationLinks('my-courses');
       window.scrollTo({ top: 0, behavior: 'instant' });
-      renderLearningPage(courseId, moduleIdx);
+      renderLearningPage(courseId, moduleIdx, step);
       return;
     }
+
+    // Leaving learning portal -> Restore global navbar & footer
+    document.body.classList.remove('learning-mode-active');
+    const globalHeader = document.querySelector('header.navbar');
+    const globalFooter = document.querySelector('footer.footer');
+    if (globalHeader) globalHeader.style.display = '';
+    if (globalFooter) globalFooter.style.display = '';
 
     // Handle dynamic verify route: #verify/<certId>
     const verifyMatch = hash.match(/^#verify\/([^/]+)$/);
@@ -1015,17 +1025,266 @@ async function getLessonsForCourse(course) {
 }
 
 /* ==========================================================================
+   YOUTUBE IFRAME PLAYER API INTEGRATION & CUSTOM CONTROLS MANAGER
+   ========================================================================== */
+let _ytPlayer = null;
+let _ytApiLoadingPromise = null;
+let _ytProgressTimer = null;
+
+function loadYouTubeIFrameAPI() {
+  if (window.YT && window.YT.Player) {
+    return Promise.resolve();
+  }
+  if (_ytApiLoadingPromise) {
+    return _ytApiLoadingPromise;
+  }
+  _ytApiLoadingPromise = new Promise((resolve) => {
+    if (!document.getElementById('yt-api-script')) {
+      const tag = document.createElement('script');
+      tag.id = 'yt-api-script';
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+    const checkInterval = setInterval(() => {
+      if (window.YT && window.YT.Player) {
+        clearInterval(checkInterval);
+        resolve();
+      }
+    }, 100);
+  });
+  return _ytApiLoadingPromise;
+}
+
+function formatTime(seconds) {
+  if (isNaN(seconds) || seconds < 0) return '00:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+async function initEFBIVideoPlayer(url) {
+  const videoId = getYouTubeId(url);
+  const placeholder = document.getElementById('lp-video-placeholder');
+  const playBtn = document.getElementById('efbi-btn-play');
+  const rewindBtn = document.getElementById('efbi-btn-rewind');
+  const forwardBtn = document.getElementById('efbi-btn-forward');
+  const seekSlider = document.getElementById('efbi-seek-slider');
+  const timeDisplay = document.getElementById('efbi-time-display');
+  const volumeBtn = document.getElementById('efbi-btn-volume');
+  const volumeSlider = document.getElementById('efbi-volume-slider');
+  const speedSelect = document.getElementById('efbi-speed-select');
+  const brightnessBtn = document.getElementById('efbi-btn-brightness');
+  const brightnessMask = document.getElementById('efbi-brightness-mask');
+  const fullscreenBtn = document.getElementById('efbi-btn-fullscreen');
+  const clickMask = document.getElementById('efbi-click-mask');
+  const ripple = document.getElementById('efbi-play-ripple');
+  const container = document.getElementById('efbi-player-container');
+
+  if (_ytProgressTimer) clearInterval(_ytProgressTimer);
+  if (_ytPlayer && typeof _ytPlayer.destroy === 'function') {
+    try { _ytPlayer.destroy(); } catch {}
+  }
+
+  if (!videoId) {
+    if (placeholder) placeholder.style.display = 'none';
+    if (container) {
+      container.innerHTML = `
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+             background:var(--bg-secondary);color:var(--text-muted);gap:12px;font-size:0.95rem;">
+          <i data-lucide="video-off" style="width:44px;height:44px;color:var(--primary);"></i>
+          <span>Video lecture coming soon! Review the lesson notes and resources below.</span>
+        </div>`;
+      lucide.createIcons();
+    }
+    return;
+  }
+
+  await loadYouTubeIFrameAPI();
+
+  _ytPlayer = new YT.Player('learning-video-player', {
+    videoId: videoId,
+    playerVars: {
+      autoplay: 0,
+      controls: 0,
+      modestbranding: 1,
+      rel: 0,
+      showinfo: 0,
+      iv_load_policy: 3,
+      enablejsapi: 1,
+      fs: 0,
+      disablekb: 1
+    },
+    events: {
+      onReady: (event) => {
+        if (placeholder) placeholder.style.display = 'none';
+        
+        // Progress updater
+        _ytProgressTimer = setInterval(() => {
+          if (_ytPlayer && typeof _ytPlayer.getCurrentTime === 'function') {
+            const current = _ytPlayer.getCurrentTime() || 0;
+            const duration = _ytPlayer.getDuration() || 0;
+            if (timeDisplay) timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+            if (seekSlider && duration > 0) {
+              seekSlider.value = (current / duration) * 100;
+            }
+          }
+        }, 500);
+      },
+      onStateChange: (event) => {
+        if (playBtn) {
+          if (event.data === YT.PlayerState.PLAYING) {
+            playBtn.innerHTML = '<i data-lucide="pause" style="width:18px;height:18px;"></i>';
+          } else {
+            playBtn.innerHTML = '<i data-lucide="play" style="width:18px;height:18px;"></i>';
+          }
+          lucide.createIcons();
+        }
+      }
+    }
+  });
+
+  // Play / Pause Toggle
+  const togglePlay = () => {
+    if (!_ytPlayer || typeof _ytPlayer.getPlayerState !== 'function') return;
+    const state = _ytPlayer.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) {
+      _ytPlayer.pauseVideo();
+      showRipple('pause');
+    } else {
+      _ytPlayer.playVideo();
+      showRipple('play');
+    }
+  };
+
+  const showRipple = (type) => {
+    if (!ripple) return;
+    ripple.innerHTML = `<i data-lucide="${type === 'play' ? 'play' : 'pause'}" style="width:48px;height:48px;"></i>`;
+    lucide.createIcons();
+    ripple.classList.add('show');
+    setTimeout(() => ripple.classList.remove('show'), 500);
+  };
+
+  if (playBtn) playBtn.onclick = togglePlay;
+  if (clickMask) {
+    let lastClickTime = 0;
+    clickMask.onclick = (e) => {
+      const now = Date.now();
+      if (now - lastClickTime < 300) {
+        // Double click -> Skip 10s
+        const rect = clickMask.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        if (clickX < rect.width / 2) {
+          skip(-10);
+        } else {
+          skip(10);
+        }
+      } else {
+        togglePlay();
+      }
+      lastClickTime = now;
+    };
+  }
+
+  // Seek Functionality
+  const skip = (delta) => {
+    if (!_ytPlayer || typeof _ytPlayer.getCurrentTime !== 'function') return;
+    const current = _ytPlayer.getCurrentTime() || 0;
+    _ytPlayer.seekTo(current + delta, true);
+  };
+
+  if (rewindBtn) rewindBtn.onclick = () => skip(-10);
+  if (forwardBtn) forwardBtn.onclick = () => skip(10);
+
+  if (seekSlider) {
+    seekSlider.oninput = () => {
+      if (!_ytPlayer || typeof _ytPlayer.getDuration !== 'function') return;
+      const duration = _ytPlayer.getDuration() || 0;
+      const targetTime = duration * (seekSlider.value / 100);
+      _ytPlayer.seekTo(targetTime, true);
+    };
+  }
+
+  // Volume & Mute Controls
+  if (volumeSlider) {
+    volumeSlider.oninput = () => {
+      if (_ytPlayer && typeof _ytPlayer.setVolume === 'function') {
+        _ytPlayer.setVolume(volumeSlider.value);
+        if (_ytPlayer.isMuted()) _ytPlayer.unMute();
+      }
+    };
+  }
+
+  if (volumeBtn) {
+    volumeBtn.onclick = () => {
+      if (!_ytPlayer) return;
+      if (_ytPlayer.isMuted()) {
+        _ytPlayer.unMute();
+        volumeBtn.innerHTML = '<i data-lucide="volume-2" style="width:18px;height:18px;"></i>';
+      } else {
+        _ytPlayer.mute();
+        volumeBtn.innerHTML = '<i data-lucide="volume-x" style="width:18px;height:18px;"></i>';
+      }
+      lucide.createIcons();
+    };
+  }
+
+  // Playback Speed Selector
+  if (speedSelect) {
+    speedSelect.onchange = () => {
+      if (_ytPlayer && typeof _ytPlayer.setPlaybackRate === 'function') {
+        _ytPlayer.setPlaybackRate(parseFloat(speedSelect.value));
+      }
+    };
+  }
+
+  // Brightness Control Overlay
+  let brightnessLevel = 1.0;
+  if (brightnessBtn && brightnessMask) {
+    brightnessBtn.onclick = () => {
+      brightnessLevel = brightnessLevel === 1.0 ? 0.6 : brightnessLevel === 0.6 ? 0.3 : 1.0;
+      brightnessMask.style.background = `rgba(0,0,0,${1 - brightnessLevel})`;
+      showToast(`Brightness set to ${Math.round(brightnessLevel * 100)}%`, 'info');
+    };
+  }
+
+  // Mouse Wheel Gesture over Video Player (adjust volume)
+  if (container) {
+    container.onwheel = (e) => {
+      e.preventDefault();
+      if (!_ytPlayer || typeof _ytPlayer.getVolume !== 'function') return;
+      let vol = _ytPlayer.getVolume();
+      vol = e.deltaY < 0 ? Math.min(100, vol + 5) : Math.max(0, vol - 5);
+      _ytPlayer.setVolume(vol);
+      if (volumeSlider) volumeSlider.value = vol;
+    };
+  }
+
+  // Fullscreen Container Toggle
+  if (fullscreenBtn && container) {
+    fullscreenBtn.onclick = () => {
+      if (!document.fullscreenElement) {
+        container.requestFullscreen().catch(err => console.error(err));
+      } else {
+        document.exitFullscreen().catch(err => console.error(err));
+      }
+    };
+  }
+}
+
+/* ==========================================================================
    DEDICATED COURSERA-STYLE LEARNING PAGE RENDERER
    ========================================================================== */
 let _learningState = {
   courseId: null,
   moduleIdx: 0,
+  step: 'video',
   course: null,
   lessons: [],
   student: null
 };
 
-async function renderLearningPage(courseId, moduleIdx) {
+async function renderLearningPage(courseId, moduleIdx, currentStep = 'video') {
   const session = localStorage.getItem(STUDENT_SESSION_KEY);
   if (!session) {
     window.location.hash = '#home';
@@ -1034,13 +1293,11 @@ async function renderLearningPage(courseId, moduleIdx) {
 
   const student = JSON.parse(session);
 
-  // Header & Navigation elements
+  // Header & Stepper elements
   const titleEl       = document.getElementById('learning-course-title');
   const instructorEl  = document.getElementById('learning-course-instructor');
   const modulesList   = document.getElementById('learning-modules-list');
   const mobileDd      = document.getElementById('learning-mobile-sidebar-dropdown');
-  const videoFrame    = document.getElementById('learning-video-frame');
-  const videoPlaceholder = document.getElementById('lp-video-placeholder');
   const lessonTitle   = document.getElementById('learning-lesson-title');
   const moduleBadge   = document.getElementById('learning-module-badge');
   const lessonDesc    = document.getElementById('learning-lesson-desc');
@@ -1049,23 +1306,17 @@ async function renderLearningPage(courseId, moduleIdx) {
   const quizContainer = document.getElementById('learning-quiz-container');
   const btnComplete   = document.getElementById('btn-mark-lesson-complete');
   const btnCompleteText = document.getElementById('btn-mark-complete-text');
-  const btnPrev       = document.getElementById('btn-prev-lesson');
-  const btnNext       = document.getElementById('btn-next-lesson');
   
-  // Coursera layout elements
+  // Progress Ring & Cert Elements
   const sidebarCount  = document.getElementById('lp-sidebar-count');
   const progressFill  = document.getElementById('lp-progress-fill');
   const progressPct   = document.getElementById('lp-progress-pct');
+  const ringFill      = document.getElementById('lp-ring-fill');
+  const headerProgText = document.getElementById('lp-header-progress-text');
   const certBadge     = document.getElementById('lp-cert-badge');
+  const themeToggle   = document.getElementById('theme-toggle-learning');
 
   if (!titleEl) return;
-
-  // Show loading state for video
-  if (videoPlaceholder) videoPlaceholder.style.display = 'flex';
-  if (videoFrame) {
-    videoFrame.style.opacity = '0';
-    videoFrame.src = '';
-  }
 
   try {
     // 1. Fetch/Cache Course Data
@@ -1084,10 +1335,10 @@ async function renderLearningPage(courseId, moduleIdx) {
     const safeIdx = Math.max(0, Math.min(moduleIdx, lessons.length - 1));
 
     // Cache state
-    _learningState = { courseId, moduleIdx: safeIdx, course, lessons, student };
+    _learningState = { courseId, moduleIdx: safeIdx, step: currentStep, course, lessons, student };
 
     if (safeIdx !== moduleIdx) {
-      window.location.hash = `#learning/${courseId}/${safeIdx}`;
+      window.location.hash = `#learning/${courseId}/${safeIdx}/${currentStep}`;
       return;
     }
 
@@ -1097,15 +1348,36 @@ async function renderLearningPage(courseId, moduleIdx) {
     if (titleEl) titleEl.textContent = course.title;
     if (instructorEl) instructorEl.textContent = `Instructor: ${course.instructor || 'EFBI Faculty'}`;
 
+    // ── Theme Switcher Listener ───────────────────────────────────────────── //
+    if (themeToggle) {
+      themeToggle.onclick = () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', nextTheme);
+        localStorage.setItem('theme', nextTheme);
+        if (typeof populateRegistrationInterests === 'function') {
+          populateRegistrationInterests();
+        }
+      };
+    }
+
     // ── Progress & Certificate Badge ──────────────────────────────────────── //
     const completedIndices = getLocalProgress(student.email);
     const doneCount = completedIndices.filter(i => i < lessons.length).length;
     const totalMods = lessons.length;
     const pct = totalMods > 0 ? Math.round((doneCount / totalMods) * 100) : 0;
 
-    if (sidebarCount) sidebarCount.textContent = `${doneCount} / ${totalMods} lessons`;
+    if (sidebarCount) sidebarCount.textContent = `${doneCount} / ${totalMods} modules`;
     if (progressFill) progressFill.style.width = `${pct}%`;
     if (progressPct)  progressPct.textContent  = `${pct}% complete`;
+    if (headerProgText) headerProgText.textContent = `${pct}%`;
+
+    // SVG Circular Progress Ring Update (r=12, circumference = ~75.4)
+    if (ringFill) {
+      const circumference = 75.4;
+      const offset = circumference - (pct / 100) * circumference;
+      ringFill.style.strokeDashoffset = offset;
+    }
 
     if (certBadge) {
       if (pct >= 100) {
@@ -1116,6 +1388,32 @@ async function renderLearningPage(courseId, moduleIdx) {
         certBadge.innerHTML = `<i data-lucide="lock" style="width:14px;height:14px;"></i> Certificate Locked (${pct}%)`;
       }
     }
+
+    // ── 3-STEP LESSON WIZARD STEPPER SWITCHING ────────────────────────────── //
+    const activeStep = ['video', 'notes', 'quiz'].includes(currentStep) ? currentStep : 'video';
+
+    // Update Step Pills
+    ['video', 'notes', 'quiz'].forEach(s => {
+      const pill = document.getElementById(`pill-step-${s}`);
+      const panel = document.getElementById(`learning-step-panel-${s}`);
+      if (pill) {
+        if (s === activeStep) {
+          pill.className = 'step-pill active';
+        } else {
+          pill.className = 'step-pill';
+        }
+        pill.onclick = () => {
+          window.location.hash = `#learning/${courseId}/${safeIdx}/${s}`;
+        };
+      }
+      if (panel) {
+        if (s === activeStep) {
+          panel.classList.add('active');
+        } else {
+          panel.classList.remove('active');
+        }
+      }
+    });
 
     // ── Sidebar Lesson List ────────────────────────────────────────────────── //
     const renderLessonList = (container) => {
@@ -1128,7 +1426,7 @@ async function renderLearningPage(courseId, moduleIdx) {
 
         return `
           <button class="lp-lesson-item ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}"
-                  onclick="window.location.hash='#learning/${courseId}/${i}'">
+                  onclick="window.location.hash='#learning/${courseId}/${i}/video'">
             <div class="lp-lesson-item-icon ${statusClass}">
               <i data-lucide="${iconName}" style="width:16px;height:16px;"></i>
             </div>
@@ -1141,25 +1439,14 @@ async function renderLearningPage(courseId, moduleIdx) {
     renderLessonList(modulesList);
     renderLessonList(mobileDd);
 
-    // ── Video Frame ───────────────────────────────────────────────────────── //
-    const embedUrl = buildYouTubeEmbedUrl(lesson.videourl || '');
-    if (videoFrame) {
-      if (embedUrl) {
-        videoFrame.src = embedUrl;
-      } else {
-        if (videoPlaceholder) videoPlaceholder.style.display = 'none';
-        videoFrame.parentElement.innerHTML = `
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-               background:#090d16;color:var(--text-muted);gap:12px;font-size:0.9rem;">
-            <i data-lucide="video-off" style="width:40px;height:40px;color:var(--primary);"></i>
-            Video lesson coming soon. Check back shortly!
-          </div>`;
-      }
+    // ── Video Player Initialization ───────────────────────────────────────── //
+    if (activeStep === 'video') {
+      initEFBIVideoPlayer(lesson.videourl || '');
     }
 
-    // ── Lesson Info & Tabs ────────────────────────────────────────────────── //
+    // ── Lesson Metadata & Titles ───────────────────────────────────────────── //
     if (lessonTitle) lessonTitle.textContent = lesson.title;
-    if (moduleBadge) moduleBadge.textContent = `Lesson ${safeIdx + 1} of ${lessons.length}`;
+    if (moduleBadge) moduleBadge.textContent = `Module ${safeIdx + 1} of ${lessons.length}`;
     if (lessonDesc) {
       lessonDesc.textContent = lesson.notestext && lesson.notestext.length < 250
         ? lesson.notestext
@@ -1171,7 +1458,7 @@ async function renderLearningPage(courseId, moduleIdx) {
       notesContent.textContent = lesson.notestext || 'Lesson notes will be provided by your instructor.';
     }
 
-    // Resources tab
+    // Resources grid
     if (resourcesList) {
       const links = (lesson.resourceslinks || '').split('\n').filter(l => l.trim() !== '');
       if (links.length > 0) {
@@ -1196,7 +1483,7 @@ async function renderLearningPage(courseId, moduleIdx) {
       }
     }
 
-    // Quiz tab
+    // Quiz Panel Setup
     if (quizContainer) {
       let quizScores = {};
       try {
@@ -1208,10 +1495,10 @@ async function renderLearningPage(courseId, moduleIdx) {
         const passed = scoreInfo.percent >= 70;
         quizContainer.innerHTML = `
           <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-            <div style="font-size:2.2rem;font-weight:800;color:${passed ? 'var(--secondary)' : 'var(--danger)'};">${scoreInfo.percent}%</div>
-            <div style="font-size:0.92rem;font-weight:700;color:${passed ? 'var(--secondary)' : 'var(--danger)'};">${passed ? '✓ Passed' : '✗ Try Again'}</div>
-            <div style="font-size:0.82rem;color:var(--text-muted);">${scoreInfo.score} of ${scoreInfo.total} correct</div>
-            <button class="lp-nav-btn secondary" style="margin-top:6px;"
+            <div style="font-size:2.4rem;font-weight:800;color:${passed ? 'var(--secondary)' : 'var(--danger)'};">${scoreInfo.percent}%</div>
+            <div style="font-size:0.95rem;font-weight:700;color:${passed ? 'var(--secondary)' : 'var(--danger)'};">${passed ? '✓ Passed' : '✗ Try Again'}</div>
+            <div style="font-size:0.85rem;color:var(--text-muted);">${scoreInfo.score} of ${scoreInfo.total} correct</div>
+            <button class="lp-nav-btn secondary" style="margin-top:8px;"
               onclick="window.openQuizForLesson(${safeIdx}, '${(lesson.title || '').replace(/'/g,"\\'")}', '${student.email}', '${(course.title || '').replace(/'/g,"\\'")}')">
               Retake Quiz
             </button>
@@ -1234,7 +1521,7 @@ async function renderLearningPage(courseId, moduleIdx) {
               score: scoreData.score, total: scoreData.total, percent: scoreData.percent
             });
           } catch { /* silent */ }
-          setTimeout(() => renderLearningPage(courseId, mIdx), 500);
+          setTimeout(() => renderLearningPage(courseId, mIdx, 'quiz'), 500);
         };
         window.openQuiz(mIdx, mName, sEmail, cTitle, courseId);
       };
@@ -1256,10 +1543,10 @@ async function renderLearningPage(courseId, moduleIdx) {
         let updated;
         if (fresh.includes(safeIdx)) {
           updated = fresh.filter(i => i !== safeIdx);
-          showToast('Lesson unmarked.', 'error');
+          showToast('Module unmarked.', 'error');
         } else {
           updated = [...fresh, safeIdx];
-          showToast('Lesson complete! 🎉', 'success');
+          showToast('Module completed! 🎉', 'success');
         }
         saveLocalProgress(student.email, updated);
 
@@ -1273,21 +1560,35 @@ async function renderLearningPage(courseId, moduleIdx) {
           });
         } catch { /* silent */ }
 
-        renderLearningPage(courseId, safeIdx);
+        renderLearningPage(courseId, safeIdx, activeStep);
       };
     }
 
-    // ── Prev / Next Navigation ────────────────────────────────────────────── //
-    if (btnPrev) {
-      btnPrev.disabled = safeIdx === 0;
-      btnPrev.onclick  = () => {
-        if (safeIdx > 0) window.location.hash = `#learning/${courseId}/${safeIdx - 1}`;
-      };
+    // ── Step Navigation Buttons ────────────────────────────────────────────── //
+    const btnGotoNotes  = document.getElementById('btn-goto-notes');
+    const btnBacktoVid  = document.getElementById('btn-backto-video');
+    const btnGotoQuiz   = document.getElementById('btn-goto-quiz');
+    const btnBacktoNotes = document.getElementById('btn-backto-notes');
+    const btnNextLesson = document.getElementById('btn-next-lesson');
+
+    if (btnGotoNotes) {
+      btnGotoNotes.onclick = () => window.location.hash = `#learning/${courseId}/${safeIdx}/notes`;
     }
-    if (btnNext) {
-      btnNext.disabled = safeIdx >= lessons.length - 1;
-      btnNext.onclick  = () => {
-        if (safeIdx < lessons.length - 1) window.location.hash = `#learning/${courseId}/${safeIdx + 1}`;
+    if (btnBacktoVid) {
+      btnBacktoVid.onclick = () => window.location.hash = `#learning/${courseId}/${safeIdx}/video`;
+    }
+    if (btnGotoQuiz) {
+      btnGotoQuiz.onclick = () => window.location.hash = `#learning/${courseId}/${safeIdx}/quiz`;
+    }
+    if (btnBacktoNotes) {
+      btnBacktoNotes.onclick = () => window.location.hash = `#learning/${courseId}/${safeIdx}/notes`;
+    }
+    if (btnNextLesson) {
+      btnNextLesson.disabled = safeIdx >= lessons.length - 1;
+      btnNextLesson.onclick = () => {
+        if (safeIdx < lessons.length - 1) {
+          window.location.hash = `#learning/${courseId}/${safeIdx + 1}/video`;
+        }
       };
     }
 
@@ -1299,18 +1600,6 @@ async function renderLearningPage(courseId, moduleIdx) {
         mobileDd.style.display = isOpen ? 'none' : 'block';
       };
     }
-
-    // ── Tab Switching ─────────────────────────────────────────────────────── //
-    document.querySelectorAll('.lp-tab').forEach(tab => {
-      tab.onclick = () => {
-        document.querySelectorAll('.lp-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.lp-tab-panel').forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        const targetId = tab.getAttribute('data-learning-tab');
-        const targetPanel = document.getElementById(targetId);
-        if (targetPanel) targetPanel.classList.add('active');
-      };
-    });
 
     lucide.createIcons();
 

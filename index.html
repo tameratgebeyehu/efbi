@@ -7,7 +7,7 @@
   <meta name="description" content="Empowering Ethiopian youth with future-ready skills: AI, Software Development, Web/Mobile Apps, Entrepreneurship, and Leadership. Build the future with EFBI.">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=225">
+  <link rel="stylesheet" href="styles.css?v=230">
   
   <!-- Chart.js CDN for Admin Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -860,59 +860,82 @@
       </div>
     </section>
 
-    <!-- DEDICATED LEARNING PORTAL VIEW -->
+    <!-- DEDICATED DISTRACTION-FREE LEARNING PORTAL VIEW -->
     <section id="learning-view" class="router-view">
       
-      <!-- Coursera-style top bar -->
-      <div class="lp-topbar">
-        <div class="lp-topbar-inner">
+      <!-- Top Tibeb Accent Line -->
+      <div class="tibeb-strip"></div>
+
+      <!-- Dedicated Learning Top Bar -->
+      <div class="efbi-learning-header">
+        <div class="efbi-learning-header-inner">
           <a href="#my-courses" class="lp-back-btn" id="lp-back-btn" title="Back to My Courses">
-            <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
+            <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
           </a>
+          
           <div class="lp-course-info">
             <div class="lp-course-title" id="learning-course-title">Loading course...</div>
             <div class="lp-course-meta" id="learning-course-instructor">Instructor: EFBI Faculty</div>
           </div>
+
           <div class="lp-topbar-actions">
-            <div id="lp-cert-badge" class="lp-cert-badge locked">
-              <i data-lucide="lock" style="width:12px;height:12px;"></i> Certificate Locked
+            <!-- Progress Pill -->
+            <div class="lp-progress-pill">
+              <div class="lp-progress-ring-container">
+                <svg class="lp-progress-ring" width="32" height="32">
+                  <circle class="lp-progress-ring-bg" stroke="rgba(255,255,255,0.1)" stroke-width="3" fill="transparent" r="12" cx="16" cy="16"/>
+                  <circle class="lp-progress-ring-fill" id="lp-ring-fill" stroke="var(--primary-hover)" stroke-width="3" stroke-dasharray="75.4" stroke-dashoffset="75.4" stroke-linecap="round" fill="transparent" r="12" cx="16" cy="16"/>
+                </svg>
+              </div>
+              <span id="lp-header-progress-text" style="font-weight:700;font-size:0.82rem;color:var(--text-primary);">0%</span>
             </div>
+
+            <!-- Certificate Status Badge -->
+            <div id="lp-cert-badge" class="lp-cert-badge locked">
+              <i data-lucide="lock" style="width:13px;height:13px;"></i> Certificate Locked
+            </div>
+
+            <!-- Light / Dark Theme Switcher -->
+            <button id="theme-toggle-learning" class="theme-toggle-btn" title="Toggle Theme">
+              <i data-lucide="moon" class="dark-icon" style="width:16px;height:16px;"></i>
+              <i data-lucide="sun" class="light-icon" style="width:16px;height:16px;"></i>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Main learning layout -->
+      <!-- Main Learning Portal Layout -->
       <div class="lp-body">
 
-        <!-- ── LEFT: Video + Lesson content ── -->
+        <!-- ── LEFT MAIN WORKSPACE ── -->
         <div class="lp-content-area">
 
-          <!-- Video wrapper — custom player skin hiding YouTube branding -->
-          <div class="lp-video-wrapper" id="lp-video-wrapper">
-            <!-- Loading placeholder shown before video loads -->
-            <div class="lp-video-placeholder" id="lp-video-placeholder">
-              <div class="lp-video-placeholder-inner">
-                <div class="lp-loader"></div>
-                <span>Loading video lesson...</span>
-              </div>
-            </div>
-            <!-- Top full banner overlay hides YouTube title bar & channel links on hover -->
-            <div class="lp-video-top-overlay"></div>
-            <!-- Top-right overlay clips YouTube logo area -->
-            <div class="lp-video-topright-mask"></div>
-            <!-- Bottom overlay blocks YouTube branding in control bar -->
-            <div class="lp-video-bottomleft-mask"></div>
-            <iframe
-              id="learning-video-frame"
-              src=""
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              style="opacity:0;transition:opacity 0.3s;"
-              onload="this.style.opacity='1'; document.getElementById('lp-video-placeholder').style.display='none';"
-            ></iframe>
+          <!-- 3-STEP LESSON WIZARD STEPPER BAR -->
+          <div class="lesson-step-bar" id="lesson-step-bar">
+            <button class="step-pill active" data-step-id="video" id="pill-step-video">
+              <span class="step-num">1</span>
+              <i data-lucide="video" style="width:15px;height:15px;"></i>
+              <span class="step-label">Video Lecture</span>
+            </button>
+
+            <div class="step-connector"></div>
+
+            <button class="step-pill" data-step-id="notes" id="pill-step-notes">
+              <span class="step-num">2</span>
+              <i data-lucide="file-text" style="width:15px;height:15px;"></i>
+              <span class="step-label">Notes & Resources</span>
+            </button>
+
+            <div class="step-connector"></div>
+
+            <button class="step-pill" data-step-id="quiz" id="pill-step-quiz">
+              <span class="step-num">3</span>
+              <i data-lucide="help-circle" style="width:15px;height:15px;"></i>
+              <span class="step-label">Practice Quiz</span>
+            </button>
           </div>
 
-          <!-- Lesson header + complete button -->
+          <!-- Lesson Header Banner -->
           <div class="lp-lesson-header">
             <div class="lp-lesson-header-left">
               <span class="lp-module-badge" id="learning-module-badge">Module 1</span>
@@ -924,53 +947,153 @@
             </button>
           </div>
 
-          <!-- Tabs -->
-          <div class="lp-tabs">
-            <button class="lp-tab active" data-learning-tab="learning-tab-desc">Overview</button>
-            <button class="lp-tab" data-learning-tab="learning-tab-notes">Notes</button>
-            <button class="lp-tab" data-learning-tab="learning-tab-resources">Resources</button>
-            <button class="lp-tab" data-learning-tab="learning-tab-quiz">Quiz</button>
+          <!-- ── STEP 1: VIDEO LECTURE PANEL ── -->
+          <div class="learning-step-panel active" id="learning-step-panel-video">
+            
+            <!-- Custom EFBI Video Player Wrapper -->
+            <div class="efbi-player-container" id="efbi-player-container">
+              <!-- Loading Placeholder -->
+              <div class="lp-video-placeholder" id="lp-video-placeholder">
+                <div class="lp-video-placeholder-inner">
+                  <div class="lp-loader"></div>
+                  <span>Loading video lesson...</span>
+                </div>
+              </div>
+
+              <!-- Full Click Masking Overlay (Blocks YouTube links & title clickthroughs) -->
+              <div class="efbi-click-mask" id="efbi-click-mask" title="Click to play/pause | Double click to skip 10s"></div>
+              
+              <!-- Brightness Filter Overlay -->
+              <div class="efbi-brightness-mask" id="efbi-brightness-mask"></div>
+
+              <!-- Central Play/Pause Gesture Overlay -->
+              <div class="efbi-play-ripple" id="efbi-play-ripple">
+                <i data-lucide="play" style="width:48px;height:48px;"></i>
+              </div>
+
+              <!-- YouTube IFrame Container -->
+              <div id="learning-video-player"></div>
+
+              <!-- Custom HTML5 Controls Bar -->
+              <div class="efbi-controls-bar" id="efbi-controls-bar">
+                <div class="efbi-controls-top">
+                  <input type="range" id="efbi-seek-slider" class="efbi-seek-slider" min="0" max="100" value="0" step="0.1">
+                </div>
+                <div class="efbi-controls-bottom">
+                  <div class="efbi-controls-left">
+                    <button class="efbi-ctrl-btn" id="efbi-btn-play" title="Play / Pause (Space)">
+                      <i data-lucide="play" style="width:18px;height:18px;"></i>
+                    </button>
+                    <button class="efbi-ctrl-btn" id="efbi-btn-rewind" title="Rewind 10 seconds">
+                      <i data-lucide="rotate-ccw" style="width:16px;height:16px;"></i>
+                    </button>
+                    <button class="efbi-ctrl-btn" id="efbi-btn-forward" title="Forward 10 seconds">
+                      <i data-lucide="rotate-cw" style="width:16px;height:16px;"></i>
+                    </button>
+                    <span class="efbi-time-display" id="efbi-time-display">00:00 / 00:00</span>
+                  </div>
+
+                  <div class="efbi-controls-right">
+                    <!-- Volume Control -->
+                    <div class="efbi-volume-group">
+                      <button class="efbi-ctrl-btn" id="efbi-btn-volume" title="Mute / Unmute">
+                        <i data-lucide="volume-2" style="width:18px;height:18px;"></i>
+                      </button>
+                      <input type="range" id="efbi-volume-slider" class="efbi-volume-slider" min="0" max="100" value="100">
+                    </div>
+
+                    <!-- Speed Selector -->
+                    <select id="efbi-speed-select" class="efbi-speed-select" title="Playback Speed">
+                      <option value="0.75">0.75x</option>
+                      <option value="1" selected>1.0x (Normal)</option>
+                      <option value="1.25">1.25x</option>
+                      <option value="1.5">1.5x</option>
+                      <option value="2">2.0x</option>
+                    </select>
+
+                    <!-- Brightness Control Toggle -->
+                    <button class="efbi-ctrl-btn" id="efbi-btn-brightness" title="Adjust Night Mode Brightness">
+                      <i data-lucide="sun" style="width:16px;height:16px;"></i>
+                    </button>
+
+                    <!-- Fullscreen Button -->
+                    <button class="efbi-ctrl-btn" id="efbi-btn-fullscreen" title="Fullscreen">
+                      <i data-lucide="maximize" style="width:18px;height:18px;"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Video Step Footer Navigation -->
+            <div class="lp-step-footer">
+              <p id="learning-lesson-desc" class="lp-desc-text">Watch the video lecture above to complete Step 1 of this module.</p>
+              <button id="btn-goto-notes" class="lp-nav-btn primary">
+                Proceed to Notes & Resources <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+              </button>
+            </div>
           </div>
 
-          <div class="lp-tab-body">
-            <div class="lp-tab-panel active" id="learning-tab-desc">
-              <p id="learning-lesson-desc" class="lp-desc-text">Watch the lesson above, then mark it complete when you're ready to move on.</p>
-            </div>
-            <div class="lp-tab-panel" id="learning-tab-notes">
-              <div id="learning-lesson-notes-content" class="lp-notes-box">Notes will appear here once uploaded by your instructor.</div>
-            </div>
-            <div class="lp-tab-panel" id="learning-tab-resources">
+          <!-- ── STEP 2: LESSON NOTES & RESOURCES PANEL ── -->
+          <div class="learning-step-panel" id="learning-step-panel-notes">
+            <div class="notes-panel-container">
+              <div class="panel-section-title">
+                <i data-lucide="book-open" style="width:20px;height:20px;color:var(--primary-hover);"></i>
+                <h2>Instructor Lesson Notes</h2>
+              </div>
+              <div id="learning-lesson-notes-content" class="lp-notes-box">
+                Notes will appear here once uploaded by your instructor.
+              </div>
+
+              <div class="panel-section-title" style="margin-top: 32px;">
+                <i data-lucide="download-cloud" style="width:20px;height:20px;color:var(--secondary);"></i>
+                <h2>Downloadable Learning Resources</h2>
+              </div>
               <div id="learning-lesson-resources-list" class="lp-resources-grid">
-                <!-- Populated by JS -->
+                <!-- Populated dynamically by JS -->
               </div>
             </div>
-            <div class="lp-tab-panel" id="learning-tab-quiz">
-              <div class="lp-quiz-box">
-                <i data-lucide="help-circle" style="width:36px;height:36px;color:var(--primary-hover);"></i>
-                <h3 style="margin:12px 0 4px;">Practice Quiz</h3>
-                <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:16px;">Pass with 70% or higher to unlock your certificate.</p>
-                <div id="learning-quiz-container"></div>
-              </div>
+
+            <!-- Notes Step Footer Navigation -->
+            <div class="lp-step-footer">
+              <button id="btn-backto-video" class="lp-nav-btn secondary">
+                <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back to Video
+              </button>
+              <button id="btn-goto-quiz" class="lp-nav-btn primary">
+                Proceed to Practice Quiz <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+              </button>
             </div>
           </div>
 
-          <!-- Prev / Next navigation -->
-          <div class="lp-nav-footer">
-            <button id="btn-prev-lesson" class="lp-nav-btn secondary">
-              <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Previous
-            </button>
-            <button id="btn-next-lesson" class="lp-nav-btn primary">
-              Next <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
-            </button>
+          <!-- ── STEP 3: PRACTICE QUIZ PANEL ── -->
+          <div class="learning-step-panel" id="learning-step-panel-quiz">
+            <div class="lp-quiz-box">
+              <div class="quiz-header-badge">
+                <i data-lucide="help-circle" style="width:36px;height:36px;color:var(--primary-hover);"></i>
+                <h3>Module Practice Quiz</h3>
+                <p>Pass with 70% or higher to record your module completion and unlock your EFBI certificate.</p>
+              </div>
+              <div id="learning-quiz-container"></div>
+            </div>
+
+            <!-- Quiz Step Footer Navigation -->
+            <div class="lp-step-footer">
+              <button id="btn-backto-notes" class="lp-nav-btn secondary">
+                <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back to Notes
+              </button>
+              <button id="btn-next-lesson" class="lp-nav-btn primary">
+                Next Lesson Video <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+              </button>
+            </div>
           </div>
 
         </div>
 
-        <!-- ── RIGHT: Course content sidebar ── -->
+        <!-- ── RIGHT SIDEBAR: COURSE SYLLABUS & PROGRESS ── -->
         <aside class="lp-sidebar" id="learning-sidebar-desktop">
           <div class="lp-sidebar-inner">
             <div class="lp-sidebar-header">
-              <span class="lp-sidebar-label">Course Content</span>
+              <span class="lp-sidebar-label">Course Modules</span>
               <span class="lp-sidebar-count" id="lp-sidebar-count">0 / 0 lessons</span>
             </div>
 
@@ -984,7 +1107,7 @@
 
             <!-- Lesson list -->
             <div id="learning-modules-list" class="lp-lesson-list">
-              <!-- Populated by JS -->
+              <!-- Populated dynamically by JS -->
             </div>
           </div>
         </aside>
@@ -999,7 +1122,7 @@
       <!-- Mobile bottom bar -->
       <div class="lp-mobile-bar">
         <button id="btn-learning-mobile-sidebar" class="lp-mobile-contents-btn">
-          <i data-lucide="list" style="width:16px;height:16px;"></i> Course Contents
+          <i data-lucide="list" style="width:16px;height:16px;"></i> Course Modules
         </button>
       </div>
 
@@ -2540,8 +2663,8 @@
   </div>
 
   <!-- JavaScript Logics -->
-  <script src="api.js?v=225"></script>
-  <script src="app.js?v=225"></script>
+  <script src="api.js?v=230"></script>
+  <script src="app.js?v=230"></script>
 
   <!-- =========================================================
        QUIZ MODAL
