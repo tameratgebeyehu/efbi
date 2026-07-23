@@ -2200,12 +2200,30 @@ function initRegistrationForm() {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit Application';
 
-        cardPanel.style.display = 'none';
-        successPanel.style.display = 'block';
-        showToast('Application successfully registered!', 'success');
+        // Auto-login newly registered student
+        const newStudentSession = {
+          id: 'STUDENT-' + Date.now(),
+          name: payload.name,
+          email: payload.email,
+          country: payload.country,
+          region: payload.region,
+          school: payload.school,
+          grade: payload.grade,
+          interest: payload.interest,
+          status: 'Approved',
+          joined: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+        };
+
+        localStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify(newStudentSession));
+        applyStudentAuthState();
+
+        showToast(`Welcome to EFBI, ${payload.name.split(' ')[0]}! Your account is active. 🎉`, 'success');
         
         form.reset();
         renderAdminTables();
+
+        // Direct redirect to My Courses dashboard!
+        window.location.hash = '#my-courses';
 
       } catch (err) {
         submitBtn.disabled = false;

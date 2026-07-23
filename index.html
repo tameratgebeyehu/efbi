@@ -833,7 +833,7 @@
     <section id="my-courses-view" class="router-view">
       <div class="page-header">
         <div class="container">
-          <h1 class="page-title">My Courses</h1>
+          <h1 class="page-title">My Learning Dashboard</h1>
           <p class="page-subtitle" id="my-courses-welcome">Pick up where you left off and stay on your path to certification.</p>
         </div>
       </div>
@@ -866,7 +866,7 @@
       <!-- Coursera-style top bar -->
       <div class="lp-topbar">
         <div class="lp-topbar-inner">
-          <a href="#my-courses" class="lp-back-btn" id="lp-back-btn">
+          <a href="#my-courses" class="lp-back-btn" id="lp-back-btn" title="Back to My Courses">
             <i data-lucide="arrow-left" style="width:16px;height:16px;"></i>
           </a>
           <div class="lp-course-info">
@@ -893,9 +893,11 @@
             <div class="lp-video-placeholder" id="lp-video-placeholder">
               <div class="lp-video-placeholder-inner">
                 <div class="lp-loader"></div>
-                <span>Loading lesson...</span>
+                <span>Loading video lesson...</span>
               </div>
             </div>
+            <!-- Top full banner overlay hides YouTube title bar & channel links on hover -->
+            <div class="lp-video-top-overlay"></div>
             <!-- Top-right overlay clips YouTube logo area -->
             <div class="lp-video-topright-mask"></div>
             <!-- Bottom overlay blocks YouTube branding in control bar -->
