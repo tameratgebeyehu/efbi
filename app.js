@@ -824,44 +824,118 @@ async function renderMyCourses() {
       localStorage.setItem(activityKey, lastActivityDate);
     }
 
-    // Clean progress bar
-    const thumbHtml = `<div style="width:72px;height:72px;border-radius:18px;background:var(--primary-glow);color:var(--primary-hover);display:flex;align-items:center;justify-content:center;">
-      <i data-lucide="${matchedCourse.icon || 'book-open'}" style="width:36px;height:36px;"></i>
-    </div>`;
+    // SVG ring values (circ = 2π × 36 ≈ 226.2)
+    const circ    = 226.2;
+    const offset  = circ - (circ * progressPct / 100);
+    const ringColor = progressPct >= 100 ? '#10b981' : progressPct >= 50 ? '#6366f1' : '#818cf8';
+    const certStatus = progressPct >= 100
+      ? `<span style="color:#34d399;font-weight:800;display:inline-flex;align-items:center;gap:5px;"><i data-lucide="award" style="width:13px;height:13px;"></i> Certificate Unlocked!</span>`
+      : `<span style="color:rgba(255,255,255,0.35);font-size:0.78rem;">Complete all lessons to unlock your certificate</span>`;
 
-    // Render clean enrolled course card
+    // Build lesson preview list (first 6)
+    const previewLessons = lessons.slice(0, 6);
+    const lessonRows = previewLessons.map((l, i) => {
+      const done   = completedIndices.includes(i);
+      const active = i === resumeIdx && !done;
+      const icon   = done ? 'check-circle-2' : active ? 'play-circle' : 'circle';
+      const color  = done ? '#34d399' : active ? '#818cf8' : 'rgba(255,255,255,0.2)';
+      return `
+        <a href="#learning/${matchedCourse.id}/${i}" class="mc-lesson-row ${done ? 'done' : active ? 'active' : ''}">
+          <i data-lucide="${icon}" style="width:15px;height:15px;color:${color};flex-shrink:0;"></i>
+          <span class="mc-lesson-row-title">${l.title}</span>
+          ${done ? '<span class="mc-lesson-row-badge">Done</span>' : active ? '<span class="mc-lesson-row-badge active">Resume</span>' : ''}
+        </a>`;
+    }).join('');
+
+    const moreCount = lessons.length - previewLessons.length;
+
     grid.innerHTML = `
-      <div style="max-width: 480px; margin: 0 auto;">
-        <div class="my-course-card glass-panel" style="padding: 28px; border-radius: 16px;">
-          <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
-            ${thumbHtml}
-            <div>
-              <span class="status-badge active" style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: inline-block;">
-                <i data-lucide="check-circle" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i> Enrolled Pathway
-              </span>
-              <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0; line-height: 1.3;">${matchedCourse.title}</h3>
-              <span style="font-size: 0.82rem; color: var(--text-muted);">Instructor: ${matchedCourse.instructor || 'EFBI Faculty'}</span>
+      <div class="mc-dashboard">
+
+        <!-- Top hero banner -->
+        <div class="mc-hero">
+          <div class="mc-hero-left">
+            <div class="mc-course-icon">
+              <i data-lucide="${matchedCourse.icon || 'book-open'}" style="width:32px;height:32px;"></i>
             </div>
-          </div>
-          
-          <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);">Course Progress</span>
-              <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary-hover);">${progressPct}%</span>
-            </div>
-            <div style="height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
-              <div style="height: 100%; width: ${progressPct}%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 4px; transition: width 0.5s;"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted);">
-              <span>${completedCount} of ${totalModules} Lessons Completed</span>
-              <span>Last active: ${lastActivityDate}</span>
+            <div class="mc-hero-info">
+              <div class="mc-enrolled-tag">
+                <i data-lucide="check-circle" style="width:11px;height:11px;"></i> Enrolled Pathway
+              </div>
+              <h2 class="mc-course-name">${matchedCourse.title}</h2>
+              <div class="mc-course-meta">
+                <i data-lucide="user" style="width:12px;height:12px;"></i>
+                ${matchedCourse.instructor || 'EFBI Faculty'}
+                &nbsp;·&nbsp;
+                <i data-lucide="layers" style="width:12px;height:12px;"></i>
+                ${totalModules} Lessons
+              </div>
             </div>
           </div>
 
-          <a href="#learning/${matchedCourse.id}/${resumeIdx}" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; font-size: 0.98rem; font-weight: 700; border-radius: 10px;">
-            Continue Learning <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
-          </a>
+          <!-- SVG Progress Ring -->
+          <div class="mc-ring-wrap">
+            <svg width="90" height="90" viewBox="0 0 90 90" style="transform:rotate(-90deg);">
+              <circle cx="45" cy="45" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="7"/>
+              <circle cx="45" cy="45" r="36" fill="none"
+                stroke="${ringColor}" stroke-width="7" stroke-linecap="round"
+                stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
+                style="transition:stroke-dashoffset 1s cubic-bezier(0.16,1,0.3,1);"/>
+            </svg>
+            <div class="mc-ring-text">
+              <div class="mc-ring-pct">${progressPct}%</div>
+            </div>
+          </div>
         </div>
+
+        <!-- Stat chips row -->
+        <div class="mc-stats-row">
+          <div class="mc-stat-chip">
+            <i data-lucide="check-square" style="width:14px;height:14px;color:#34d399;"></i>
+            <span><strong>${completedCount}</strong> Completed</span>
+          </div>
+          <div class="mc-stat-chip">
+            <i data-lucide="layers" style="width:14px;height:14px;color:#818cf8;"></i>
+            <span><strong>${totalModules - completedCount}</strong> Remaining</span>
+          </div>
+          <div class="mc-stat-chip">
+            <i data-lucide="calendar" style="width:14px;height:14px;color:#fbbf24;"></i>
+            <span>Active: ${lastActivityDate}</span>
+          </div>
+        </div>
+
+        <!-- Certificate status -->
+        <div class="mc-cert-bar">
+          <i data-lucide="${progressPct >= 100 ? 'award' : 'lock'}" style="width:14px;height:14px;"></i>
+          ${progressPct >= 100
+            ? '<span style="color:#34d399;font-weight:800;">Certificate Unlocked! 🎉 Download yours from your profile.</span>'
+            : `<span>Complete all <strong>${totalModules}</strong> lessons to unlock your certificate</span>`}
+        </div>
+
+        <!-- Progress bar -->
+        <div class="mc-progress-track">
+          <div class="mc-progress-fill" style="width:${progressPct}%;background:linear-gradient(90deg,${ringColor},#34d399);"></div>
+        </div>
+
+        <!-- CTA Button -->
+        <a href="#learning/${matchedCourse.id}/${resumeIdx}" class="mc-cta-btn">
+          <i data-lucide="${progressPct >= 100 ? 'refresh-cw' : 'play-circle'}" style="width:18px;height:18px;"></i>
+          ${progressPct >= 100 ? 'Review Course' : progressPct > 0 ? `Continue — Lesson ${resumeIdx + 1}` : 'Start Learning'}
+        </a>
+
+        <!-- Lesson preview list -->
+        <div class="mc-lesson-list">
+          <div class="mc-lesson-list-header">
+            <span>Course Content</span>
+            <span>${completedCount} / ${totalModules} done</span>
+          </div>
+          ${lessonRows}
+          ${moreCount > 0 ? `
+            <a href="#learning/${matchedCourse.id}/${resumeIdx}" class="mc-lesson-more">
+              + ${moreCount} more lesson${moreCount !== 1 ? 's' : ''} — view all inside the course
+            </a>` : ''}
+        </div>
+
       </div>
     `;
     lucide.createIcons();
@@ -872,6 +946,7 @@ async function renderMyCourses() {
     grid.innerHTML = `<div style="color: var(--danger); text-align: center; padding: 40px;">Unable to load your courses. Please try again later.</div>`;
   }
 }
+
 
 function renderMyCoursesEmptyState(container) {
   container.innerHTML = `
