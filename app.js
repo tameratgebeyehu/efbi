@@ -2277,7 +2277,7 @@ function initCertificateVerifier() {
                         <line x1="22.5" y1="5.5" x2="18.5" y2="9.5" stroke="#c5a456" stroke-width="0.8" opacity="0.7"/>
                         <line x1="9.5" y1="18.5" x2="5.5" y2="22.5" stroke="#c5a456" stroke-width="0.8" opacity="0.7"/>
                       </svg>
-                      <div class="cert-logo">Ethiopian Future Builders Initiative</div>
+                      <div class="cert-logo">Ethiopian Future Builders Initiative Academy</div>
                     </div>
                     <div class="cert-tagline">Empowering Ethiopia's Next Generation of Innovators</div>
                   </div>
@@ -2457,7 +2457,7 @@ window.openCertificateViewer = async (certId) => {
                 <line x1="2" y1="14" x2="8" y2="14" stroke="#0b132b" stroke-width="1.2"/>
                 <line x1="20" y1="14" x2="26" y2="14" stroke="#0b132b" stroke-width="1.2"/>
               </svg>
-              <div class="cert-logo" style="font-size:0.6rem;">Ethiopian Future Builders Initiative</div>
+              <div class="cert-logo" style="font-size:0.6rem;">Ethiopian Future Builders Initiative Academy</div>
             </div>
             <div class="cert-tagline" style="font-size:0.5rem;">Empowering Ethiopia's Next Generation of Innovators</div>
           </div>
