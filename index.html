@@ -14,7 +14,7 @@
   <link rel="manifest" href="site.webmanifest">
 
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=239">
+  <link rel="stylesheet" href="styles.css?v=241">
   
   <!-- Chart.js CDN for Admin Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -111,71 +111,49 @@
             </div>
             
             <div class="hero-visual">
-              <div class="ide-window glass-panel">
-                <!-- Titlebar -->
-                <div class="ide-titlebar">
-                  <div class="ide-dots">
-                    <span class="ide-dot close"></span>
-                    <span class="ide-dot minimize"></span>
-                    <span class="ide-dot maximize"></span>
-                  </div>
-                  <div class="ide-title">efbi-initiative — main.py</div>
-                </div>
+              <div class="floating-circle-1"></div>
+              <div class="floating-circle-2"></div>
+              
+              <!-- EFBI Students Learning Visual Card -->
+              <div class="hero-students-card glass-panel">
+                <picture>
+                  <source srcset="assets/hero-students-learning.webp" type="image/webp">
+                  <img src="assets/hero-students-learning.jpg"
+                       alt="EFBI students collaborating and learning software engineering, AI, and digital skills together"
+                       class="hero-students-img"
+                       loading="eager"
+                       width="1024"
+                       height="768">
+                </picture>
                 
-                <!-- Editor Area -->
-                <div class="ide-editor-container">
-                  <!-- Sidebar/File tree -->
-                  <div class="ide-sidebar">
-                    <div class="ide-file active"><i data-lucide="file-code" style="width: 14px; color: var(--secondary); display: inline-block; vertical-align: middle;"></i> main.py</div>
-                    <div class="ide-file"><i data-lucide="file-json" style="width: 14px; display: inline-block; vertical-align: middle;"></i> data.json</div>
-                    <div class="ide-file"><i data-lucide="settings" style="width: 14px; display: inline-block; vertical-align: middle;"></i> config.cfg</div>
+                <!-- Floating Cohort Badge -->
+                <div class="hero-image-badge glass-card">
+                  <div class="hero-badge-icon">
+                    <i data-lucide="users" style="width: 18px; color: var(--secondary);"></i>
                   </div>
-                  
-                  <!-- Code view -->
-                  <div class="ide-code-view">
-                    <pre class="ide-code"><code id="hero-animated-code"><span class="code-line">1</span> <span class="code-keyword">import</span> efbi_core
-<span class="code-line">2</span> 
-<span class="code-line">3</span> <span class="code-keyword">def</span> <span class="code-function">build_future</span>(student):
-<span class="code-line">4</span>     path = student.interest
-<span class="code-line">5</span>     skills = [
-<span class="code-line">6</span>         <span class="code-string">"AI & Coding"</span>, 
-<span class="code-line">7</span>         <span class="code-string">"Leadership"</span>,
-<span class="code-line">8</span>         <span class="code-string">"Innovation"</span>
-<span class="code-line">9</span>     ]
-<span class="code-line">10</span>     <span class="code-keyword">return</span> efbi_core.empower(skills)
-<span class="code-line">11</span> 
-<span class="code-line">12</span> <span class="code-comment"># Ready to build the nation!</span>
-<span class="code-line">13</span> build_future(<span class="code-string">"Ethiopian Youth"</span>)</code></pre>
-                  </div>
-                </div>
-                
-                <!-- Terminal / Output -->
-                <div class="ide-terminal">
-                  <div class="ide-terminal-header"><i data-lucide="terminal" style="width:12px; display: inline-block; vertical-align: middle;"></i> Console Output</div>
-                  <div class="ide-terminal-body" id="hero-animated-terminal">
-                    <div class="terminal-line"><span class="terminal-prompt">$</span> python main.py</div>
-                    <div class="terminal-line success">>>> [EFBI Core] Status: Empowered 🌟</div>
-                    <div class="terminal-line success">>>> Impact: 100% Certified. Curriculum unlocked!</div>
+                  <div>
+                    <div class="hero-badge-title">Interactive EFBI Cohorts</div>
+                    <div class="hero-badge-sub">Collaborative Hands-On Learning</div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Floating AI Copilot Card -->
               <div class="floating-copilot-card glass-card">
                 <div class="copilot-header">
                   <div class="copilot-avatar">
-                    <i data-lucide="bot" style="width:18px; color: var(--secondary);"></i>
+                    <i data-lucide="sparkles" style="width:18px; color: var(--secondary);"></i>
                   </div>
                   <div>
-                    <div class="copilot-name">EFBI AI Copilot</div>
-                    <div class="copilot-status">Online</div>
+                    <div class="copilot-name">EFBI AI Academy</div>
+                    <div class="copilot-status">Active Cohort</div>
                   </div>
                 </div>
                 <div class="copilot-body">
-                  "Great job! The model has been optimized. Ready to launch?"
+                  "Empowering Ethiopian youth with real-world AI, Web, &amp; Mobile engineering skills."
                 </div>
                 <div class="copilot-footer">
-                  <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 6px;">Approve & Deploy</button>
+                  <a href="#courses" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 6px; text-decoration: none; display: inline-block;">Explore Programs</a>
                 </div>
               </div>
             </div>
