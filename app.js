@@ -698,6 +698,44 @@ function initStoriesCarousel() {
   startAutoPlay();
 }
 
+/**
+ * Render dynamic YouTube thumbnail or fallback icon for a course card.
+ */
+function renderCourseCardThumbnail(course, videoUrl) {
+  const videoId = getYouTubeId(videoUrl);
+  if (videoId) {
+    const maxResUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    const hqUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    const mqUrl = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    const altText = `Thumbnail for ${course.title}`;
+
+    return `
+      <div class="course-img-box video-thumb-box">
+        <img src="${maxResUrl}" 
+             alt="${altText}" 
+             class="course-thumb-img" 
+             loading="lazy"
+             onerror="if (this.src !== '${hqUrl}' && this.getAttribute('data-tried-hq') !== 'true') { this.setAttribute('data-tried-hq', 'true'); this.src = '${hqUrl}'; } else if (this.src !== '${mqUrl}' && this.getAttribute('data-tried-mq') !== 'true') { this.setAttribute('data-tried-mq', 'true'); this.src = '${mqUrl}'; } else { this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'; }">
+        <div class="course-thumb-fallback" style="display:none;">
+          <i data-lucide="${course.icon || 'book-open'}"></i>
+        </div>
+        <span class="course-badge">${course.category}</span>
+        <div class="play-overlay-icon">
+          <i data-lucide="play"></i>
+        </div>
+      </div>
+    `;
+  }
+
+  // EFBI Default Placeholder when no video exists
+  return `
+    <div class="course-img-box">
+      <i data-lucide="${course.icon || 'book-open'}"></i>
+      <span class="course-badge">${course.category}</span>
+    </div>
+  `;
+}
+
 /* ==========================================================================
    DYNAMIC PUBLIC COURSES CATALOG RENDERING
    ========================================================================== */
@@ -742,19 +780,35 @@ async function renderPublicCourses() {
         }
       }
 
+      // Concurrently fetch lessons for each published course to resolve its first video URL
+      const coursesWithVideo = await Promise.all(published.map(async (course) => {
+        let firstVideoUrl = '';
+        try {
+          const lessons = await getLessonsForCourse(course);
+          if (lessons && lessons.length > 0) {
+            const firstWithVideo = lessons.find(l => l.videourl && l.videourl.trim() !== '');
+            if (firstWithVideo) {
+              firstVideoUrl = firstWithVideo.videourl.trim();
+            }
+          }
+        } catch (err) {
+          console.warn(`Could not load lessons for thumbnail of course ${course.id}:`, err);
+        }
+        return { course, firstVideoUrl };
+      }));
+
       grid.className = 'grid-3';
-      grid.innerHTML = published.map(course => {
+      grid.innerHTML = coursesWithVideo.map(({ course, firstVideoUrl }) => {
         const isEnrolled = enrolledCourse && enrolledCourse === course.title.trim().toLowerCase();
         const actionButton = isEnrolled 
           ? `<button class="btn btn-secondary btn-block" style="display: block; text-align: center; width: 100%; cursor: not-allowed;" disabled>Enrolled</button>`
           : `<a href="${studentSession ? '#' : '#register'}" class="btn btn-primary btn-block btn-enroll" data-course="${course.title}" style="display: block; text-align: center;">Enroll Now</a>`;
 
+        const thumbnailHTML = renderCourseCardThumbnail(course, firstVideoUrl);
+
         return `
           <div class="course-card glass-panel" data-level="${course.level || 'Beginner'}">
-            <div class="course-img-box">
-              <i data-lucide="${course.icon || 'book-open'}"></i>
-              <span class="course-badge">${course.category}</span>
-            </div>
+            ${thumbnailHTML}
             <div class="course-body">
               <span class="course-instructor">${course.instructor}</span>
               <h3 class="course-title">${course.title}</h3>
