@@ -1433,16 +1433,14 @@ html[data-theme="light"] .badge-planned {
 @media (max-width: 1024px) {
   .building-efbi-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
   }
-}
-
-@media (max-width: 768px) {
   .building-filters {
     justify-content: flex-start;
     overflow-x: auto;
     flex-wrap: nowrap;
-    padding-bottom: 10px;
-    margin-bottom: 24px;
+    padding-bottom: 12px;
+    margin-bottom: 28px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
