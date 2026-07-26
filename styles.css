@@ -305,8 +305,8 @@ html[data-theme="light"] .navbar {
 }
 
 .brand-logo-img {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   border-radius: 6px;
   flex-shrink: 0;
@@ -315,8 +315,8 @@ html[data-theme="light"] .navbar {
 }
 
 .lp-brand-img {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
   border-radius: 4px;
   flex-shrink: 0;
@@ -325,8 +325,8 @@ html[data-theme="light"] .navbar {
 }
 
 .footer-brand-img {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
   border-radius: 5px;
   flex-shrink: 0;
