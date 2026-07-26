@@ -518,109 +518,22 @@ function syncNavigationLinks(activeView) {
 }
 
 /* ==========================================================================
-   MOBILE NAVIGATION MENU DRAWER & ACCESSIBILITY
+   MOBILE NAVIGATION MENU DRAWER
    ========================================================================== */
-function closeMobileMenu() {
-  const navLinks = document.getElementById('nav-links');
-  const hamburger = document.getElementById('hamburger');
-  const overlay = document.getElementById('nav-drawer-overlay');
-
-  if (navLinks) navLinks.classList.remove('active');
-  if (hamburger) {
-    hamburger.classList.remove('active');
-    hamburger.setAttribute('aria-expanded', 'false');
-    hamburger.setAttribute('aria-label', 'Open Menu');
-  }
-  if (overlay) overlay.classList.remove('active');
-  document.body.classList.remove('mobile-nav-open');
-}
-
-function openMobileMenu() {
-  const navLinks = document.getElementById('nav-links');
-  const hamburger = document.getElementById('hamburger');
-  const overlay = document.getElementById('nav-drawer-overlay');
-
-  if (navLinks) navLinks.classList.add('active');
-  if (hamburger) {
-    hamburger.classList.add('active');
-    hamburger.setAttribute('aria-expanded', 'true');
-    hamburger.setAttribute('aria-label', 'Close Menu');
-  }
-  if (overlay) overlay.classList.add('active');
-  document.body.classList.add('mobile-nav-open');
-}
-
-function toggleMobileMenu() {
-  const navLinks = document.getElementById('nav-links');
-  if (navLinks && navLinks.classList.contains('active')) {
-    closeMobileMenu();
-  } else {
-    openMobileMenu();
-  }
-}
-
-window.closeMobileMenu = closeMobileMenu;
-window.openMobileMenu = openMobileMenu;
-window.toggleMobileMenu = toggleMobileMenu;
-
 function initMobileNav() {
   const hamburger = document.getElementById('hamburger');
   const navLinks = document.getElementById('nav-links');
-  const overlay = document.getElementById('nav-drawer-overlay');
-
-  if (hamburger) {
-    hamburger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleMobileMenu();
-    });
-  }
-
-  // Close drawer on clicking/tapping backdrop overlay
-  if (overlay) {
-    overlay.addEventListener('click', () => {
-      closeMobileMenu();
-    });
-  }
-
-  // Close mobile drawer when ANY link inside navLinks is clicked
-  if (navLinks) {
-    navLinks.addEventListener('click', (e) => {
-      const link = e.target.closest('a, button');
-      if (link) {
-        closeMobileMenu();
-      }
-    });
-  }
-
-  // Close mobile drawer on clicking brand logo
-  const logoLink = document.querySelector('.navbar .logo');
-  if (logoLink) {
-    logoLink.addEventListener('click', () => {
-      closeMobileMenu();
-    });
-  }
-
-  // Close drawer on Escape key press
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' || e.key === 'Esc') {
-      closeMobileMenu();
-    }
+  
+  hamburger.addEventListener('click', () => {
+    navLinks.classList.toggle('active');
+    hamburger.classList.toggle('active');
   });
 
-  // Close drawer on route navigation (hashchange)
-  window.addEventListener('hashchange', () => {
-    closeMobileMenu();
-  });
-
-  // Close drawer on click/tap outside navLinks and hamburger
-  document.addEventListener('click', (e) => {
-    if (!navLinks) return;
-    if (navLinks.classList.contains('active')) {
-      const isInsideNav = navLinks.contains(e.target);
-      const isHamburger = hamburger && hamburger.contains(e.target);
-      if (!isInsideNav && !isHamburger) {
-        closeMobileMenu();
-      }
+  // Close mobile drawer when link is clicked
+  navLinks.addEventListener('click', (e) => {
+    if (e.target.tagName === 'A') {
+      navLinks.classList.remove('active');
+      hamburger.classList.remove('active');
     }
   });
 }
@@ -4346,6 +4259,13 @@ function initStudentAuth() {
 
   // Sync Navbar UI on load
   applyStudentAuthState();
+
+  const closeMobileMenu = () => {
+    const navLinks = document.getElementById('nav-links');
+    const hamburger = document.getElementById('hamburger');
+    if (navLinks) navLinks.classList.remove('active');
+    if (hamburger) hamburger.classList.remove('active');
+  };
 
   const handleShowLoginModal = (e) => {
     e.preventDefault();
