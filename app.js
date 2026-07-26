@@ -4410,8 +4410,7 @@ function applyStudentAuthState() {
     }
   }
 
-  const desktopNavItem = document.getElementById('nav-mycourses-desktop');
-  const mobileLink = document.querySelector('.mobile-auth-mycourses');
+  const myCoursesNavItem = document.getElementById('nav-mycourses-desktop');
 
   if (isLoggedIn) {
     if (guestActions) guestActions.style.display = 'none';
@@ -4422,11 +4421,9 @@ function applyStudentAuthState() {
 
     // Toggle My Courses navigation link based on enrollment status
     if (hasEnrolledCourse) {
-      if (desktopNavItem) desktopNavItem.style.display = 'block';
-      if (mobileLink) mobileLink.style.display = 'block';
+      if (myCoursesNavItem) myCoursesNavItem.style.display = 'block';
     } else {
-      if (desktopNavItem) desktopNavItem.style.display = 'none';
-      if (mobileLink) mobileLink.style.display = 'none';
+      if (myCoursesNavItem) myCoursesNavItem.style.display = 'none';
     }
   } else {
     if (guestActions) guestActions.style.display = 'flex';
@@ -4435,8 +4432,7 @@ function applyStudentAuthState() {
     mobileGuests.forEach(el => el.style.display = 'block');
     mobileStudents.forEach(el => el.style.display = 'none');
 
-    if (desktopNavItem) desktopNavItem.style.display = 'none';
-    if (mobileLink) mobileLink.style.display = 'none';
+    if (myCoursesNavItem) myCoursesNavItem.style.display = 'none';
   }
   lucide.createIcons();
 }
