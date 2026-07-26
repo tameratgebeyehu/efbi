@@ -699,6 +699,25 @@ function initStoriesCarousel() {
 }
 
 /**
+ * Global handler for YouTube thumbnail load errors (works reliably across desktop, iOS Safari & Android)
+ */
+window.handleThumbError = function(img, hqUrl, mqUrl) {
+  if (!img) return;
+  if (!img.getAttribute('data-tried-hq')) {
+    img.setAttribute('data-tried-hq', 'true');
+    img.src = hqUrl;
+  } else if (!img.getAttribute('data-tried-mq')) {
+    img.setAttribute('data-tried-mq', 'true');
+    img.src = mqUrl;
+  } else {
+    img.style.display = 'none';
+    if (img.nextElementSibling && img.nextElementSibling.classList.contains('course-thumb-fallback')) {
+      img.nextElementSibling.style.display = 'flex';
+    }
+  }
+};
+
+/**
  * Render dynamic YouTube thumbnail or fallback icon for a course card.
  */
 function renderCourseCardThumbnail(course, videoUrl) {
@@ -715,7 +734,7 @@ function renderCourseCardThumbnail(course, videoUrl) {
              alt="${altText}" 
              class="course-thumb-img" 
              loading="lazy"
-             onerror="if (this.src !== '${hqUrl}' && this.getAttribute('data-tried-hq') !== 'true') { this.setAttribute('data-tried-hq', 'true'); this.src = '${hqUrl}'; } else if (this.src !== '${mqUrl}' && this.getAttribute('data-tried-mq') !== 'true') { this.setAttribute('data-tried-mq', 'true'); this.src = '${mqUrl}'; } else { this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='flex'; }">
+             onerror="window.handleThumbError(this, '${hqUrl}', '${mqUrl}')">
         <div class="course-thumb-fallback" style="display:none;">
           <i data-lucide="${course.icon || 'book-open'}"></i>
         </div>
