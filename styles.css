@@ -1239,12 +1239,12 @@ html[data-theme="light"] .stage-num {
 }
 
 .building-filter-btn {
-  padding: 8px 18px;
+  padding: 8px 20px;
   border-radius: 9999px;
   font-size: 0.85rem;
   font-weight: 600;
-  background: rgba(99, 102, 241, 0.07);
-  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.25s ease;
@@ -1252,15 +1252,16 @@ html[data-theme="light"] .stage-num {
 
 .building-filter-btn:hover {
   color: var(--text-primary);
-  border-color: rgba(99, 102, 241, 0.35);
-  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.15);
 }
 
 .building-filter-btn.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  background: #4f46e5 !important;
+  border-color: #4f46e5 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4);
 }
 
 .building-efbi-grid {
@@ -1297,25 +1298,45 @@ html[data-theme="light"] .stage-num {
   height: auto;
 }
 
+.building-card-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.building-card-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.building-cat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--secondary);
+  margin: 0;
+}
+
 .building-status-badge {
-  position: absolute;
-  top: 14px;
-  right: 14px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 9999px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  flex-shrink: 0;
 }
 
 .badge-active {
-  background: rgba(16, 185, 129, 0.18);
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
   color: #34d399;
 }
 .badge-active .status-dot {
@@ -1327,8 +1348,8 @@ html[data-theme="light"] .stage-num {
 }
 
 .badge-dev {
-  background: rgba(99, 102, 241, 0.18);
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.35);
   color: #818cf8;
 }
 .badge-dev .status-dot {
@@ -1340,8 +1361,8 @@ html[data-theme="light"] .stage-num {
 }
 
 .badge-planned {
-  background: rgba(245, 158, 11, 0.18);
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
   color: #fbbf24;
 }
 .badge-planned .status-dot {
@@ -1350,22 +1371,6 @@ html[data-theme="light"] .stage-num {
   border-radius: 50%;
   background: #fbbf24;
   box-shadow: 0 0 6px #fbbf24;
-}
-
-.building-card-body {
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-
-.building-cat-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--secondary);
-  margin-bottom: 8px;
 }
 
 .building-card-title {
@@ -1383,13 +1388,46 @@ html[data-theme="light"] .stage-num {
   margin: 0;
 }
 
+/* Light Theme Styling for Building EFBI Section */
 html[data-theme="light"] .building-filter-btn {
-  background: rgba(99, 102, 241, 0.05);
-  border-color: rgba(99, 102, 241, 0.15);
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+html[data-theme="light"] .building-filter-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+html[data-theme="light"] .building-filter-btn.active {
+  background: #4f46e5 !important;
+  border-color: #4f46e5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
 }
 
 html[data-theme="light"] .building-card:hover {
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="light"] .badge-active {
+  background: #d1fae5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+html[data-theme="light"] .badge-dev {
+  background: #e0e7ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+}
+
+html[data-theme="light"] .badge-planned {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #b45309;
 }
 
 @media (max-width: 1024px) {
@@ -1401,6 +1439,10 @@ html[data-theme="light"] .building-card:hover {
 @media (max-width: 640px) {
   .building-efbi-grid {
     grid-template-columns: 1fr;
+  }
+  .building-filter-btn {
+    padding: 7px 14px;
+    font-size: 0.8rem;
   }
 }
 
