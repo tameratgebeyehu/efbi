@@ -14,7 +14,7 @@
   <link rel="manifest" href="site.webmanifest">
 
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=250">
+  <link rel="stylesheet" href="styles.css?v=251">
   
   <!-- Chart.js CDN for Admin Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -404,75 +404,66 @@
         </div>
       </div>
       
-      <!-- Success Stories Section -->
-      <div class="section" style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);">
+      <!-- From Skills to Solutions Section -->
+      <div id="methodology" class="section" style="background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);">
         <div class="container">
           <div class="section-header text-center">
-            <span class="section-tag">Success Stories</span>
-            <h2 class="section-title">Builders in Action</h2>
-            <p class="section-desc">How our graduates are building solutions, winning scholarships, and launching startups.</p>
+            <span class="section-tag">Learning Methodology</span>
+            <h2 class="section-title">From Skills to Solutions</h2>
+            <p class="section-desc">A practical four-stage framework designed to transform ambitious learners into real-world tech builders.</p>
           </div>
           
-          <!-- Testimonials Carousel -->
-          <div class="stories-slider-container">
-            <div class="stories-track-wrapper">
-              <div class="stories-track" id="stories-track">
-                
-                <!-- Slide 1 -->
-                <div class="story-slide">
-                  <div class="story-card glass-panel">
-                    <div class="story-image-box">
-                      <!-- Rendered Icon representing student avatar -->
-                      <i data-lucide="user" style="stroke-width: 1.5;"></i>
-                    </div>
-                    <div class="story-details">
-                      <p class="story-quote">"Within 8 weeks I went from zero to building an AI crop-disease detection app for my father's farm. It got me a scholarship."</p>
-                      <h4 class="story-author">Yared Kebede</h4>
-                      <p class="story-info">AI Fundamentals Graduate — Addis Ababa</p>
-                      <span class="story-badge">App Development & AI</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Slide 2 -->
-                <div class="story-slide">
-                  <div class="story-card glass-panel">
-                    <div class="story-image-box">
-                      <i data-lucide="user-check" style="stroke-width: 1.5;"></i>
-                    </div>
-                    <div class="story-details">
-                      <p class="story-quote">"I went from zero coding skills to building web portals for local businesses. EFBI's mentors made it real, not just theory."</p>
-                      <h4 class="story-author">Selamawit Tadesse</h4>
-                      <p class="story-info">Web Development Alumna — Hawassa</p>
-                      <span class="story-badge">Full Stack Web Dev</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Slide 3 -->
-                <div class="story-slide">
-                  <div class="story-card glass-panel">
-                    <div class="story-image-box">
-                      <i data-lucide="user-plus" style="stroke-width: 1.5;"></i>
-                    </div>
-                    <div class="story-details">
-                      <p class="story-quote">"EFBI taught me to turn a digital idea into a real startup pitch. Youth can build solutions for local challenges — and I'm proof."</p>
-                      <h4 class="story-author">Elias Tekle</h4>
-                      <p class="story-info">Entrepreneurship & Innovation Graduate — Mekelle</p>
-                      <span class="story-badge">Tech Entrepreneurship</span>
-                    </div>
-                  </div>
-                </div>
-                
+          <!-- 4 Stages Grid -->
+          <div class="skills-to-solutions-grid">
+            <!-- Stage 1: Learn -->
+            <div class="stage-card glass-panel">
+              <div class="stage-card-header">
+                <span class="stage-num">01</span>
+                <div class="stage-icon"><i data-lucide="book-open"></i></div>
               </div>
+              <h3 class="stage-title">Learn</h3>
+              <p class="stage-desc">Master core concepts in AI, software engineering, and digital skills through structured, interactive lessons.</p>
             </div>
             
-            <!-- Slider Navigation -->
-            <div class="slider-nav">
-              <button class="slider-btn" id="prev-story" aria-label="Previous Story"><i data-lucide="chevron-left"></i></button>
-              <div class="slider-dots" id="slider-dots"></div>
-              <button class="slider-btn" id="next-story" aria-label="Next Story"><i data-lucide="chevron-right"></i></button>
+            <!-- Stage 2: Practice -->
+            <div class="stage-card glass-panel">
+              <div class="stage-card-header">
+                <span class="stage-num">02</span>
+                <div class="stage-icon" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;"><i data-lucide="code-2"></i></div>
+              </div>
+              <h3 class="stage-title">Practice</h3>
+              <p class="stage-desc">Reinforce understanding with real-time coding exercises, hands-on lab challenges, and practical problem solving.</p>
             </div>
+            
+            <!-- Stage 3: Build -->
+            <div class="stage-card glass-panel">
+              <div class="stage-card-header">
+                <span class="stage-num">03</span>
+                <div class="stage-icon" style="background: var(--secondary-glow); color: var(--secondary);"><i data-lucide="layers"></i></div>
+              </div>
+              <h3 class="stage-title">Build</h3>
+              <p class="stage-desc">Develop functional, production-grade applications and digital solutions addressing genuine local needs.</p>
+            </div>
+            
+            <!-- Stage 4: Share -->
+            <div class="stage-card glass-panel">
+              <div class="stage-card-header">
+                <span class="stage-num">04</span>
+                <div class="stage-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;"><i data-lucide="rocket"></i></div>
+              </div>
+              <h3 class="stage-title">Share</h3>
+              <p class="stage-desc">Showcase your completed projects, collaborate with peers, and present your work to the tech community.</p>
+            </div>
+          </div>
+
+          <!-- Section Action Buttons -->
+          <div class="skills-to-solutions-actions text-center" style="margin-top: 44px; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+            <a href="#courses" data-view="courses" class="btn btn-primary">
+              Explore Courses <i data-lucide="arrow-right" style="width:16px; margin-left:4px;"></i>
+            </a>
+            <a href="#courses" data-view="courses" class="btn btn-secondary">
+              <i data-lucide="compass" style="width:16px; margin-right:4px;"></i> View Learning Path
+            </a>
           </div>
           
         </div>
