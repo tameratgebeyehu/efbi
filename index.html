@@ -14,7 +14,7 @@
   <link rel="manifest" href="site.webmanifest">
 
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=260">
+  <link rel="stylesheet" href="styles.css?v=259">
   
   <!-- Chart.js CDN for Admin Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -23,37 +23,9 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- YouTube IFrame API — required for custom player controls -->
   <script src="https://www.youtube.com/iframe_api"></script>
-  <!-- QR Code generator (real scannable QR codes for certificates) -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <!-- html2canvas + jsPDF — for proper landscape A4 PDF certificate export -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
 
 <body>
-
-  <!-- ===== CERTIFICATE PRINT AREA (hidden except during @media print) ===== -->
-  <div id="cert-print-area" aria-hidden="true"></div>
-
-  <!-- ===== CERTIFICATE SHARE DIALOG ===== -->
-  <div id="cert-share-dialog" class="cert-share-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Share certificate">
-    <div class="cert-share-panel">
-      <div class="cert-share-header">
-        <span class="cert-share-title">Share Certificate</span>
-        <button class="cert-share-close" id="btn-close-share-dialog" aria-label="Close">&times;</button>
-      </div>
-      <p class="cert-share-subtitle">Share this verified credential on your preferred platform.</p>
-      <div class="cert-share-grid" id="cert-share-grid">
-        <!-- Populated dynamically -->
-      </div>
-      <div class="cert-share-copy-row">
-        <input type="text" class="cert-share-url-input" id="cert-share-url-display" readonly />
-        <button class="cert-share-copy-btn" id="btn-copy-share-url">
-          <i data-lucide="copy" style="width:14px;"></i> Copy
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- Navigation Bar -->
   <header class="navbar">
@@ -3070,11 +3042,8 @@
       <div class="cert-viewer-grid">
         <!-- Left: Certificate Preview Pane -->
         <div class="cert-viewer-preview-pane">
-          <!-- Scale wrapper: JS sets transform: scale() on this -->
-          <div class="cert-viewer-scale-host" id="cert-viewer-scale-host">
-            <div id="cert-viewer-render-target">
-              <!-- Dynamically populated fixed-size certificate HTML -->
-            </div>
+          <div id="cert-viewer-render-target" style="width: 100%;">
+            <!-- Dynamically populated certificate HTML -->
           </div>
         </div>
 
@@ -3123,7 +3092,7 @@
                 <i data-lucide="external-link" style="width:16px;"></i> Verify on Registry
               </button>
               <button class="cert-action-btn secondary" id="btn-cv-share">
-                <i data-lucide="share-2" style="width:16px;"></i> Share Certificate
+                <i data-lucide="share-2" style="width:16px;"></i> Share Verifiable Link
               </button>
             </div>
 

@@ -2210,33 +2210,56 @@ textarea.form-control {
 }
 
 /* ==========================================================================
-   PREMIUM EFBI CERTIFICATE — Fixed 1122x793px Single Source of Truth
+   PREMIUM EFBI CERTIFICATE — Luxury / Technology-Inspired Redesign
    ========================================================================== */
 
-/* Outer wrapper — fixed 1122px × 793px A4 landscape at 96dpi */
-.cert-frame-wrapper {
-  width: 1122px;
-  height: 793px;
-  position: relative;
-  background: #fdfbf7; /* Paper linen cream background */
-  border: 16px solid #050a30; /* Thick navy outer border */
-  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-  overflow: hidden;
-  box-sizing: border-box;
-  flex-shrink: 0;
+.cert-preview-card {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 12px;
 }
 
-/* Inner gold accent hairline border */
+/* Outer wrapper — always light/cream for print fidelity */
+.cert-frame-wrapper {
+  width: 100%;
+  position: relative;
+  background: linear-gradient(145deg, #ffffff 0%, #faf8f5 45%, #f5f7fc 100%);
+  aspect-ratio: 1.414 / 1;
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 4px 16px rgba(0,0,0,0.12);
+  border-radius: 4px;
+}
+
+/* Outer border frame */
 .cert-frame-wrapper::before {
   content: '';
   position: absolute;
-  top: 8px;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  border: 2px solid #c5a880;
+  inset: 10px;
+  border: 1.5px solid #0b132b;
   pointer-events: none;
-  z-index: 2;
+  z-index: 10;
+  border-radius: 2px;
+}
+
+/* Inner gold accent border */
+.cert-frame-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 0.5px solid #c5a456;
+  pointer-events: none;
+  z-index: 10;
+  border-radius: 1px;
+}
+
+/* Subtle geometric watermark background */
+.cert-watermark {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 /* Top accent bar */
@@ -2245,7 +2268,7 @@ textarea.form-control {
   top: 0;
   left: 0;
   right: 0;
-  height: 6px;
+  height: 5px;
   background: linear-gradient(90deg, #0b132b 0%, #1a3a6b 40%, #c5a456 70%, #0b132b 100%);
   z-index: 5;
 }
@@ -2256,68 +2279,12 @@ textarea.form-control {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 6px;
+  height: 5px;
   background: linear-gradient(90deg, #0b132b 0%, #c5a456 30%, #1a3a6b 60%, #0b132b 100%);
   z-index: 5;
 }
 
-/* Corner Geometries */
-.cert-corner-tl {
-  position: absolute;
-  top: -20px;
-  left: -20px;
-  width: 180px;
-  height: 180px;
-  background: #2e266d;
-  clip-path: polygon(0 0, 100% 0, 0 100%);
-  opacity: 0.85;
-  z-index: 1;
-}
-
-.cert-corner-tl-sub {
-  position: absolute;
-  top: -20px;
-  left: -20px;
-  width: 135px;
-  height: 135px;
-  background: #b1d4e0;
-  clip-path: polygon(0 0, 100% 0, 0 100%);
-  z-index: 1;
-}
-
-.cert-corner-br {
-  position: absolute;
-  bottom: -20px;
-  right: -20px;
-  width: 180px;
-  height: 180px;
-  background: #2e266d;
-  clip-path: polygon(100% 100%, 100% 0, 0 100%);
-  opacity: 0.85;
-  z-index: 1;
-}
-
-.cert-corner-br-sub {
-  position: absolute;
-  bottom: -20px;
-  right: -20px;
-  width: 135px;
-  height: 135px;
-  background: #b1d4e0;
-  clip-path: polygon(100% 100%, 100% 0, 0 100%);
-  z-index: 1;
-}
-
-/* Geometric watermark background */
-.cert-watermark {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-/* Certificate inner content layout */
+/* Main content layout */
 .cert-preview-content {
   position: relative;
   width: 100%;
@@ -2326,136 +2293,144 @@ textarea.form-control {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 40px 60px;
+  padding: 5.5% 7%;
   text-align: center;
   z-index: 3;
   box-sizing: border-box;
   color: #0b132b;
 }
 
-/* Header section */
+/* ---- HEADER SECTION ---- */
 .cert-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   width: 100%;
 }
 
 .cert-org-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .cert-logo-mark {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
 }
 
 .cert-logo {
-  font-family: 'Red Hat Display', 'Montserrat', sans-serif;
-  font-size: 1.15rem;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.2em;
-  color: #050a30;
+  letter-spacing: 0.22em;
+  color: #0b132b;
   text-transform: uppercase;
 }
 
 .cert-tagline {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.58rem;
   font-weight: 400;
   color: #64748b;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   font-style: italic;
 }
 
+/* ---- DIVIDER ---- */
 .cert-divider {
-  width: 120px;
-  height: 2px;
+  width: 60px;
+  height: 1.5px;
   background: linear-gradient(90deg, transparent, #c5a456, transparent);
-  margin: 6px auto;
+  margin: 4px auto;
 }
 
-/* Title block */
+/* ---- HEADING GROUP ---- */
 .cert-title-group {
-  margin: 4px 0;
+  margin: 2px 0;
 }
 
 .cert-main-title {
-  font-family: 'Red Hat Display', 'Playfair Display', serif;
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: #050a30;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #0b132b;
+  letter-spacing: 0.04em;
   line-height: 1.1;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .cert-sub-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #9b7a4d;
-  letter-spacing: 0.2em;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  font-style: italic;
+  color: #c5a456;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
 }
 
-/* Recipient Section */
-.cert-recipient-section {
-  margin: 6px 0;
+/* ---- RECIPIENT SECTION ---- */
+.cert-presented-to {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.62rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin: 4px 0 2px;
 }
 
 .cert-recipient {
-  font-family: 'Playfair Display', 'Outfit', serif;
-  font-size: 2.8rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 2.1rem;
   font-weight: 800;
   color: #0b132b;
   letter-spacing: 0.02em;
-  line-height: 1.1;
-  padding-bottom: 8px;
-  border-bottom: 2.5px solid #c5a456;
-  min-width: 420px;
+  line-height: 1;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid #c5a456;
+  min-width: 280px;
   display: inline-block;
+  margin: 2px 0 6px;
 }
 
-/* Body description */
+/* ---- COURSE DESCRIPTION ---- */
 .cert-body-text {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.95rem;
+  font-size: 0.62rem;
   color: #475569;
-  max-width: 720px;
+  max-width: 480px;
   line-height: 1.6;
-  margin: 4px auto;
+  margin: 0;
 }
 
 .cert-course-name {
   font-family: 'Playfair Display', serif;
-  font-weight: 800;
-  color: #050a30;
+  font-weight: 700;
+  color: #0b132b;
   font-style: italic;
 }
 
-/* Achievement Row */
+/* ---- ACHIEVEMENT BADGE ---- */
 .cert-achievement-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 14px;
   margin: 4px 0;
 }
 
 .cert-achievement-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 14px;
+  gap: 5px;
+  padding: 3px 10px;
   border-radius: 20px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2482,24 +2457,24 @@ textarea.form-control {
 
 .cert-score-chip {
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.6rem;
   font-weight: 700;
   color: #475569;
   background: rgba(0,0,0,0.04);
-  padding: 4px 14px;
+  padding: 3px 10px;
   border-radius: 20px;
   border: 1px solid rgba(0,0,0,0.08);
 }
 
-/* Footer layout */
+/* ---- THREE-COLUMN FOOTER ---- */
 .cert-footer-layout {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   width: 100%;
-  padding-top: 12px;
-  border-top: 1px dashed rgba(197, 168, 128, 0.4);
-  gap: 20px;
+  padding-top: 8px;
+  border-top: 0.5px solid rgba(197,164,86,0.4);
+  gap: 16px;
 }
 
 .cert-footer-col {
@@ -2508,6 +2483,7 @@ textarea.form-control {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
+  gap: 2px;
 }
 
 .cert-footer-col.left {
@@ -2522,9 +2498,9 @@ textarea.form-control {
 
 .cert-footer-label {
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.65rem;
+  font-size: 0.52rem;
   font-weight: 700;
-  color: #64748b;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   margin-bottom: 2px;
@@ -2532,40 +2508,80 @@ textarea.form-control {
 
 .cert-footer-value {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: #0b132b;
 }
 
 .cert-footer-id {
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.6rem;
   font-weight: 800;
   color: #1a3a6b;
   letter-spacing: 0.05em;
 }
 
-/* QR Block */
+/* ---- QR CODE PLACEHOLDER ---- */
 .cert-qr-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+}
+
+.cert-qr-svg {
+  width: 42px;
+  height: 42px;
+  opacity: 0.75;
 }
 
 .cert-verify-url {
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.65rem;
-  color: #64748b;
+  font-size: 0.46rem;
+  color: #94a3b8;
   letter-spacing: 0.04em;
-  font-weight: 600;
 }
 
-/* Signatures */
+/* ---- SIGNATURES ---- */
+.cert-sig-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+}
+
+.cert-sig-name {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.2rem;
+  color: #1a3a6b;
+  line-height: 1.1;
+  transform: rotate(-2deg);
+  user-select: none;
+  display: block;
+  margin-bottom: -2px;
+}
+
+.cert-sig-line {
+  width: 130px;
+  height: 0.5px;
+  background: #0b132b;
+  margin: 4px 0 2px;
+}
+
+.cert-sig-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.5rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ---- MULTIPLE SIGNATURES ROW ---- */
 .cert-sigs-row {
   display: flex;
   justify-content: flex-end;
-  gap: 32px;
+  gap: 24px;
   align-items: flex-end;
 }
 
@@ -2575,9 +2591,283 @@ textarea.form-control {
   align-items: center;
 }
 
-.cert-sig-name {
+/* ---- RESPONSIVE SCALING ---- */
+@media (max-width: 768px) {
+  .cert-logo { font-size: 0.55rem; }
+  .cert-main-title { font-size: 1.25rem; }
+  .cert-sub-title { font-size: 0.62rem; }
+  .cert-recipient { font-size: 1.5rem; min-width: 200px; }
+  .cert-body-text { font-size: 0.54rem; }
+  .cert-sig-name { font-size: 0.95rem; }
+  .cert-qr-svg { width: 32px; height: 32px; }
+  .cert-achievement-badge, .cert-score-chip { font-size: 0.5rem; }
+}
+
+@media (max-width: 480px) {
+  .cert-logo { font-size: 0.45rem; letter-spacing: 0.1em; }
+  .cert-main-title { font-size: 0.95rem; }
+  .cert-recipient { font-size: 1.1rem; min-width: 150px; }
+  .cert-body-text { display: none; }
+  .cert-sig-name { font-size: 0.8rem; }
+  .cert-qr-svg { width: 26px; height: 26px; }
+  .cert-achievement-row { gap: 6px; }
+}
+
+.cert-frame-wrapper {
+  width: 100%;
+  position: relative;
+  background: #fdfbf7; /* Premium paper linen cream */
+  border: 16px solid #050a30; /* Thick navy outer border */
+  box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+  aspect-ratio: 1.414 / 1; /* A4 Landscape aspect ratio */
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Gold inner border */
+.cert-frame-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 2px solid #c5a880; /* Gold inner line */
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Corner Geometries matching the Canva blueprint */
+.cert-corner-tl {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 160px;
+  height: 160px;
+  background: #2e266d; /* Purple triangle */
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  opacity: 0.85;
+  z-index: 1;
+}
+
+.cert-corner-tl-sub {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 120px;
+  height: 120px;
+  background: #b1d4e0; /* Light blue accent triangle */
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  z-index: 1;
+}
+
+.cert-corner-br {
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  width: 160px;
+  height: 160px;
+  background: #2e266d;
+  clip-path: polygon(100% 100%, 100% 0, 0 100%);
+  opacity: 0.85;
+  z-index: 1;
+}
+
+.cert-corner-br-sub {
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  width: 120px;
+  height: 120px;
+  background: #b1d4e0;
+  clip-path: polygon(100% 100%, 100% 0, 0 100%);
+  z-index: 1;
+}
+
+.cert-preview-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5% 8%;
+  text-align: center;
+  color: #0f172a;
+  z-index: 3;
+  box-sizing: border-box;
+}
+
+.cert-logo {
+  font-family: 'Red Hat Display', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #050a30;
+  text-transform: uppercase;
+  margin-top: 10px;
+}
+
+.cert-title-group {
+  margin: 10px 0;
+}
+
+.cert-main-title {
+  font-family: 'Red Hat Display', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #050a30;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.cert-sub-title {
+  font-family: 'Red Hat Display', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #9b7a4d; /* Metallic Gold */
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.cert-text-present {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 8px 0;
+}
+
+.cert-recipient {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: #050a30;
+  border-bottom: 2.5px solid #c5a880; /* Gold underline */
+  padding-bottom: 4px;
+  min-width: 320px;
+  display: inline-block;
+  letter-spacing: 0.03em;
+}
+
+.cert-details-text {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.76rem;
+  color: #475569;
+  max-width: 530px;
+  line-height: 1.6;
+  margin: 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cert-course-name {
+  font-weight: 800;
+  color: #2e266d;
+}
+
+/* Three-column premium footer */
+.cert-footer-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(197, 168, 128, 0.4);
+}
+
+.cert-footer-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.cert-footer-col.left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.cert-footer-col.right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.cert-footer-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 3px;
+}
+
+.cert-footer-value {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #050a30;
+}
+
+/* Premium Rotating Gold Security Seal */
+.cert-seal-container {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cert-gold-seal {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #fce0ad 0%, #dfa856 60%, #b8812c 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(184, 129, 44, 0.35), inset 0 2px 4px rgba(255,255,255,0.4);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: slow-rotate 25s linear infinite;
+}
+
+/* Spiked/sunburst edge overlay using CSS border spikes */
+.cert-gold-seal::before {
+  content: '';
+  position: absolute;
+  width: 90%;
+  height: 90%;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+}
+
+.cert-seal-star {
+  position: absolute;
+  color: #fcf6e8;
+  font-size: 1.15rem;
+  z-index: 5;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+}
+
+@keyframes slow-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Realistic handwriting signature */
+.cert-signature-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cert-signature-text {
   font-family: 'Great Vibes', cursive;
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   color: #1e3a8a;
   line-height: 1;
   margin-bottom: -2px;
@@ -2585,209 +2875,33 @@ textarea.form-control {
   user-select: none;
 }
 
-.cert-sig-line {
-  width: 140px;
-  height: 1px;
-  background: #0b132b;
-  margin: 4px 0 2px;
-}
-
-.cert-sig-label {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-/* Modal scale host */
-.cert-viewer-scale-host {
-  transform-origin: top center;
-  transition: transform 0.2s ease;
-  display: inline-block;
-}
-
-/* ===== SHARE DIALOG MODAL ===== */
-.cert-share-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.cert-share-panel {
-  background: var(--card-bg, #111827);
-  border: 1px solid var(--border-color, #1f2937);
-  border-radius: 16px;
-  padding: 24px;
-  width: 100%;
-  max-width: 440px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  color: var(--text-primary, #f9fafb);
-}
-
-.cert-share-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.cert-share-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-.cert-share-close {
-  background: none;
-  border: none;
-  color: var(--text-muted, #9ca3af);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 4px 8px;
-  line-height: 1;
-}
-
-.cert-share-close:hover {
-  color: var(--text-primary, #ffffff);
-}
-
-.cert-share-subtitle {
-  font-size: 0.85rem;
-  color: var(--text-muted, #9ca3af);
-  margin-bottom: 20px;
-}
-
-.cert-share-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.cert-share-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 8px;
-  border-radius: 12px;
-  background: var(--bg-tertiary, rgba(255,255,255,0.04));
-  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
-  text-decoration: none;
-  color: var(--text-primary, #ffffff);
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.cert-share-item:hover {
-  transform: translateY(-2px);
-  background: var(--bg-secondary, rgba(255,255,255,0.08));
-}
-
-.cert-share-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cert-share-icon i {
-  width: 20px;
-  height: 20px;
-}
-
-.cert-share-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.cert-share-copy-row {
-  display: flex;
-  gap: 8px;
-}
-
-.cert-share-url-input {
-  flex: 1;
-  background: var(--bg-secondary, rgba(0,0,0,0.2));
-  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.8rem;
-  color: var(--text-muted, #9ca3af);
-  font-family: monospace;
-}
-
-.cert-share-copy-btn {
-  background: var(--primary, #4f46e5);
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: opacity 0.2s ease;
-}
-
-.cert-share-copy-btn:hover {
-  opacity: 0.9;
-}
-
-/* ===== PRINT STYLES ===== */
-#cert-print-area {
-  display: none;
-}
-
-@media print {
-  @page {
-    size: 297mm 210mm; /* A4 Landscape */
-    margin: 0;
+@media (max-width: 768px) {
+  .cert-frame-wrapper {
+    border-width: 10px;
   }
+  .cert-logo { font-size: 0.85rem; }
+  .cert-main-title { font-size: 1.25rem; }
+  .cert-sub-title { font-size: 0.8rem; }
+  .cert-recipient { font-size: 1.45rem; min-width: 220px; }
+  .cert-details-text { font-size: 0.62rem; margin: 4px 0; }
+  .cert-seal-container { width: 50px; height: 50px; }
+  .cert-seal-star { font-size: 0.85rem; }
+  .cert-signature-text { font-size: 1.3rem; }
+  .cert-footer-label { font-size: 0.55rem; }
+  .cert-footer-value { font-size: 0.6rem; }
+}
 
-  body {
-    background: #ffffff !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
+@media (max-width: 480px) {
+  .cert-frame-wrapper {
+    border-width: 6px;
   }
-
-  /* Hide everything on the page except #cert-print-area */
-  body > *:not(#cert-print-area) {
-    display: none !important;
-  }
-
-  #cert-print-area {
-    display: block !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 297mm !important;
-    height: 210mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    page-break-after: avoid !important;
-    page-break-inside: avoid !important;
-  }
-
-  #cert-print-area .cert-frame-wrapper {
-    width: 297mm !important;
-    height: 210mm !important;
-    box-shadow: none !important;
-    border-width: 12mm !important;
-    border-radius: 0 !important;
-  }
+  .cert-logo { font-size: 0.65rem; letter-spacing: 0.1em; }
+  .cert-main-title { font-size: 0.95rem; }
+  .cert-sub-title { font-size: 0.65rem; }
+  .cert-recipient { font-size: 1.1rem; min-width: 160px; }
+  .cert-details-text { display: none; } /* Hide descriptions on tiny mobile */
+  .cert-seal-container { width: 38px; height: 38px; }
+  .cert-signature-text { font-size: 1rem; }
 }
 
 /* Certificate Verification page */
