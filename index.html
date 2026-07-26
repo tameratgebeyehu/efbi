@@ -14,7 +14,7 @@
   <link rel="manifest" href="site.webmanifest">
 
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=253">
+  <link rel="stylesheet" href="styles.css?v=254">
   
   <!-- Chart.js CDN for Admin Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -469,213 +469,177 @@
         </div>
       </div>
       
-      <!-- Gallery Section -->
+      <!-- Building EFBI Section (Replaces old Event Gallery) -->
       <div id="gallery" class="section">
         <div class="container">
           <div class="section-header text-center">
-            <span class="section-tag">Event Gallery</span>
-            <h2 class="section-title">Life at EFBI</h2>
-            <p class="section-desc">Explore visual highlights from our physical workshops, online learning sessions, technology bootcamps, and project presentations.</p>
+            <span class="section-tag">Initiative Progress</span>
+            <h2 class="section-title">Building EFBI</h2>
+            <p class="section-desc">A transparent view into our active platform development, curriculum design, video production, and upcoming roadmap.</p>
           </div>
-          <div class="gallery-masonry">
-            <!-- Gallery Item 1 -->
-            <div class="gallery-item">
-              <svg viewBox="0 0 300 200" width="100%" height="auto" style="background: #090d16; display: block; border-radius: var(--border-radius-md);">
-                <defs>
-                  <linearGradient id="ai-grad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.8"/>
-                    <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.4"/>
-                    <stop offset="100%" stop-color="#0284c7" stop-opacity="0.9"/>
-                  </linearGradient>
-                  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="6" result="blur"/>
-                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-                  </filter>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#ai-grad)"/>
-                <!-- Circuit board connections -->
-                <path d="M 0,100 L 80,100 L 120,60 L 180,60 L 220,100 L 300,100" fill="none" stroke="rgba(59, 130, 246, 0.4)" stroke-width="2"/>
-                <path d="M 120,60 L 150,140 L 250,140" fill="none" stroke="rgba(14, 165, 233, 0.3)" stroke-width="1.5" stroke-dasharray="4,4"/>
-                
-                <!-- Glowing Neural Nodes -->
-                <circle cx="80" cy="100" r="6" fill="#60a5fa" filter="url(#glow)"/>
-                <circle cx="120" cy="60" r="8" fill="#38bdf8" filter="url(#glow)"/>
-                <circle cx="180" cy="60" r="8" fill="#38bdf8" filter="url(#glow)"/>
-                <circle cx="220" cy="100" r="6" fill="#60a5fa" filter="url(#glow)"/>
-                <circle cx="150" cy="140" r="10" fill="#06b6d4" filter="url(#glow)"/>
-                
-                <!-- Brain Core/AI Icon -->
-                <g transform="translate(135, 45) scale(0.6)">
-                  <path d="M24 6c-7.73 0-14 6.27-14 14 0 5.4 3.06 10.1 7.56 12.39L16 38h16l-1.56-5.61C34.94 30.1 38 25.4 38 20c0-7.73-6.27-14-14-14zm0 6c4.42 0 8 3.58 8 8s-3.58 8-8 8-8-3.58-8-8 3.58-8 8-8z" fill="#ffffff" opacity="0.9"/>
-                </g>
-                
-                <text x="15" y="30" fill="rgba(255,255,255,0.5)" font-family="monospace" font-size="8">MODEL: RESNET_50_EFBI</text>
-                <text x="15" y="42" fill="#38bdf8" font-family="monospace" font-size="9" font-weight="bold">>>> EPOCHS: 100/100 [COMPLETE]</text>
-              </svg>
-              <div class="gallery-overlay">
-                <span class="gallery-tag">Workshops</span>
-                <h4 class="gallery-caption">AI & Neural Networks In-Person Bootcamp</h4>
-              </div>
-            </div>
-            
-            <!-- Gallery Item 2 -->
-            <div class="gallery-item">
-              <svg viewBox="0 0 300 320" width="100%" height="auto" style="background: #050b14; display: block; border-radius: var(--border-radius-md);">
-                <defs>
-                  <linearGradient id="proj-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#064e3b" stop-opacity="0.8"/>
-                    <stop offset="50%" stop-color="#10b981" stop-opacity="0.3"/>
-                    <stop offset="100%" stop-color="#022c22" stop-opacity="0.9"/>
-                  </linearGradient>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#proj-grad)"/>
-                
-                <!-- Mock Mobile Dashboard wireframe -->
-                <rect x="50" y="30" width="200" height="260" rx="20" fill="rgba(0,0,0,0.4)" stroke="rgba(16, 185, 129, 0.3)" stroke-width="2"/>
-                <!-- Speaker notch -->
-                <rect x="120" y="40" width="60" height="8" rx="4" fill="rgba(16, 185, 129, 0.2)"/>
-                
-                <!-- Inner charts -->
-                <circle cx="150" cy="120" r="45" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
-                <circle cx="150" cy="120" r="45" fill="none" stroke="#10b981" stroke-width="8" stroke-dasharray="210,280" transform="rotate(-90, 150, 120)"/>
-                <text x="150" y="125" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="18" font-weight="bold">84%</text>
-                <text x="150" y="185" dominant-baseline="middle" text-anchor="middle" fill="#a7f3d0" font-family="sans-serif" font-size="10" letter-spacing="1">PROJECT COMPLETE</text>
-                
-                <!-- Stat widgets list -->
-                <rect x="70" y="205" width="160" height="24" rx="6" fill="rgba(16, 185, 129, 0.15)"/>
-                <circle cx="85" cy="217" r="6" fill="#34d399"/>
-                <rect x="100" y="213" width="100" height="8" rx="4" fill="rgba(255,255,255,0.8)"/>
-                
-                <rect x="70" y="238" width="160" height="24" rx="6" fill="rgba(16, 185, 129, 0.15)"/>
-                <circle cx="85" cy="250" r="6" fill="#34d399"/>
-                <rect x="100" y="246" width="70" height="8" rx="4" fill="rgba(255,255,255,0.8)"/>
-                
-                <!-- Floating Graduation Cap icon top-right -->
-                <g transform="translate(220, 15) scale(0.6)">
-                  <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z" fill="#34d399"/>
-                  <path d="M22 10v4.72l-10 5.45-10-5.45V10l10 5.45L22 10z" fill="#059669"/>
-                </g>
-              </svg>
-              <div class="gallery-overlay">
-                <span class="gallery-tag">Student Projects</span>
-                <h4 class="gallery-caption">Mobile App Hackathon Presentations</h4>
-              </div>
-            </div>
-            
-            <!-- Gallery Item 3 -->
-            <div class="gallery-item">
-              <svg viewBox="0 0 300 220" width="100%" height="auto" style="background: #080718; display: block; border-radius: var(--border-radius-md);">
-                <defs>
-                  <linearGradient id="learn-grad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stop-color="#312e81" stop-opacity="0.8"/>
-                    <stop offset="100%" stop-color="#4c1d95" stop-opacity="0.9"/>
-                  </linearGradient>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#learn-grad)"/>
-                
-                <!-- Grid background -->
-                <path d="M 0,40 H 300 M 0,80 H 300 M 0,120 H 300 M 0,160 H 300 M 0,200 H 300" fill="none" stroke="rgba(99, 102, 241, 0.1)" stroke-width="1"/>
-                <path d="M 50,0 V 220 M 100,0 V 220 M 150,0 V 220 M 200,0 V 220 M 250,0 V 220" fill="none" stroke="rgba(99, 102, 241, 0.1)" stroke-width="1"/>
-                
-                <!-- Mock IDE UI inside online learning -->
-                <rect x="30" y="25" width="240" height="170" rx="10" fill="rgba(0,0,0,0.6)" stroke="rgba(129, 140, 248, 0.3)" stroke-width="1.5"/>
-                <!-- Code text lines -->
-                <rect x="50" y="45" width="140" height="6" rx="3" fill="#818cf8"/>
-                <rect x="50" y="58" width="180" height="6" rx="3" fill="#a5b4fc"/>
-                <rect x="70" y="71" width="100" height="6" rx="3" fill="#c7d2fe"/>
-                
-                <!-- Virtual student bubbles -->
-                <circle cx="65" cy="130" r="16" fill="rgba(99, 102, 241, 0.2)" stroke="#818cf8" stroke-width="1.5"/>
-                <text x="65" y="134" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="10" font-weight="bold">Y</text>
-                
-                <circle cx="110" cy="130" r="16" fill="rgba(139, 92, 246, 0.2)" stroke="#a78bfa" stroke-width="1.5"/>
-                <text x="110" y="134" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="10" font-weight="bold">H</text>
-                
-                <circle cx="155" cy="130" r="16" fill="rgba(236, 72, 153, 0.2)" stroke="#f472b6" stroke-width="1.5"/>
-                <text x="155" y="134" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-size="10" font-weight="bold">S</text>
-                
-                <!-- Active glowing voice/speaker wave -->
-                <path d="M190,130 C195,120 205,120 210,130 C215,140 225,140 230,130" fill="none" stroke="#22c55e" stroke-width="2" filter="url(#glow)"/>
-              </svg>
-              <div class="gallery-overlay">
-                <span class="gallery-tag">Online Learning</span>
-                <h4 class="gallery-caption">Interactive Online Web Dev Class Q&A</h4>
-              </div>
-            </div>
-            
-            <!-- Gallery Item 4 -->
-            <div class="gallery-item">
-              <svg viewBox="0 0 300 240" width="100%" height="auto" style="background: #0c0804; display: block; border-radius: var(--border-radius-md);">
-                <defs>
-                  <linearGradient id="ent-grad" x1="1" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#b45309" stop-opacity="0.8"/>
-                    <stop offset="50%" stop-color="#d97706" stop-opacity="0.3"/>
-                    <stop offset="100%" stop-color="#451a03" stop-opacity="0.9"/>
-                  </linearGradient>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#ent-grad)"/>
-                
-                <!-- Ascending rocket ship pathway graphic -->
-                <path d="M 60,200 Q 150,150 240,40" fill="none" stroke="rgba(245, 158, 11, 0.2)" stroke-width="8" stroke-linecap="round"/>
-                <path d="M 60,200 Q 150,150 240,40" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" stroke-dasharray="10,6"/>
-                
-                <!-- Rocket ship -->
-                <g transform="translate(225, 25) rotate(45)">
-                  <path d="M0 -15 L10 10 L-10 10 Z" fill="#ffffff"/>
-                  <path d="M-10 10 C-10 15 10 15 10 10 Z" fill="#f59e0b"/>
-                  <rect x="-4" y="5" width="8" height="15" rx="3" fill="#ef4444"/>
-                </g>
-                
-                <!-- Pitch stats tags -->
-                <rect x="40" y="60" width="100" height="34" rx="8" fill="rgba(251, 191, 36, 0.15)" stroke="rgba(251, 191, 36, 0.4)" stroke-width="1"/>
-                <text x="50" y="75" fill="#fef08a" font-family="sans-serif" font-size="9" font-weight="bold">STARTUP PITCH</text>
-                <text x="50" y="87" fill="#ffffff" font-family="sans-serif" font-size="10" font-weight="900">STAGE 1: SEED</text>
-                
-                <!-- Glowing Gear overlay -->
-                <circle cx="70" cy="160" r="24" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="4"/>
-                <circle cx="70" cy="160" r="16" fill="none" stroke="rgba(251, 191, 36, 0.2)" stroke-dasharray="6,4" stroke-width="6"/>
-              </svg>
-              <div class="gallery-overlay">
-                <span class="gallery-tag">Technology Events</span>
-                <h4 class="gallery-caption">Youth Entrepreneurship Pitching Day</h4>
-              </div>
-            </div>
-  
-            <!-- Gallery Item 5 -->
-            <div class="gallery-item">
-              <svg viewBox="0 0 300 180" width="100%" height="auto" style="background: #0a040d; display: block; border-radius: var(--border-radius-md);">
-                <defs>
-                  <linearGradient id="grad-grad" x1="0" y1="1" x2="1" y2="0">
-                    <stop offset="0%" stop-color="#db2777" stop-opacity="0.8"/>
-                    <stop offset="50%" stop-color="#ec4899" stop-opacity="0.3"/>
-                    <stop offset="100%" stop-color="#500724" stop-opacity="0.9"/>
-                  </linearGradient>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grad-grad)"/>
-                
-                <!-- Award Certificate Seal design -->
-                <circle cx="150" cy="90" r="50" fill="none" stroke="rgba(236, 72, 153, 0.2)" stroke-width="4"/>
-                <circle cx="150" cy="90" r="42" fill="rgba(251, 191, 36, 0.1)" stroke="#db2777" stroke-width="2"/>
-                
-                <!-- Ribbon pathways -->
-                <path d="M 135,115 L 125,160 L 140,150 L 155,160 L 148,115 Z" fill="#db2777" opacity="0.8"/>
-                <path d="M 165,115 L 175,160 L 160,150 L 145,160 L 152,115 Z" fill="#f43f5e" opacity="0.8"/>
-                
-                <circle cx="150" cy="90" r="30" fill="radial-gradient(circle, #fde047 0%, #ca8a04 100%)" stroke="#fbbf24" stroke-width="2.5"/>
-                
-                <!-- Star inside seal -->
-                <path d="M 150,78 L 153,85 L 161,86 L 155,91 L 157,99 L 150,95 L 143,99 L 145,91 L 139,86 L 147,85 Z" fill="#ffffff" filter="url(#glow)"/>
-                
-                <text x="15" y="30" fill="rgba(255,255,255,0.4)" font-family="sans-serif" font-size="8" letter-spacing="1">GRADUATION TRACK</text>
-                <text x="15" y="42" fill="#f472b6" font-family="sans-serif" font-size="9" font-weight="bold">IMPACT: 100% CERTIFIED</text>
-              </svg>
-              <div class="gallery-overlay">
-                <span class="gallery-tag">Certificates</span>
-                <h4 class="gallery-caption">Graduates Receiving Completion Credentials</h4>
-              </div>
-            </div>
-          </div>     </div>
+
+          <!-- Category Filter Tabs -->
+          <div class="building-filters">
+            <button class="building-filter-btn active" data-filter="all">All Focus Areas</button>
+            <button class="building-filter-btn" data-filter="platform">Platform Development</button>
+            <button class="building-filter-btn" data-filter="production">Course Production</button>
+            <button class="building-filter-btn" data-filter="curriculum">Curriculum Design</button>
+            <button class="building-filter-btn" data-filter="branding">Brand & Media</button>
+            <button class="building-filter-btn" data-filter="community">Future Community Programs</button>
+          </div>
           
+          <!-- Building EFBI Grid -->
+          <div class="building-efbi-grid" id="building-efbi-grid">
+            
+            <!-- Item 1: Platform Development -->
+            <div class="building-card glass-panel" data-category="platform">
+              <div class="building-visual-box">
+                <svg viewBox="0 0 320 180" width="100%" height="auto" class="building-svg">
+                  <rect width="100%" height="100%" fill="#0a0f1d"/>
+                  <!-- IDE Topbar -->
+                  <rect x="0" y="0" width="100%" height="24" fill="#111827"/>
+                  <circle cx="14" cy="12" r="4" fill="#ef4444"/>
+                  <circle cx="26" cy="12" r="4" fill="#f59e0b"/>
+                  <circle cx="38" cy="12" r="4" fill="#10b981"/>
+                  <text x="160" y="16" fill="#6b7280" font-family="monospace" font-size="9" text-anchor="middle">app.js — EFBI Platform</text>
+                  <!-- Code snippet preview -->
+                  <text x="16" y="48" fill="#818cf8" font-family="monospace" font-size="10">const initEFBIPortal = () => {</text>
+                  <text x="32" y="66" fill="#34d399" font-family="monospace" font-size="10">renderCourses({ activeTrack: true });</text>
+                  <text x="32" y="84" fill="#a5b4fc" font-family="monospace" font-size="10">mountCustomPlayer('#lp-yt-player');</text>
+                  <text x="32" y="102" fill="#fbbf24" font-family="monospace" font-size="10">verifyCertificate(certId);</text>
+                  <text x="16" y="120" fill="#818cf8" font-family="monospace" font-size="10">};</text>
+                  <rect x="16" y="136" width="130" height="18" rx="4" fill="rgba(52, 211, 153, 0.15)" stroke="rgba(52, 211, 153, 0.3)" stroke-width="1"/>
+                  <text x="24" y="148" fill="#34d399" font-family="monospace" font-size="9" font-weight="bold">✓ PWA & RESPONSIVE</text>
+                </svg>
+                <div class="building-status-badge badge-active">
+                  <span class="status-dot"></span> Active
+                </div>
+              </div>
+              <div class="building-card-body">
+                <span class="building-cat-label">Platform Development</span>
+                <h3 class="building-card-title">EFBI Web Platform & Learning Portal</h3>
+                <p class="building-card-desc">Building the student portal, course video player, certificate verification system, and responsive web application.</p>
+              </div>
+            </div>
+            
+            <!-- Item 2: Course Production -->
+            <div class="building-card glass-panel" data-category="production">
+              <div class="building-visual-box">
+                <svg viewBox="0 0 320 180" width="100%" height="auto" class="building-svg">
+                  <rect width="100%" height="100%" fill="#0d0e1c"/>
+                  <!-- Video Editor Timeline Mock -->
+                  <rect x="20" y="30" width="280" height="90" rx="8" fill="#1e1b4b" stroke="rgba(99, 102, 241, 0.3)" stroke-width="1"/>
+                  <circle cx="160" cy="75" r="22" fill="rgba(99, 102, 241, 0.3)" stroke="#818cf8" stroke-width="2"/>
+                  <polygon points="154,65 172,75 154,85" fill="#ffffff"/>
+                  <!-- Timeline Tracks -->
+                  <rect x="20" y="132" width="280" height="12" rx="4" fill="#312e81"/>
+                  <rect x="40" y="132" width="120" height="12" rx="4" fill="#818cf8"/>
+                  <rect x="170" y="132" width="90" height="12" rx="4" fill="#34d399"/>
+                  <!-- Playhead -->
+                  <line x1="110" y1="20" x2="110" y2="155" stroke="#ef4444" stroke-width="2"/>
+                </svg>
+                <div class="building-status-badge badge-active">
+                  <span class="status-dot"></span> Active
+                </div>
+              </div>
+              <div class="building-card-body">
+                <span class="building-cat-label">Course Production</span>
+                <h3 class="building-card-title">Video Lessons & Media Production</h3>
+                <p class="building-card-desc">Recording, editing, and publishing structured video modules for Python, Web Development, and AI basics.</p>
+              </div>
+            </div>
+            
+            <!-- Item 3: Curriculum Design -->
+            <div class="building-card glass-panel" data-category="curriculum">
+              <div class="building-visual-box">
+                <svg viewBox="0 0 320 180" width="100%" height="auto" class="building-svg">
+                  <rect width="100%" height="100%" fill="#08131a"/>
+                  <!-- Module Roadmap Nodes -->
+                  <line x1="40" y1="90" x2="280" y2="90" stroke="rgba(14, 165, 233, 0.3)" stroke-width="2" stroke-dasharray="6,4"/>
+                  <!-- Node 1 -->
+                  <circle cx="60" cy="90" r="16" fill="#0284c7"/>
+                  <text x="60" y="94" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="10" font-weight="bold">M1</text>
+                  <!-- Node 2 -->
+                  <circle cx="135" cy="90" r="16" fill="#0369a1"/>
+                  <text x="135" y="94" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="10" font-weight="bold">M2</text>
+                  <!-- Node 3 -->
+                  <circle cx="210" cy="90" r="16" fill="#075985"/>
+                  <text x="210" y="94" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="10" font-weight="bold">M3</text>
+                  <!-- Node 4 -->
+                  <circle cx="270" cy="90" r="12" fill="rgba(14, 165, 233, 0.2)" stroke="#38bdf8" stroke-width="1.5"/>
+                  <text x="270" y="94" text-anchor="middle" fill="#38bdf8" font-family="sans-serif" font-size="9">M4</text>
+                  
+                  <text x="60" y="130" text-anchor="middle" fill="#7dd3fc" font-family="sans-serif" font-size="9">Foundations</text>
+                  <text x="135" y="130" text-anchor="middle" fill="#7dd3fc" font-family="sans-serif" font-size="9">Labs & Projects</text>
+                  <text x="210" y="130" text-anchor="middle" fill="#7dd3fc" font-family="sans-serif" font-size="9">AI & Apps</text>
+                </svg>
+                <div class="building-status-badge badge-dev">
+                  <span class="status-dot"></span> In Development
+                </div>
+              </div>
+              <div class="building-card-body">
+                <span class="building-cat-label">Curriculum Design</span>
+                <h3 class="building-card-title">Practical Learning Pathways</h3>
+                <p class="building-card-desc">Structuring hands-on module syllabi, coding exercises, project prompts, and assessment criteria.</p>
+              </div>
+            </div>
+            
+            <!-- Item 4: Brand and Media -->
+            <div class="building-card glass-panel" data-category="branding">
+              <div class="building-visual-box">
+                <svg viewBox="0 0 320 180" width="100%" height="auto" class="building-svg">
+                  <rect width="100%" height="100%" fill="#07120e"/>
+                  <!-- Brand System Visual -->
+                  <rect x="40" y="30" width="100" height="120" rx="10" fill="rgba(52, 211, 153, 0.08)" stroke="rgba(52, 211, 153, 0.25)" stroke-width="1.5"/>
+                  <text x="90" y="70" text-anchor="middle" fill="#34d399" font-family="sans-serif" font-size="16" font-weight="900">EFBI</text>
+                  <text x="90" y="88" text-anchor="middle" fill="#a7f3d0" font-family="sans-serif" font-size="8" letter-spacing="1">ACADEMY</text>
+                  <circle cx="90" cy="115" r="8" fill="#34d399"/>
+                  
+                  <!-- Color Swatches -->
+                  <rect x="160" y="30" width="120" height="32" rx="6" fill="#4f46e5"/>
+                  <text x="220" y="50" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="9">Primary #4F46E5</text>
+                  
+                  <rect x="160" y="74" width="120" height="32" rx="6" fill="#059669"/>
+                  <text x="220" y="94" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="9">Secondary #059669</text>
+                  
+                  <rect x="160" y="118" width="120" height="32" rx="6" fill="#0f172a" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                  <text x="220" y="138" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Dark #0F172A</text>
+                </svg>
+                <div class="building-status-badge badge-active">
+                  <span class="status-dot"></span> Active
+                </div>
+              </div>
+              <div class="building-card-body">
+                <span class="building-cat-label">Brand & Media</span>
+                <h3 class="building-card-title">Identity & Design System</h3>
+                <p class="building-card-desc">Crafting the transparent EFBI logo asset, favicon suite, web manifest, color tokens, and UI guidelines.</p>
+              </div>
+            </div>
+            
+            <!-- Item 5: Future Community Programs -->
+            <div class="building-card glass-panel" data-category="community">
+              <div class="building-visual-box">
+                <svg viewBox="0 0 320 180" width="100%" height="auto" class="building-svg">
+                  <rect width="100%" height="100%" fill="#160f06"/>
+                  <!-- Future Community Roadmap Mock -->
+                  <rect x="30" y="35" width="260" height="110" rx="10" fill="rgba(245, 158, 11, 0.06)" stroke="rgba(245, 158, 11, 0.25)" stroke-width="1.5" stroke-dasharray="6,4"/>
+                  <text x="160" y="70" text-anchor="middle" fill="#fbbf24" font-family="sans-serif" font-size="12" font-weight="bold">Community Workshops & Bootcamps</text>
+                  <text x="160" y="90" text-anchor="middle" fill="#fef08a" font-family="sans-serif" font-size="10">Mentorship • Student Hackathons • Peer Hubs</text>
+                  <rect x="100" y="106" width="120" height="22" rx="11" fill="rgba(245, 158, 11, 0.15)"/>
+                  <text x="160" y="121" text-anchor="middle" fill="#f59e0b" font-family="sans-serif" font-size="9" font-weight="bold">PLANNED ROADMAP</text>
+                </svg>
+                <div class="building-status-badge badge-planned">
+                  <span class="status-dot"></span> Planned
+                </div>
+              </div>
+              <div class="building-card-body">
+                <span class="building-cat-label">Future Community Programs</span>
+                <h3 class="building-card-title">Mentorship & Workshops Roadmap</h3>
+                <p class="building-card-desc">Preparing for future student cohort bootcamps, community hackathons, and mentor network partnerships as EFBI scales.</p>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
       

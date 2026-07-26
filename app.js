@@ -107,6 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Testimonials Carousel Slider
   initStoriesCarousel();
+
+  // Building EFBI Interactive Category Filters
+  initBuildingFilters();
   
   // Auto-connect to Google Sheets on load, then render live course data
   autoDetectAndConnect().then(() => {
@@ -586,6 +589,31 @@ function initStatsCounters() {
   if (statsSection) {
     observer.observe(statsSection);
   }
+}
+
+/* ==========================================================================
+   BUILDING EFBI INTERACTIVE CATEGORY FILTERS
+   ========================================================================== */
+function initBuildingFilters() {
+  const filterBtns = document.querySelectorAll('.building-filter-btn');
+  const cards = document.querySelectorAll('.building-card');
+  if (filterBtns.length === 0 || cards.length === 0) return;
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const filter = btn.getAttribute('data-filter');
+      cards.forEach(card => {
+        if (filter === 'all' || card.getAttribute('data-category') === filter) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
 }
 
 /* ==========================================================================
