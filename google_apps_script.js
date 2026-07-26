@@ -707,8 +707,8 @@ function sendApprovalEmail(email, name, course) {
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0;" />
       
       <p style="font-size: 12.5px; color: #94a3b8; text-align: center; margin: 0; line-height: 1.4;">
-        Addis Ababa, Ethiopia | info@efbi-initiative.org <br>
-        &copy; 2026 Ethiopian Future Builders Initiative. All Rights Reserved.
+        Addis Ababa, Ethiopia | efbi.academy@gmail.com | +251 725 520 306 <br>
+        &copy; 2026 Ethiopian Future Builders Initiative Academy. All Rights Reserved.
       </p>
     </div>
   `;
