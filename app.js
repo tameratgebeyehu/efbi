@@ -392,11 +392,19 @@ function initRouter() {
       return;
     }
 
-    // Handle dynamic verify route: #verify/<certId>
-    const verifyMatch = hash.match(/^#verify\/([^/]+)$/);
+    // Handle dynamic verify route: #verify/<certId>, #verify?id=<certId>, or ?id=<certId>
+    let urlCertId = null;
+    const verifyMatch = hash.match(/^#verify(?:\/|\?id=)([^&/]+)$/i);
     if (verifyMatch) {
-      const certId = verifyMatch[1].toUpperCase();
+      urlCertId = verifyMatch[1].toUpperCase();
+    } else {
+      const queryParams = new URLSearchParams(window.location.search);
+      if (queryParams.has('id')) {
+        urlCertId = queryParams.get('id').toUpperCase();
+      }
+    }
 
+    if (urlCertId) {
       const views = document.querySelectorAll('.router-view');
       views.forEach(view => {
         if (view.id === 'verify-view') {
@@ -417,7 +425,7 @@ function initRouter() {
       // Auto-trigger verification search
       const input = document.getElementById('cert-id-input');
       if (input) {
-        input.value = certId;
+        input.value = urlCertId;
         const verifyBtn = document.getElementById('btn-verify-cert');
         if (verifyBtn) {
           setTimeout(() => verifyBtn.click(), 100);
@@ -2287,6 +2295,161 @@ function initCertificatePreview() {
 /* ==========================================================================
    CERTIFICATE VERIFICATION ENGINE (Asynchronous DB Search)
    ========================================================================== */
+/* ==========================================================================
+   UNIFIED CERTIFICATE TEMPLATE ENGINE (SINGLE SOURCE OF TRUTH)
+   ========================================================================== */
+
+/**
+ * Renders the single fixed 1122x793px A4 landscape certificate HTML structure.
+ */
+function renderEFBICertificateHTML(foundCert, options = {}) {
+  const certId = (foundCert.id || 'EFBI-2026-000').toUpperCase();
+  const studentName = foundCert.name || 'Student Name';
+  const courseTitle = foundCert.course || 'Technical Learning Pathway';
+  const issueDate = foundCert.date || new Date().toISOString().split('T')[0];
+  const instructorName = foundCert.instructor || 'EFBI Faculty';
+  const score = foundCert.score;
+  const level = foundCert.level;
+  const verifyUrl = `https://efbi.site/verify?id=${certId}`;
+  const scalerId = options.scalerId || ('cert-scaler-' + Math.random().toString(36).substr(2, 6));
+
+  const chipsHTML = (score || level) ? `
+    <div class="efbi-cert-chips-row">
+      ${score ? `<span class="efbi-cert-chip score"><i data-lucide="award" style="width:14px;height:14px;"></i> Score: ${score}%</span>` : ''}
+      ${level ? `<span class="efbi-cert-chip level"><i data-lucide="star" style="width:14px;height:14px;"></i> ${level}</span>` : ''}
+    </div>
+  ` : '';
+
+  return `
+    <div class="efbi-cert-scaler" id="${scalerId}">
+      <div class="efbi-cert-template" id="efbi-cert-node-${certId}">
+        <!-- Border Frames -->
+        <div class="efbi-cert-border-outer"></div>
+        <div class="efbi-cert-border-inner"></div>
+
+        <!-- Corner Decorative Accents -->
+        <div class="efbi-cert-corner top-left"></div>
+        <div class="efbi-cert-corner top-right"></div>
+        <div class="efbi-cert-corner bottom-left"></div>
+        <div class="efbi-cert-corner bottom-right"></div>
+
+        <!-- Background Watermark -->
+        <div class="efbi-cert-bg-watermark">
+          <img src="assets/efbi-icon.png" alt="" class="efbi-cert-watermark-icon">
+        </div>
+
+        <!-- Content Container -->
+        <div class="efbi-cert-content">
+          <!-- Top Header Row -->
+          <div class="efbi-cert-header">
+            <div class="efbi-cert-brand">
+              <img src="assets/efbi-icon.png" alt="EFBI Icon" class="efbi-cert-brand-icon">
+              <div class="efbi-cert-brand-name">
+                EFBI <span>ACADEMY</span>
+              </div>
+            </div>
+            <div class="efbi-cert-domain">efbi.site</div>
+          </div>
+
+          <div class="efbi-cert-gold-divider"></div>
+
+          <!-- Titles -->
+          <div class="efbi-cert-title-section">
+            <h1 class="efbi-cert-main-title">CERTIFICATE OF COMPLETION</h1>
+            <p class="efbi-cert-award-text">This certificate is awarded to</p>
+          </div>
+
+          <!-- Student Name -->
+          <div class="efbi-cert-recipient-wrap">
+            <h2 class="efbi-cert-recipient-name">${studentName}</h2>
+            <div class="efbi-cert-recipient-underline"></div>
+          </div>
+
+          <!-- Body Description -->
+          <div class="efbi-cert-body-section">
+            <p class="efbi-cert-completion-lead">for successfully completing the requirements of</p>
+            <h3 class="efbi-cert-course-title">${courseTitle}</h3>
+            <p class="efbi-cert-completion-sub">including the required lessons, assessments, and practical learning activities.</p>
+          </div>
+
+          ${chipsHTML}
+
+          <!-- Footer Grid -->
+          <div class="efbi-cert-footer">
+            <!-- Left: Issuance & ID -->
+            <div class="efbi-cert-footer-left">
+              <div class="efbi-cert-meta-item">
+                <span class="efbi-cert-meta-label">DATE OF ISSUANCE</span>
+                <span class="efbi-cert-meta-val">${issueDate}</span>
+              </div>
+              <div class="efbi-cert-meta-item">
+                <span class="efbi-cert-meta-label">CREDENTIAL ID</span>
+                <span class="efbi-cert-meta-val id-code">${certId}</span>
+              </div>
+            </div>
+
+            <!-- Center: Verification Badge & Domain -->
+            <div class="efbi-cert-footer-center">
+              <div class="efbi-cert-verify-badge">
+                <i data-lucide="shield-check" class="efbi-cert-shield-icon"></i>
+                <span class="efbi-cert-verify-label">VERIFIABLE CREDENTIAL</span>
+                <a href="${verifyUrl}" target="_blank" class="efbi-cert-verify-url">${verifyUrl}</a>
+              </div>
+            </div>
+
+            <!-- Right: Signatures -->
+            <div class="efbi-cert-footer-right">
+              <div class="efbi-cert-sig-block">
+                <span class="efbi-cert-sig-script">Tamerat Gebeyehu</span>
+                <div class="efbi-cert-sig-line"></div>
+                <span class="efbi-cert-sig-title">Founder &amp; Lead Builder</span>
+              </div>
+              <div class="efbi-cert-sig-block">
+                <span class="efbi-cert-sig-script">${instructorName}</span>
+                <div class="efbi-cert-sig-line"></div>
+                <span class="efbi-cert-sig-title">Lead Instructor</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Calculates and applies proportional CSS scale transform to all certificate containers.
+ */
+function updateCertScale() {
+  const scalers = document.querySelectorAll('.efbi-cert-scaler');
+  scalers.forEach(scaler => {
+    const parent = scaler.parentElement;
+    if (!parent) return;
+    const template = scaler.querySelector('.efbi-cert-template');
+    if (!template) return;
+
+    const availableWidth = parent.clientWidth;
+    if (availableWidth <= 0) return;
+
+    const targetWidth = 1122;
+    const targetHeight = 793;
+
+    const scale = Math.min(1, availableWidth / targetWidth);
+
+    template.style.transform = `scale(${scale})`;
+    template.style.transformOrigin = 'top left';
+
+    scaler.style.width = `${targetWidth * scale}px`;
+    scaler.style.height = `${targetHeight * scale}px`;
+  });
+}
+
+window.addEventListener('resize', updateCertScale);
+
+/* ==========================================================================
+   CERTIFICATE VERIFICATION ENGINE (Asynchronous DB Search)
+   ========================================================================== */
 function initCertificateVerifier() {
   const btnVerify = document.getElementById('btn-verify-cert');
   const inputCertId = document.getElementById('cert-id-input');
@@ -2322,7 +2485,7 @@ function initCertificateVerifier() {
           Credential Valid & Active
         `;
         document.getElementById('verifier-details').innerHTML = `
-          <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+          <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px;">
             <div>
               <div class="verifier-label">Student Name</div>
               <div class="verifier-value">${foundCert.name}</div>
@@ -2342,138 +2505,25 @@ function initCertificateVerifier() {
           </div>
           
           <div style="grid-column: 1 / -1; border-top: 1px solid var(--border-color); padding-top: 24px; width: 100%;">
-            <div class="cert-preview-card" style="padding: 0;">
-              <div class="cert-frame-wrapper" style="box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
-                <!-- Accent bars -->
-                <div class="cert-top-bar"></div>
-                <div class="cert-bottom-bar"></div>
-
-                <!-- Geometric watermark -->
-                <div class="cert-watermark">
-                  <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;">
-                    <defs>
-                      <pattern id="cert-grid-v" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0b132b" stroke-width="0.3" opacity="0.06"/>
-                      </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#cert-grid-v)"/>
-                  </svg>
-                </div>
-
-                <!-- Certificate Content -->
-                <div class="cert-preview-content">
-
-                  <!-- Header -->
-                  <div class="cert-header">
-                    <div class="cert-org-logo">
-                      <svg class="cert-logo-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="14" cy="14" r="12" fill="none" stroke="#0b132b" stroke-width="1.2"/>
-                        <circle cx="14" cy="14" r="4" fill="#c5a456"/>
-                        <line x1="14" y1="2" x2="14" y2="8" stroke="#0b132b" stroke-width="1.2"/>
-                        <line x1="14" y1="20" x2="14" y2="26" stroke="#0b132b" stroke-width="1.2"/>
-                        <line x1="2" y1="14" x2="8" y2="14" stroke="#0b132b" stroke-width="1.2"/>
-                        <line x1="20" y1="14" x2="26" y2="14" stroke="#0b132b" stroke-width="1.2"/>
-                        <line x1="5.5" y1="5.5" x2="9.5" y2="9.5" stroke="#c5a456" stroke-width="0.8" opacity="0.7"/>
-                        <line x1="18.5" y1="18.5" x2="22.5" y2="22.5" stroke="#c5a456" stroke-width="0.8" opacity="0.7"/>
-                        <line x1="22.5" y1="5.5" x2="18.5" y2="9.5" stroke="#c5a456" stroke-width="0.8" opacity="0.7"/>
-                        <line x1="9.5" y1="18.5" x2="5.5" y2="22.5" stroke="#c5a456" stroke-width="0.8" opacity="0.7"/>
-                      </svg>
-                      <div class="cert-logo">Ethiopian Future Builders Initiative Academy</div>
-                    </div>
-                    <div class="cert-tagline">Empowering Ethiopia's Next Generation of Innovators</div>
-                  </div>
-
-                  <div class="cert-divider"></div>
-
-                  <!-- Title -->
-                  <div class="cert-title-group">
-                    <div class="cert-main-title">Certificate of Completion</div>
-                    <div class="cert-sub-title">This is to officially certify that</div>
-                  </div>
-
-                  <!-- Recipient -->
-                  <div>
-                    <div class="cert-presented-to">Proudly Presented To</div>
-                    <div class="cert-recipient">${foundCert.name}</div>
-                  </div>
-
-                  <!-- Course -->
-                  <p class="cert-body-text">
-                    has successfully completed the full curriculum of
-                    <span class="cert-course-name">${foundCert.course}</span>,
-                    demonstrating outstanding commitment, technical proficiency, and readiness for the future of technology.
-                  </p>
-
-                  <!-- Achievement -->
-                  <div class="cert-achievement-row">
-                    ${foundCert.score ? `<span class="cert-score-chip">Final Score: ${foundCert.score}%</span>` : ''}
-                    ${foundCert.level ? `<span class="cert-achievement-badge ${(foundCert.level || '').toLowerCase()}">★ ${foundCert.level}</span>` : ''}
-                  </div>
-
-                  <div class="cert-divider" style="width:100%; opacity:0.4;"></div>
-
-                  <!-- Footer -->
-                  <div class="cert-footer-layout">
-                    <!-- Left: Date & ID -->
-                    <div class="cert-footer-col left">
-                      <div class="cert-footer-label">Date of Issuance</div>
-                      <div class="cert-footer-value">${foundCert.date}</div>
-                      <div class="cert-footer-label" style="margin-top:6px;">Credential ID</div>
-                      <div class="cert-footer-id">${foundCert.id}</div>
-                    </div>
-
-                    <!-- Center: QR Code -->
-                    <div class="cert-footer-col">
-                      <div class="cert-qr-block">
-                        <svg class="cert-qr-svg" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" fill="#0b132b">
-                          <rect x="2" y="2" width="16" height="16" rx="1.5" fill="none" stroke="#0b132b" stroke-width="1.2"/>
-                          <rect x="5" y="5" width="10" height="10" rx="0.5"/>
-                          <rect x="24" y="2" width="16" height="16" rx="1.5" fill="none" stroke="#0b132b" stroke-width="1.2"/>
-                          <rect x="27" y="5" width="10" height="10" rx="0.5"/>
-                          <rect x="2" y="24" width="16" height="16" rx="1.5" fill="none" stroke="#0b132b" stroke-width="1.2"/>
-                          <rect x="5" y="27" width="10" height="10" rx="0.5"/>
-                          <rect x="24" y="24" width="4" height="4"/>
-                          <rect x="30" y="24" width="4" height="4"/>
-                          <rect x="36" y="24" width="4" height="4"/>
-                          <rect x="24" y="30" width="4" height="4"/>
-                          <rect x="30" y="30" width="4" height="4"/>
-                          <rect x="36" y="36" width="4" height="4"/>
-                          <rect x="24" y="36" width="4" height="4"/>
-                          <rect x="30" y="36" width="10" height="4"/>
-                        </svg>
-                        <div class="cert-verify-url">efbi.org/verify?id=${foundCert.id}</div>
-                      </div>
-                    </div>
-
-                    <!-- Right: Signatures -->
-                    <div class="cert-footer-col right">
-                      <div class="cert-sigs-row">
-                        <div class="cert-sig-unit">
-                          <span class="cert-sig-name">Tamerat Gebeyehu</span>
-                          <div class="cert-sig-line"></div>
-                          <div class="cert-sig-label">Founder &amp; Director</div>
-                        </div>
-                        <div class="cert-sig-unit">
-                          <span class="cert-sig-name" style="font-size:1rem;">${foundCert.instructor || 'EFBI Faculty'}</span>
-                          <div class="cert-sig-line"></div>
-                          <div class="cert-sig-label">Lead Instructor</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div><!-- /cert-preview-content -->
-              </div>
+            <div style="width: 100%; margin: 0 auto;">
+              ${renderEFBICertificateHTML(foundCert, { scalerId: 'cert-scaler-verifier' })}
             </div>
             
-            <div style="text-align: center; margin-top: 20px;">
-              <button class="btn btn-secondary btn-sm" onclick="window.print()" style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; padding: 8px 16px;">
-                <i data-lucide="printer" style="width: 14px; height: 14px;"></i> Print / Save Certificate PDF
+            <div style="text-align: center; margin-top: 24px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+              <button class="btn btn-primary btn-sm" onclick="downloadCertificatePDF('${foundCert.id}')" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i data-lucide="download" style="width: 14px; height: 14px;"></i> Download PDF
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="printCertificate('${foundCert.id}')" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i data-lucide="printer" style="width: 14px; height: 14px;"></i> Print Certificate
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="shareVerifiableLink('${foundCert.id}')" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i data-lucide="share-2" style="width: 14px; height: 14px;"></i> Share Link
               </button>
             </div>
           </div>
         `;
         showToast('Credential successfully verified!', 'success');
+        setTimeout(updateCertScale, 50);
       } else {
         resultBox.className = 'verifier-result invalid';
         document.getElementById('verifier-result-header').innerHTML = `
@@ -2500,6 +2550,231 @@ function initCertificateVerifier() {
 }
 
 /* ==========================================================================
+   HIGH-RESOLUTION PDF EXPORT & PRINT & SHARE ENGINE
+   ========================================================================== */
+
+/**
+ * Downloads a high-density 300DPI landscape PDF of the certificate.
+ */
+window.downloadCertificatePDF = async (certId) => {
+  const certIdUpper = (certId || '').trim().toUpperCase();
+  if (!certIdUpper) return;
+
+  showToast('Generating high-density landscape PDF...', 'info');
+
+  try {
+    const foundCert = await EFBIDatabase.request('verifyCertificate', { id: certIdUpper });
+    if (!foundCert) {
+      showToast('Certificate record not found.', 'error');
+      return;
+    }
+
+    // Render 1122x793 template into a temporary off-screen container for 1:1 crisp capture
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'fixed';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '-9999px';
+    tempContainer.style.width = '1122px';
+    tempContainer.style.height = '793px';
+    tempContainer.style.zIndex = '-9999';
+
+    tempContainer.innerHTML = `
+      <div class="efbi-cert-template" style="transform: none !important; width: 1122px; height: 793px;">
+        <div class="efbi-cert-border-outer"></div>
+        <div class="efbi-cert-border-inner"></div>
+
+        <div class="efbi-cert-corner top-left"></div>
+        <div class="efbi-cert-corner top-right"></div>
+        <div class="efbi-cert-corner bottom-left"></div>
+        <div class="efbi-cert-corner bottom-right"></div>
+
+        <div class="efbi-cert-bg-watermark">
+          <img src="assets/efbi-icon.png" alt="" class="efbi-cert-watermark-icon">
+        </div>
+
+        <div class="efbi-cert-content">
+          <div class="efbi-cert-header">
+            <div class="efbi-cert-brand">
+              <img src="assets/efbi-icon.png" alt="EFBI Icon" class="efbi-cert-brand-icon">
+              <div class="efbi-cert-brand-name">EFBI <span>ACADEMY</span></div>
+            </div>
+            <div class="efbi-cert-domain">efbi.site</div>
+          </div>
+
+          <div class="efbi-cert-gold-divider"></div>
+
+          <div class="efbi-cert-title-section">
+            <h1 class="efbi-cert-main-title">CERTIFICATE OF COMPLETION</h1>
+            <p class="efbi-cert-award-text">This certificate is awarded to</p>
+          </div>
+
+          <div class="efbi-cert-recipient-wrap">
+            <h2 class="efbi-cert-recipient-name">${foundCert.name || 'Student Name'}</h2>
+            <div class="efbi-cert-recipient-underline"></div>
+          </div>
+
+          <div class="efbi-cert-body-section">
+            <p class="efbi-cert-completion-lead">for successfully completing the requirements of</p>
+            <h3 class="efbi-cert-course-title">${foundCert.course || 'Technical Learning Pathway'}</h3>
+            <p class="efbi-cert-completion-sub">including the required lessons, assessments, and practical learning activities.</p>
+          </div>
+
+          ${(foundCert.score || foundCert.level) ? `
+          <div class="efbi-cert-chips-row">
+            ${foundCert.score ? `<span class="efbi-cert-chip score">Score: ${foundCert.score}%</span>` : ''}
+            ${foundCert.level ? `<span class="efbi-cert-chip level">${foundCert.level}</span>` : ''}
+          </div>` : ''}
+
+          <div class="efbi-cert-footer">
+            <div class="efbi-cert-footer-left">
+              <div class="efbi-cert-meta-item">
+                <span class="efbi-cert-meta-label">DATE OF ISSUANCE</span>
+                <span class="efbi-cert-meta-val">${foundCert.date}</span>
+              </div>
+              <div class="efbi-cert-meta-item">
+                <span class="efbi-cert-meta-label">CREDENTIAL ID</span>
+                <span class="efbi-cert-meta-val id-code">${foundCert.id}</span>
+              </div>
+            </div>
+
+            <div class="efbi-cert-footer-center">
+              <div class="efbi-cert-verify-badge">
+                <span class="efbi-cert-verify-label">VERIFIABLE CREDENTIAL</span>
+                <span class="efbi-cert-verify-url">https://efbi.site/verify?id=${foundCert.id}</span>
+              </div>
+            </div>
+
+            <div class="efbi-cert-footer-right">
+              <div class="efbi-cert-sig-block">
+                <span class="efbi-cert-sig-script">Tamerat Gebeyehu</span>
+                <div class="efbi-cert-sig-line"></div>
+                <span class="efbi-cert-sig-title">Founder &amp; Lead Builder</span>
+              </div>
+              <div class="efbi-cert-sig-block">
+                <span class="efbi-cert-sig-script">${foundCert.instructor || 'EFBI Faculty'}</span>
+                <div class="efbi-cert-sig-line"></div>
+                <span class="efbi-cert-sig-title">Lead Instructor</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(tempContainer);
+
+    const certNode = tempContainer.querySelector('.efbi-cert-template');
+    const canvas = await html2canvas(certNode, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#090e1a',
+      logging: false
+    });
+
+    document.body.removeChild(tempContainer);
+
+    const imgData = canvas.toDataURL('image/png', 1.0);
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
+    pdf.save(`EFBI-Certificate-${foundCert.id}.pdf`);
+
+    showToast('Certificate PDF downloaded successfully!', 'success');
+
+  } catch (err) {
+    console.error('PDF export error:', err);
+    showToast('Failed to export PDF. Triggering print dialog fallback...', 'info');
+    window.printCertificate(certId);
+  }
+};
+
+/**
+ * Triggers clean landscape print dialog.
+ */
+window.printCertificate = async (certId) => {
+  const foundCert = await EFBIDatabase.request('verifyCertificate', { id: certId.trim().toUpperCase() });
+  if (!foundCert) return;
+
+  const printArea = document.getElementById('cert-print-area');
+  if (printArea) {
+    printArea.innerHTML = renderEFBICertificateHTML(foundCert, { scalerId: 'cert-scaler-print' });
+    lucide.createIcons();
+    setTimeout(() => {
+      window.print();
+    }, 300);
+  }
+};
+
+/**
+ * Shares public verification link via Web Share API or Share Modal.
+ */
+window.shareVerifiableLink = (certId) => {
+  const certIdUpper = (certId || '').trim().toUpperCase();
+  const verifyUrl = `https://efbi.site/verify?id=${certIdUpper}`;
+  const shareTitle = `EFBI Academy Verified Credential - ${certIdUpper}`;
+  const shareText = `Check out my official verifiable certificate from Ethiopian Future Builders Initiative Academy!`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: shareTitle,
+      text: shareText,
+      url: verifyUrl
+    }).catch(() => {});
+    return;
+  }
+
+  const modal = document.getElementById('cert-share-modal');
+  const inputUrl = document.getElementById('cert-share-url-input');
+  if (!modal || !inputUrl) return;
+
+  inputUrl.value = verifyUrl;
+
+  const encodedUrl = encodeURIComponent(verifyUrl);
+  const encodedText = encodeURIComponent(shareText);
+
+  document.getElementById('share-linkedin').href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+  document.getElementById('share-facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+  document.getElementById('share-x').href = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
+  document.getElementById('share-whatsapp').href = `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`;
+  document.getElementById('share-email').href = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodedText}%20${encodedUrl}`;
+
+  document.getElementById('btn-copy-cert-share-url').onclick = () => {
+    navigator.clipboard.writeText(verifyUrl).then(() => {
+      showToast('Public verification URL copied to clipboard!', 'success');
+    }).catch(() => {
+      showToast('Could not copy link automatically.', 'error');
+    });
+  };
+
+  modal.style.display = 'flex';
+  lucide.createIcons();
+};
+
+window.closeCertShareModal = () => {
+  const modal = document.getElementById('cert-share-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+function initCertShareModal() {
+  const modal = document.getElementById('cert-share-modal');
+  const closeBtn = document.getElementById('btn-close-cert-share');
+  if (!modal || !closeBtn) return;
+
+  closeBtn.addEventListener('click', closeCertShareModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeCertShareModal();
+  });
+}
+
+/* ==========================================================================
    PREMIUM CERTIFICATE VIEWER MODAL CONTROLLERS
    ========================================================================== */
 window.openCertificateViewer = async (certId) => {
@@ -2515,145 +2790,27 @@ window.openCertificateViewer = async (certId) => {
       return;
     }
 
-    // Populate metadata
+    // Populate metadata pane
     document.getElementById('cv-student-name').textContent = foundCert.name;
     document.getElementById('cv-course-name').textContent = foundCert.course;
     document.getElementById('cv-issue-date').textContent = foundCert.date;
     document.getElementById('cv-cert-id').textContent = foundCert.id;
     
-    const scoreText = foundCert.score ? foundCert.score + '%' : 'N/A';
-    const levelText = foundCert.level ? foundCert.level : 'N/A';
+    const scoreText = foundCert.score ? foundCert.score + '%' : '-';
+    const levelText = foundCert.level ? foundCert.level : '-';
     document.getElementById('cv-score-level').textContent = `${scoreText} / ${levelText}`;
 
     // Render Preview Frame
     const renderTarget = document.getElementById('cert-viewer-render-target');
-    renderTarget.innerHTML = `
-      <div class="cert-frame-wrapper" style="box-shadow: 0 10px 30px rgba(0,0,0,0.4); width: 100%; max-width: 760px; margin: 0 auto;">
-        <!-- Accent bars -->
-        <div class="cert-top-bar"></div>
-        <div class="cert-bottom-bar"></div>
-
-        <!-- Watermark -->
-        <div class="cert-watermark">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;">
-            <defs>
-              <pattern id="cert-grid-cv" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0b132b" stroke-width="0.3" opacity="0.06"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#cert-grid-cv)"/>
-          </svg>
-        </div>
-
-        <!-- Certificate Content -->
-        <div class="cert-preview-content" style="padding: 5% 6%;">
-          <!-- Header -->
-          <div class="cert-header">
-            <div class="cert-org-logo">
-              <svg class="cert-logo-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="14" cy="14" r="12" fill="none" stroke="#0b132b" stroke-width="1.2"/>
-                <circle cx="14" cy="14" r="4" fill="#c5a456"/>
-                <line x1="14" y1="2" x2="14" y2="8" stroke="#0b132b" stroke-width="1.2"/>
-                <line x1="14" y1="20" x2="14" y2="26" stroke="#0b132b" stroke-width="1.2"/>
-                <line x1="2" y1="14" x2="8" y2="14" stroke="#0b132b" stroke-width="1.2"/>
-                <line x1="20" y1="14" x2="26" y2="14" stroke="#0b132b" stroke-width="1.2"/>
-              </svg>
-              <div class="cert-logo" style="font-size:0.6rem;">Ethiopian Future Builders Initiative Academy</div>
-            </div>
-            <div class="cert-tagline" style="font-size:0.5rem;">Empowering Ethiopia's Next Generation of Innovators</div>
-          </div>
-
-          <div class="cert-divider" style="margin: 2px auto;"></div>
-
-          <!-- Title -->
-          <div class="cert-title-group" style="margin: 0;">
-            <div class="cert-main-title" style="font-size: 1.4rem;">Certificate of Completion</div>
-            <div class="cert-sub-title" style="font-size: 0.65rem;">This is to officially certify that</div>
-          </div>
-
-          <!-- Recipient -->
-          <div style="margin: 2px 0;">
-            <div class="cert-presented-to" style="font-size: 0.55rem;">Proudly Presented To</div>
-            <div class="cert-recipient" style="font-size: 1.8rem; min-width: 220px; padding-bottom: 4px; margin: 2px 0;">${foundCert.name}</div>
-          </div>
-
-          <!-- Course -->
-          <p class="cert-body-text" style="font-size: 0.55rem; line-height: 1.4; max-width: 440px; margin: 0 auto;">
-            has successfully completed the full curriculum of
-            <span class="cert-course-name">${foundCert.course}</span>,
-            demonstrating outstanding commitment, technical proficiency, and readiness for the future of technology.
-          </p>
-
-          <!-- Achievement -->
-          <div class="cert-achievement-row" style="margin: 2px 0;">
-            ${foundCert.score ? `<span class="cert-score-chip" style="font-size: 0.55rem; padding: 2px 8px;">Final Score: ${foundCert.score}%</span>` : ''}
-            ${foundCert.level ? `<span class="cert-achievement-badge ${(foundCert.level || '').toLowerCase()}" style="font-size: 0.55rem; padding: 2px 8px;">★ ${foundCert.level}</span>` : ''}
-          </div>
-
-          <div class="cert-divider" style="width:100%; opacity:0.4; margin: 2px 0;"></div>
-
-          <!-- Footer -->
-          <div class="cert-footer-layout" style="padding-top: 4px;">
-            <div class="cert-footer-col left">
-              <div class="cert-footer-label" style="font-size: 0.45rem;">Date of Issuance</div>
-              <div class="cert-footer-value" style="font-size: 0.55rem;">${foundCert.date}</div>
-              <div class="cert-footer-label" style="font-size: 0.45rem; margin-top:4px;">Credential ID</div>
-              <div class="cert-footer-id" style="font-size: 0.55rem;">${foundCert.id}</div>
-            </div>
-
-            <div class="cert-footer-col">
-              <div class="cert-qr-block" style="gap: 2px;">
-                <svg class="cert-qr-svg" style="width: 32px; height: 32px;" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" fill="#0b132b">
-                  <rect x="2" y="2" width="16" height="16" rx="1.5" fill="none" stroke="#0b132b" stroke-width="1.2"/>
-                  <rect x="5" y="5" width="10" height="10" rx="0.5"/>
-                  <rect x="24" y="2" width="16" height="16" rx="1.5" fill="none" stroke="#0b132b" stroke-width="1.2"/>
-                  <rect x="27" y="5" width="10" height="10" rx="0.5"/>
-                  <rect x="2" y="24" width="16" height="16" rx="1.5" fill="none" stroke="#0b132b" stroke-width="1.2"/>
-                  <rect x="5" y="27" width="10" height="10" rx="0.5"/>
-                  <rect x="24" y="24" width="4" height="4"/>
-                  <rect x="30" y="24" width="4" height="4"/>
-                  <rect x="36" y="24" width="4" height="4"/>
-                  <rect x="24" y="30" width="4" height="4"/>
-                  <rect x="30" y="30" width="4" height="4"/>
-                  <rect x="36" y="36" width="4" height="4"/>
-                  <rect x="24" y="36" width="4" height="4"/>
-                  <rect x="30" y="36" width="10" height="4"/>
-                </svg>
-                <div class="cert-verify-url" style="font-size: 0.4rem;">efbi.org/verify?id=${foundCert.id}</div>
-              </div>
-            </div>
-
-            <div class="cert-footer-col right">
-              <div class="cert-sigs-row" style="gap: 16px;">
-                <div class="cert-sig-unit">
-                  <span class="cert-sig-name" style="font-size: 0.95rem;">Tamerat Gebeyehu</span>
-                  <div class="cert-sig-line" style="width: 100px; margin: 2px 0 1px;"></div>
-                  <div class="cert-sig-label" style="font-size: 0.45rem;">Founder &amp; Director</div>
-                </div>
-                <div class="cert-sig-unit">
-                  <span class="cert-sig-name" style="font-size:0.8rem;">${foundCert.instructor || 'EFBI Faculty'}</span>
-                  <div class="cert-sig-line" style="width: 100px; margin: 2px 0 1px;"></div>
-                  <div class="cert-sig-label" style="font-size: 0.45rem;">Lead Instructor</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    renderTarget.innerHTML = renderEFBICertificateHTML(foundCert, { scalerId: 'cert-scaler-modal' });
 
     // Bind Button Click Actions
     document.getElementById('btn-cv-download').onclick = () => {
-      closeCertificateViewer();
       downloadCertificatePDF(foundCert.id);
     };
 
-    document.getElementById('btn-cv-print').onclick = async () => {
-      modal.style.display = 'none';
-      window.triggerCertVerify(foundCert.id);
-      window.location.hash = '#verify';
-      await new Promise(r => setTimeout(r, 600));
-      window.print();
+    document.getElementById('btn-cv-print').onclick = () => {
+      printCertificate(foundCert.id);
     };
 
     document.getElementById('btn-cv-verify').onclick = () => {
@@ -2663,19 +2820,13 @@ window.openCertificateViewer = async (certId) => {
     };
 
     document.getElementById('btn-cv-share').onclick = () => {
-      const shareLink = `${window.location.origin}${window.location.pathname}#verify/${foundCert.id}`;
-      navigator.clipboard.writeText(shareLink)
-        .then(() => {
-          showToast('Verifiable credential link copied to clipboard!', 'success');
-        })
-        .catch(() => {
-          showToast('Failed to copy link. Please select and copy manually.', 'error');
-        });
+      shareVerifiableLink(foundCert.id);
     };
 
     // Open Modal Overlay
     modal.style.display = 'flex';
     lucide.createIcons();
+    setTimeout(updateCertScale, 50);
 
   } catch (err) {
     showToast('Failed to load credential verification details.', 'error');
@@ -2700,6 +2851,16 @@ function initCertificateViewer() {
       closeCertificateViewer();
     }
   });
+
+  // Escape key handler to close modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+      closeCertificateViewer();
+      closeCertShareModal();
+    }
+  });
+
+  initCertShareModal();
 }
 
 /* ==========================================================================

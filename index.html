@@ -14,7 +14,7 @@
   <link rel="manifest" href="site.webmanifest">
 
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=259">
+  <link rel="stylesheet" href="styles.css?v=260">
   
   <!-- Chart.js CDN for Admin Analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -23,6 +23,10 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- YouTube IFrame API — required for custom player controls -->
   <script src="https://www.youtube.com/iframe_api"></script>
+
+  <!-- High-Resolution Client-Side PDF Export Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body>
@@ -3102,9 +3106,54 @@
             </div>
           </div>
         </div>
+  <!-- ============================================================
+       CERTIFICATE SHARE MODAL — Multi-Platform Share Dialog
+       ============================================================ -->
+  <div id="cert-share-modal" class="cert-viewer-overlay" role="dialog" aria-modal="true" aria-labelledby="cert-share-modal-title" style="display:none;">
+    <div class="cert-share-card glass-panel">
+      <div class="cert-share-header">
+        <h3 class="cert-share-title" id="cert-share-modal-title">Share Verifiable Credential</h3>
+        <button class="cert-share-close" id="btn-close-cert-share" aria-label="Close Share Modal">&times;</button>
+      </div>
+      <p class="cert-share-subtitle">Share your official EFBI certificate verification link directly on your professional networks.</p>
+      
+      <div class="cert-share-grid">
+        <a href="#" id="share-linkedin" target="_blank" rel="noopener noreferrer" class="cert-share-item linkedin">
+          <div class="cert-share-icon"><i data-lucide="linkedin"></i></div>
+          <span class="cert-share-label">LinkedIn</span>
+        </a>
+        <a href="#" id="share-facebook" target="_blank" rel="noopener noreferrer" class="cert-share-item facebook">
+          <div class="cert-share-icon"><i data-lucide="facebook"></i></div>
+          <span class="cert-share-label">Facebook</span>
+        </a>
+        <a href="#" id="share-x" target="_blank" rel="noopener noreferrer" class="cert-share-item twitter">
+          <div class="cert-share-icon"><i data-lucide="twitter"></i></div>
+          <span class="cert-share-label">X / Twitter</span>
+        </a>
+        <a href="#" id="share-whatsapp" target="_blank" rel="noopener noreferrer" class="cert-share-item whatsapp">
+          <div class="cert-share-icon"><i data-lucide="message-circle"></i></div>
+          <span class="cert-share-label">WhatsApp</span>
+        </a>
+        <a href="#" id="share-email" target="_blank" rel="noopener noreferrer" class="cert-share-item email">
+          <div class="cert-share-icon"><i data-lucide="mail"></i></div>
+          <span class="cert-share-label">Email</span>
+        </a>
+      </div>
+
+      <div class="cert-share-copy-box">
+        <label for="cert-share-url-input" class="cert-share-copy-label">Public Verification Link</label>
+        <div class="cert-share-copy-row">
+          <input type="text" id="cert-share-url-input" class="cert-share-url-input" readonly>
+          <button id="btn-copy-cert-share-url" class="btn btn-primary btn-sm">
+            <i data-lucide="copy" style="width:14px;"></i> Copy Link
+          </button>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Dedicated Off-Screen Landscape Print Container -->
+  <div id="cert-print-area" class="cert-print-area" aria-hidden="true"></div>
 
 </body>
 </html>
