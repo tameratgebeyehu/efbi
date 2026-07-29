@@ -2359,9 +2359,9 @@ function renderEFBICertificateHTML(cert, opts = {}) {
 
       <!-- Body -->
       <div class="efbi-cert-body-section">
-        <div class="efbi-cert-completion-lead">for successfully completing the requirements of</div>
-        <div class="efbi-cert-course-title">${course}</div>
-        <div class="efbi-cert-completion-sub">including the required lessons, assessments, and practical learning activities.</div>
+        <p class="efbi-cert-completion-paragraph">
+          for successfully completing the requirements of <strong class="efbi-cert-course-inline">${course}</strong>, including the required lessons, assessments, and practical learning activities.
+        </p>
       </div>
 
       ${chipsHtml}
@@ -2452,21 +2452,41 @@ function initCertificateVerifier() {
       btnVerify.textContent = 'Verify Certificate';
 
       if (cert) {
-        resultBox.className = 'verifier-result valid';
-        document.getElementById('verifier-result-header').innerHTML = `
-          <i data-lucide="check-circle" style="stroke:var(--secondary);fill:var(--secondary-glow);"></i>
-          Credential Valid &amp; Active`;
+        const isRevoked = cert.status === 'Revoked';
+        const isExpired = cert.status === 'Expired';
+        const isValid = cert.isValid !== false && !isRevoked && !isExpired;
+
+        if (isValid) {
+          resultBox.className = 'verifier-result valid';
+          document.getElementById('verifier-result-header').innerHTML = `
+            <i data-lucide="check-circle" style="stroke:var(--secondary);fill:var(--secondary-glow);"></i>
+            Credential Valid &amp; Active`;
+        } else if (isRevoked) {
+          resultBox.className = 'verifier-result invalid';
+          document.getElementById('verifier-result-header').innerHTML = `
+            <i data-lucide="x-circle" style="stroke:var(--danger);"></i>
+            CREDENTIAL REVOKED`;
+        } else if (isExpired) {
+          resultBox.className = 'verifier-result invalid';
+          document.getElementById('verifier-result-header').innerHTML = `
+            <i data-lucide="clock" style="stroke:var(--accent);"></i>
+            CREDENTIAL EXPIRED`;
+        }
+
+        const statusLabel = isValid ? 'ACTIVE VERIFIED' : (isRevoked ? 'REVOKED' : 'EXPIRED');
+        const statusColor = isValid ? 'var(--secondary)' : (isRevoked ? 'var(--danger)' : 'var(--accent)');
 
         document.getElementById('verifier-details').innerHTML = `
           <div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px;">
             <div><div class="verifier-label">Student Name</div><div class="verifier-value">${cert.name}</div></div>
             <div><div class="verifier-label">Course Path</div><div class="verifier-value">${cert.course}</div></div>
             <div><div class="verifier-label">Completion Date</div><div class="verifier-value">${cert.date}</div></div>
-            <div><div class="verifier-label">Status</div><div class="verifier-value" style="color:var(--secondary);font-weight:700;">ACTIVE VERIFIED</div></div>
+            <div><div class="verifier-label">Status</div><div class="verifier-value" style="color:${statusColor};font-weight:700;">${statusLabel}</div></div>
           </div>
           <div style="grid-column:1/-1;border-top:1px solid var(--border-color);padding-top:24px;width:100%;">
             ${renderEFBICertificateHTML(cert, { scalerId: 'cert-scaler-verify' })}
             <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+              ${isValid ? `
               <button class="btn btn-primary btn-sm" onclick="downloadCertificatePDF('${cert.id}')" style="display:inline-flex;align-items:center;gap:6px;">
                 <i data-lucide="download" style="width:14px;height:14px;"></i> Download PDF
               </button>
@@ -2476,9 +2496,15 @@ function initCertificateVerifier() {
               <button class="btn btn-secondary btn-sm" onclick="shareVerifiableLink('${cert.id}')" style="display:inline-flex;align-items:center;gap:6px;">
                 <i data-lucide="share-2" style="width:14px;height:14px;"></i> Share Link
               </button>
+              ` : `
+              <div style="padding:10px 18px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:0.85rem;font-weight:600;">
+                Downloads disabled for revoked or expired credentials.
+              </div>
+              `}
             </div>
           </div>`;
-        showToast('Credential verified successfully!', 'success');
+        
+        showToast(isValid ? 'Credential verified successfully!' : `Credential status: ${statusLabel}`, isValid ? 'success' : 'error');
         setTimeout(() => { updateCertScale(); lucide.createIcons(); }, 80);
 
       } else {
@@ -2487,7 +2513,7 @@ function initCertificateVerifier() {
           <i data-lucide="alert-triangle" style="stroke:var(--danger);"></i> Credential Not Found`;
         document.getElementById('verifier-details').innerHTML = `
           <div style="grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:12px 0;">
-            No record matches <strong>${certId}</strong>. Check the spelling and try again (e.g. EFBI-2026-001).
+            No record matches <strong>${certId}</strong>. Check the spelling and try again (e.g. EFBI-26-A7K9-Q2XM-P8DR).
           </div>`;
         showToast('Certificate not found.', 'error');
       }
@@ -2498,7 +2524,7 @@ function initCertificateVerifier() {
     } catch (err) {
       btnVerify.disabled = false;
       btnVerify.textContent = 'Verify Certificate';
-      showToast(getFriendlyErrorMessage(err, 'certificate-verification'), 'error');
+      showToast(err.message || 'Verification lookup failed.', 'error');
     }
   });
 }
@@ -2651,10 +2677,10 @@ function buildRawCertTemplate(cert) {
     </div>
 
     <!-- Body -->
-    <div style="max-width:800px;margin:4px 0;">
-      <div style="font-size:15px;color:#94a3b8;margin:0 0 4px;letter-spacing:0.04em;">for successfully completing the requirements of</div>
-      <div style="font-family:'Outfit',sans-serif;font-size:27px;font-weight:800;color:#10b981;margin:4px 0 6px;">${course}</div>
-      <div style="font-size:14px;color:#cbd5e1;line-height:1.5;">including the required lessons, assessments, and practical learning activities.</div>
+    <div style="max-width:820px;margin:8px 0;">
+      <p style="font-size:15px;color:#cbd5e1;line-height:1.6;letter-spacing:0.01em;margin:0;">
+        for successfully completing the requirements of <strong style="font-family:'Outfit',sans-serif;font-weight:800;color:#10b981;font-size:17px;padding:0 4px;">${course}</strong>, including the required lessons, assessments, and practical learning activities.
+      </p>
     </div>
 
     ${chipsHtml}
@@ -2682,12 +2708,12 @@ function buildRawCertTemplate(cert) {
       <!-- Right -->
       <div style="display:flex;justify-content:flex-end;gap:20px;">
         <div style="display:flex;flex-direction:column;align-items:center;">
-          <span style="font-family:'Great Vibes',cursive;font-size:24px;color:#a5b4fc;line-height:1;transform:rotate(-1.5deg);display:inline-block;">Tamerat Gebeyehu</span>
+          <span style="font-family:'Great Vibes',cursive;font-size:20px;color:#a5b4fc;line-height:1.1;display:inline-block;">Tamerat Gebeyehu</span>
           <div style="width:105px;height:1px;background:rgba(165,180,252,0.3);margin:4px 0 3px;"></div>
           <span style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:0.08em;text-transform:uppercase;">Founder &amp; Director</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;">
-          <span style="font-family:'Great Vibes',cursive;font-size:24px;color:#a5b4fc;line-height:1;transform:rotate(-1.5deg);display:inline-block;">${instructor}</span>
+          <span style="font-family:'Great Vibes',cursive;font-size:20px;color:#a5b4fc;line-height:1.1;display:inline-block;">${instructor}</span>
           <div style="width:105px;height:1px;background:rgba(165,180,252,0.3);margin:4px 0 3px;"></div>
           <span style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:0.08em;text-transform:uppercase;">Lead Instructor</span>
         </div>

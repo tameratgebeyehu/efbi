@@ -130,25 +130,95 @@ const DEFAULT_STUDENTS = [];
 const DEFAULT_CERTIFICATES = [];
 const DEFAULT_CONTACTS = [];
 
-// Helper to initialize local storage
-function initLocalStorageDB() {
-  if (!localStorage.getItem('efbi_students')) {
-    localStorage.setItem('efbi_students', JSON.stringify(DEFAULT_STUDENTS));
+// Crockford Base32 Alphabet (Excludes I, L, O, U to prevent user confusion)
+const CROCKFORD_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+/**
+ * Generates a cryptographically secure, non-predictable public credential ID.
+ * Format: EFBI-YY-XXXX-XXXX-XXXX
+ * Example: EFBI-26-A7K9-Q2XM-P8DR
+ */
+function generateSecureCredentialId(year) {
+  const yy = String(year || new Date().getFullYear()).slice(-2);
+  const bytes = new Uint8Array(12);
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+    window.crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < 12; i++) {
+      bytes[i] = Math.floor(Math.random() * 256);
+    }
   }
-  if (!localStorage.getItem('efbi_certificates')) {
-    localStorage.setItem('efbi_certificates', JSON.stringify(DEFAULT_CERTIFICATES));
+
+  const chars = Array.from(bytes).map(b => CROCKFORD_ALPHABET[b % 32]);
+  const g1 = chars.slice(0, 4).join('');
+  const g2 = chars.slice(4, 8).join('');
+  const g3 = chars.slice(8, 12).join('');
+
+  return `EFBI-${yy}-${g1}-${g2}-${g3}`;
+}
+
+// Verification rate limiting storage (sliding window)
+const _verificationRateLimits = new Map();
+
+function checkVerificationRateLimit(key = 'client_lookup') {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute window
+  const maxRequests = 10;     // max 10 attempts per minute
+
+  let record = _verificationRateLimits.get(key);
+  if (!record || now - record.startTime > windowMs) {
+    record = { startTime: now, count: 1 };
+    _verificationRateLimits.set(key, record);
+    return true;
   }
-  if (!localStorage.getItem('efbi_contacts')) {
-    localStorage.setItem('efbi_contacts', JSON.stringify(DEFAULT_CONTACTS));
+
+  if (record.count >= maxRequests) {
+    return false;
   }
-  if (!localStorage.getItem('efbi_courses')) {
-    localStorage.setItem('efbi_courses', JSON.stringify([]));
-  }
-  if (!localStorage.getItem('efbi_notifications')) {
-    localStorage.setItem('efbi_notifications', JSON.stringify([]));
+
+  record.count++;
+  return true;
+}
+
+// Migration helper for legacy certificates
+function migrateCertificateIds() {
+  try {
+    let certs = JSON.parse(localStorage.getItem('efbi_certificates') || '[]');
+    let modified = false;
+
+    certs = certs.map(c => {
+      let updated = { ...c };
+
+      // Ensure status normalization
+      if (!updated.status || updated.status === 'Active') {
+        updated.status = 'Valid';
+        modified = true;
+      }
+
+      // If missing credentialId, generate one and preserve old ID as legacyId
+      if (!updated.credentialId) {
+        updated.credentialId = generateSecureCredentialId(updated.date ? new Date(updated.date).getFullYear() : 2026);
+        if (updated.id && (updated.id.startsWith('EFBI-') || updated.id.includes('2026'))) {
+          updated.legacyId = updated.id.toUpperCase();
+        }
+        // Assign internal private primary key if needed
+        updated.internalId = 'cert_' + Math.random().toString(36).substr(2, 9);
+        modified = true;
+      }
+
+      return updated;
+    });
+
+    if (modified) {
+      localStorage.setItem('efbi_certificates', JSON.stringify(certs));
+    }
+  } catch (err) {
+    console.warn('[EFBI DB] Certificate migration warning:', err);
   }
 }
+
 initLocalStorageDB();
+migrateCertificateIds();
 
 // 2. UNIFIED DATA ACCESS OBJECT (DAO)
 const EFBIDatabase = {
@@ -314,33 +384,84 @@ const EFBIDatabase = {
         return Promise.resolve(certificates);
 
       case 'verifyCertificate':
-        const cert = certificates.find(c => c.id === payload.id.trim().toUpperCase());
-        return Promise.resolve(cert || null);
+        if (!checkVerificationRateLimit()) {
+          return Promise.reject(new Error('Rate limit exceeded. Please wait a minute before verifying another credential.'));
+        }
+        const queryId = (payload.id || '').trim().toUpperCase();
+        if (!queryId) return Promise.resolve(null);
+
+        // Match against credentialId, legacyId, or id
+        const foundCert = certificates.find(c => 
+          (c.credentialId && c.credentialId.toUpperCase() === queryId) ||
+          (c.legacyId && c.legacyId.toUpperCase() === queryId) ||
+          (c.id && c.id.toUpperCase() === queryId)
+        );
+
+        if (!foundCert) return Promise.resolve(null);
+
+        // Normalize status (default 'Active' -> 'Valid')
+        const normStatus = (!foundCert.status || foundCert.status === 'Active') ? 'Valid' : foundCert.status;
+        const resultCert = {
+          ...foundCert,
+          id: foundCert.credentialId || foundCert.id,
+          status: normStatus,
+          isValid: normStatus === 'Valid'
+        };
+
+        return Promise.resolve(resultCert);
 
       case 'issueCertificate':
+        // Generate a collision-free secure credential ID
+        let secureId = generateSecureCredentialId();
+        let attempts = 0;
+        while (certificates.some(c => c.credentialId === secureId || c.id === secureId) && attempts < 10) {
+          secureId = generateSecureCredentialId();
+          attempts++;
+        }
+
         const newCert = {
-          id: payload.id || `EFBI-2026-${String(certificates.length + 1).padStart(3, '0')}`,
+          internalId: 'cert_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+          id: secureId,
+          credentialId: secureId,
+          legacyId: payload.legacyId || null,
           name: payload.name,
           course: payload.course,
-          date: new Date().toISOString().split('T')[0],
+          date: payload.date || new Date().toISOString().split('T')[0],
           score: payload.score || null,
           level: payload.level || null,
           instructor: payload.instructor || null,
-          status: 'Active'
+          status: 'Valid'
         };
+
         certificates.unshift(newCert);
         localStorage.setItem('efbi_certificates', JSON.stringify(certificates));
-        // Add a notification for issued cert
+
         EFBIDatabase.localFallback('addNotification', {
           type: 'success',
           icon: 'award',
           title: `Certificate issued to ${newCert.name}`,
-          meta: `${newCert.course} • ${newCert.id} • ${newCert.date}`
+          meta: `${newCert.course} • ${newCert.credentialId} • ${newCert.date}`
         });
+
         return Promise.resolve(newCert);
 
       case 'revokeCertificate':
-        certificates = certificates.filter(c => c.id !== payload.id);
+        certificates = certificates.map(c => {
+          if (c.id === payload.id || c.credentialId === payload.id || c.legacyId === payload.id) {
+            c.status = 'Revoked';
+          }
+          return c;
+        });
+        localStorage.setItem('efbi_certificates', JSON.stringify(certificates));
+        return Promise.resolve(true);
+
+      case 'updateCertificateStatus':
+        certificates = certificates.map(c => {
+          if (c.id === payload.id || c.credentialId === payload.id || c.legacyId === payload.id) {
+            c.status = payload.status || 'Valid';
+          }
+          return c;
+        });
         localStorage.setItem('efbi_certificates', JSON.stringify(certificates));
         return Promise.resolve(true);
 

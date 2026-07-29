@@ -8451,29 +8451,22 @@ html[data-theme="light"] .site-footer {
 
 /* ── Body Section ── */
 .efbi-cert-body-section {
-  max-width: 800px;
-  margin: 4px 0;
+  max-width: 820px;
+  margin: 8px 0;
 }
-.efbi-cert-completion-lead {
+.efbi-cert-completion-paragraph {
   font-size: 0.95rem;
-  color: #94a3b8;
-  margin: 0 0 4px;
-  letter-spacing: 0.04em;
+  color: #cbd5e1;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  margin: 0;
 }
-.efbi-cert-course-title {
+.efbi-cert-course-inline {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.7rem;
   font-weight: 800;
   color: #10b981;
-  margin: 4px 0 6px;
-  letter-spacing: 0.01em;
-}
-.efbi-cert-completion-sub {
-  font-size: 0.875rem;
-  color: #cbd5e1;
-  margin: 0;
-  line-height: 1.5;
-  letter-spacing: 0.01em;
+  font-size: 1.1rem;
+  padding: 0 4px;
 }
 
 /* ── Optional Score / Level Chips ── */
@@ -8602,11 +8595,11 @@ html[data-theme="light"] .site-footer {
 }
 .efbi-cert-sig-script {
   font-family: 'Great Vibes', cursive;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: #a5b4fc;
-  line-height: 1;
-  margin-bottom: -2px;
-  transform: rotate(-1.5deg);
+  line-height: 1.1;
+  margin-bottom: 1px;
+  transform: none;
 }
 .efbi-cert-sig-line {
   width: 105px;
