@@ -3,5 +3,6 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  cacheDir: '.vite-cache',
   plugins: [react()],
 })
