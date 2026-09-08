@@ -18,6 +18,10 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Firebase Hosting rewrite and baseline response headers in `firebase.json`.
 - Safe holding states for enrollment, sign-in, submissions, and certificate verification.
 - Production build and lint checks passing.
+- Frontend copy and layouts refined across all public pages.
+- Firebase web SDK, secure account forms, email-verification gate, and protected learning route added.
+- Deny-by-default Firestore rules added and covered by eight emulator authorization tests.
+- Backend data model, privacy boundaries, and Firebase Console checklist documented in BACKEND_FOUNDATION.md.
 - Ten routes tested at 390px, 768px, and 1440px with no horizontal overflow or browser runtime errors.
 
 ## Deliberately not active yet
@@ -33,15 +37,15 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 
 ## Next implementation phase
 
-Design the secure Firebase foundation before enabling any student interaction:
+Connect a development Firebase project and complete the first real learning loop:
 
-1. Create separate development and production Firebase projects.
-2. Configure Firebase Authentication and verified-email requirements.
-3. Define Firestore collections and deny-by-default security rules.
-4. Add App Check, rate limits, validation, audit records, and minimum-data collection.
-5. Implement registration and sign-in against the development project.
-6. Test authorization rules with the Firebase Emulator Suite.
-7. Implement learner progress and course delivery only after authentication tests pass.
+1. Add development Firebase web settings to `.env.local` and keep the production project separate.
+2. Enable Email/Password Authentication, email verification, password policy, and email-enumeration protection.
+3. Deploy the tested Firestore rules to the development project and register App Check.
+4. Test registration, verification, sign-in, reset, sign-out, and protected-route behavior in the browser.
+5. Add the first lesson player, transcript, and accessible fallback.
+6. Save progress by authenticated user ID and verify it survives a second device/session.
+7. Design assessments and project review before enabling certificate issuance.
 
 ## Recovery commands
 

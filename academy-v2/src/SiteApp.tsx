@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './Layout'
+import { AccountPage, AuthProvider, JoinPage, LearningPage, RequireVerifiedUser, SignInPage } from './auth'
 import {
   AboutPage,
   BlogPage,
@@ -8,18 +9,17 @@ import {
   CourseDetailPage,
   CoursesPage,
   HomePage,
-  JoinPage,
   NotFoundPage,
   ProgramDetailPage,
   ProgramsPage,
-  SignInPage,
   VerifyPage,
 } from './pages'
 import './site.css'
 
 export default function SiteApp() {
   return (
-    <BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
@@ -34,9 +34,12 @@ export default function SiteApp() {
           <Route path="contact" element={<ContactPage />} />
           <Route path="join" element={<JoinPage />} />
           <Route path="signin" element={<SignInPage />} />
+          <Route path="account" element={<AccountPage />} />
+          <Route path="learn/ai-foundations" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }

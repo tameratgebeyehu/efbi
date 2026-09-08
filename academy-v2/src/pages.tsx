@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { PageHero, ProgramCard, RebuildNotice, SectionHeading } from './components'
 import { blogPosts, buildPillars, curriculum, methodology, programs, values } from './data'
 import { Icon } from './icons'
+import { CourseAccessButton } from './auth'
 
 export function HomePage() {
   return (
@@ -186,7 +187,7 @@ export function CourseDetailPage() {
           <ol className="curriculum-list">{curriculum.map((item) => <li key={item.number}><span>{item.number}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div><Icon name="chevron" /></li>)}</ol>
           <div className="video-note"><Icon name="play" /><div><strong>Video lessons come next</strong><p>YouTube lessons, transcripts, progress saving, and secure access will be connected in the backend phase.</p></div></div>
         </div>
-        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>Lessons and student progress are being tested.</p><div className="progress-label"><span>Preparation</span><strong>In progress</strong></div><div className="progress-track"><i /></div><Link className="button button--primary" to="/join">Join the interest list</Link></aside>
+        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>Lessons and student progress are being tested.</p><div className="progress-label"><span>Preparation</span><strong>In progress</strong></div><div className="progress-track"><i /></div><CourseAccessButton /></aside>
       </section>
     </>
   )

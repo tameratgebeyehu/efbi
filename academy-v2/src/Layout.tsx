@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Icon } from './icons'
+import { AccountActions } from './auth'
 import './refinement.css'
 
 const navigation = [
@@ -49,15 +50,11 @@ export function Layout() {
               <NavLink to="/contact" onClick={closeMenu} className={({ isActive }) => isActive ? 'mobile-only is-active' : 'mobile-only'}>Contact</NavLink>
               <NavLink to="/verify" onClick={closeMenu} className={({ isActive }) => isActive ? 'mobile-only is-active' : 'mobile-only'}>Verify certificate</NavLink>
             </div>
-            <div className="mobile-nav-actions">
-              <Link className="button button--ghost" to="/signin" onClick={closeMenu}>Sign in</Link>
-              <Link className="button button--primary" to="/join" onClick={closeMenu}>Join Academy <Icon name="arrow" /></Link>
-            </div>
+            <AccountActions mobile onNavigate={closeMenu} />
           </nav>
           <div className="header-actions">
             <Link className="verify-link" to="/verify"><Icon name="shield" /> Verify</Link>
-            <Link className="signin-link" to="/signin">Sign in</Link>
-            <Link className="button button--primary button--compact" to="/join">Join Academy</Link>
+            <AccountActions />
           </div>
         </div>
       </header>

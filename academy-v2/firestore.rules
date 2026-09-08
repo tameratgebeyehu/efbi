@@ -1,0 +1,123 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+
+    function owns(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function admin() {
+      return verified()
+        && 'admin' in request.auth.token
+        && request.auth.token.admin == true;
+    }
+
+    function validDisplayName(name) {
+      return name is string && name.size() >= 2 && name.size() <= 80;
+    }
+
+    function validProfile(data) {
+      return data.keys().hasOnly(['displayName', 'status', 'createdAt', 'updatedAt'])
+        && validDisplayName(data.displayName)
+        && data.status == 'active'
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+
+    function validProgress(data, courseId) {
+      return data.keys().hasOnly([
+          'courseId',
+          'completedLessonIds',
+          'lastLessonId',
+          'percent',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.courseId == courseId
+        && data.completedLessonIds is list
+        && data.completedLessonIds.size() <= 100
+        && data.lastLessonId is string
+        && data.lastLessonId.size() <= 120
+        && data.percent is int
+        && data.percent >= 0
+        && data.percent <= 100
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function validCertificate(data, credentialId) {
+      return data.keys().hasOnly([
+          'credentialId',
+          'learnerName',
+          'courseId',
+          'courseTitle',
+          'issuedAt',
+          'status',
+          'public',
+          'updatedAt'
+        ])
+        && data.credentialId == credentialId
+        && data.learnerName is string
+        && data.learnerName.size() >= 2
+        && data.learnerName.size() <= 80
+        && data.courseId is string
+        && data.courseTitle is string
+        && data.issuedAt is timestamp
+        && data.status in ['active', 'revoked', 'replaced']
+        && data.public == true
+        && data.updatedAt == request.time;
+    }
+
+    match /users/{uid} {
+      allow create: if owns(uid) && validProfile(request.resource.data);
+      allow get: if owns(uid) || admin();
+      allow list: if admin();
+      allow update: if owns(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'updatedAt'])
+        && validDisplayName(request.resource.data.displayName)
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+
+      match /progress/{courseId} {
+        allow get, list: if owns(uid) || admin();
+        allow create: if owns(uid)
+          && verified()
+          && validProgress(request.resource.data, courseId)
+          && request.resource.data.createdAt == request.time;
+        allow update: if owns(uid)
+          && verified()
+          && validProgress(request.resource.data, courseId)
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if false;
+      }
+
+      match /submissions/{submissionId} {
+        allow read, write: if false;
+      }
+    }
+
+    match /certificates/{credentialId} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if admin() && validCertificate(request.resource.data, credentialId);
+      allow delete: if false;
+    }
+
+    match /courses/{courseId} {
+      allow read: if verified();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
