@@ -10,47 +10,43 @@ export function HomePage() {
       <section className="home-hero">
         <div className="shell home-hero-grid">
           <div className="home-hero-copy">
-            <div className="hero-kicker"><span /> EFBI Academy <i /> Empowering Ethiopian youth</div>
+            <div className="hero-kicker"><span /> EFBI Academy <i /> Built for Ethiopian learners</div>
             <h1>Learn. Build.<br /><em>Lead.</em></h1>
-            <p className="hero-lede">Practical AI, software engineering, entrepreneurship, and leadership programs for Ethiopia's next generation of builders.</p>
+            <p className="hero-lede">Free, practical courses that help young Ethiopians build useful skills and turn ideas into real projects.</p>
             <div className="button-row">
               <Link className="button button--primary" to="/programs">Explore programs <Icon name="arrow" /></Link>
               <Link className="button button--outline" to="/join">Join Academy</Link>
             </div>
             <div className="hero-trust-row">
-              <span><Icon name="check" /> 100% free learning</span>
-              <span><Icon name="check" /> Practical projects</span>
-              <span><Icon name="check" /> Built in Ethiopia</span>
+              <span><Icon name="check" /> Free to learn</span>
+              <span><Icon name="check" /> Project-based</span>
+              <span><Icon name="check" /> Made in Ethiopia</span>
             </div>
           </div>
 
           <div className="hero-visual">
             <div className="hero-image-frame">
-              <img src="/hero-students-learning.webp" alt="Students collaborating on digital skills and technology projects" width="1024" height="768" />
-              <div className="image-caption"><span>EFBI learning model</span><strong>Skills that become useful work.</strong></div>
+              <img src="/hero-students-learning.webp" alt="Students learning and building a technology project together" width="1024" height="768" />
+              <div className="image-caption"><span>The EFBI approach</span><strong>Learn it. Use it. Share it.</strong></div>
             </div>
-            <div className="hero-side-card hero-side-card--top"><span>01</span><p>Learn the idea</p></div>
-            <div className="hero-side-card hero-side-card--bottom"><span>04</span><p>Lead with it</p></div>
+            <div className="hero-side-card hero-side-card--top"><span>01</span><p>Learn</p></div>
+            <div className="hero-side-card hero-side-card--bottom"><span>04</span><p>Lead</p></div>
           </div>
         </div>
       </section>
 
       <section className="statement-band">
         <div className="shell statement-grid">
-          <p>Who we are</p>
-          <h2>A youth-led initiative helping Ethiopian students turn curiosity into practical skill, credible work, and community impact.</h2>
-          <Link to="/about">Discover EFBI <Icon name="arrow" /></Link>
+          <p>About EFBI</p>
+          <h2>We help Ethiopian students learn technology, build practical projects, and grow as leaders.</h2>
+          <Link to="/about">Our story <Icon name="arrow" /></Link>
         </div>
       </section>
 
       <section className="section shell" aria-labelledby="programs-heading">
         <div className="heading-with-action">
-          <SectionHeading
-            eyebrow="Our programs"
-            title="Future-ready learning pathways"
-            description="Eight connected pathways bridge classroom theory and the skills needed to build, communicate, and lead."
-          />
-          <Link className="text-arrow" to="/programs">View all programs <Icon name="arrow" /></Link>
+          <SectionHeading eyebrow="Our programs" title="Choose what you want to build" description="Start with one path. Learn by doing." />
+          <Link className="text-arrow" to="/programs">See all programs <Icon name="arrow" /></Link>
         </div>
         <div className="program-grid program-grid--home">
           {programs.slice(0, 4).map((program) => <ProgramCard key={program.slug} program={program} />)}
@@ -59,12 +55,7 @@ export function HomePage() {
 
       <section className="section methodology-section">
         <div className="shell">
-          <SectionHeading
-            light
-            eyebrow="Learning methodology"
-            title="From skills to solutions"
-            description="A four-stage framework designed to move ambitious learners from understanding to useful action."
-          />
+          <SectionHeading light eyebrow="How learning works" title="From skills to solutions" description="Four simple steps take you from a new idea to work you can share." />
           <ol className="methodology-grid">
             {methodology.map((stage) => (
               <li key={stage.number}>
@@ -80,11 +71,7 @@ export function HomePage() {
 
       <section className="section shell building-section">
         <div className="building-intro">
-          <SectionHeading
-            eyebrow="Work in progress"
-            title="Building EFBI"
-            description="EFBI is not only a course catalogue. These five connected workstreams are being developed into a trustworthy learning ecosystem."
-          />
+          <SectionHeading eyebrow="Behind the academy" title="Building EFBI" description="Five parts are coming together to create a better learning experience." />
           <RebuildNotice compact />
         </div>
         <div className="build-list">
@@ -101,38 +88,30 @@ export function HomePage() {
 
       <section className="section values-section">
         <div className="shell">
-          <SectionHeading eyebrow="What guides us" title="Our core values" description="The standard for what EFBI teaches, builds, publishes, and promises." />
+          <SectionHeading eyebrow="What matters to us" title="Our core values" description="These values guide how we teach, build, and work with students." />
           <div className="values-grid">
-            {values.map((value) => (
-              <article key={value.number}>
-                <span>{value.number}</span>
-                <h3>{value.title}</h3>
-                <p>{value.description}</p>
-              </article>
-            ))}
+            {values.map((value) => <article key={value.number}><span>{value.number}</span><h3>{value.title}</h3><p>{value.description}</p></article>)}
           </div>
         </div>
       </section>
 
-      <section className="section shell leadership-preview">
-        <div className="founder-image-wrap">
-          <img src="/tamerat-gebeyehu.webp" alt="Tamerat Gebeyehu, founder and lead builder of EFBI Academy" width="900" height="900" />
-          <span>Founder-led · Community-designed</span>
+      <section className="section shell founder-strip">
+        <div className="founder-strip-image">
+          <img src="/tamerat-gebeyehu.webp" alt="Tamerat Gebeyehu, founder of EFBI Academy" width="900" height="900" />
         </div>
-        <div className="founder-copy">
-          <p className="eyebrow-label">Leadership & vision</p>
-          <h2>Built by one founder.<br />Designed for a community.</h2>
-          <p>EFBI began as a founder-led initiative to make practical technology education more accessible to Ethiopian youth—and to build it transparently, one tested layer at a time.</p>
-          <blockquote>“My goal is to help students move from watching technology change the world to building solutions that shape their own communities.”</blockquote>
-          <div className="founder-byline"><strong>Tamerat Gebeyehu</strong><span>Founder & Lead Builder</span></div>
+        <div className="founder-strip-copy">
+          <p className="eyebrow-label">Founder & lead builder</p>
+          <h2>Meet Tamerat.</h2>
+          <p>Tamerat started EFBI to give Ethiopian students a practical place to learn, build, and grow.</p>
+          <blockquote>“I want students to build useful skills and believe in what they can create.”</blockquote>
           <Link className="text-arrow" to="/about#leadership">Read the EFBI story <Icon name="arrow" /></Link>
         </div>
       </section>
 
       <section className="cta-section">
         <div className="shell cta-inner">
-          <div><p className="eyebrow-label">Your next step</p><h2>Bring your curiosity.<br />Build something useful.</h2></div>
-          <div><p>Explore the learning pathways now. Enrollment will reopen after the secure student platform is ready.</p><div className="button-row"><Link className="button button--light" to="/courses">Browse courses</Link><Link className="button button--line-light" to="/contact">Contact EFBI</Link></div></div>
+          <div><p className="eyebrow-label">Start exploring</p><h2>Learn something.<br />Build something.</h2></div>
+          <div><p>See what EFBI is preparing. Enrollment will reopen when the student platform is ready.</p><div className="button-row"><Link className="button button--light" to="/courses">Browse courses</Link><Link className="button button--line-light" to="/contact">Contact EFBI</Link></div></div>
         </div>
       </section>
     </>
@@ -142,13 +121,11 @@ export function HomePage() {
 export function ProgramsPage() {
   return (
     <>
-      <PageHero eyebrow="Explore EFBI" title="Programs built around useful outcomes." description="Choose a pathway that connects technical skill, real practice, and the confidence to create work you can explain and improve.">
-        <div className="page-stat"><strong>8</strong><span>learning pathways</span></div>
+      <PageHero eyebrow="Programs" title="Choose what you want to learn." description="Pick a path, practice the skills, and build something you can show." className="page-hero--programs">
+        <div className="page-stat"><strong>8</strong><span>learning paths</span></div>
       </PageHero>
-      <section className="section shell">
-        <div className="program-grid">{programs.map((program) => <ProgramCard key={program.slug} program={program} />)}</div>
-      </section>
-      <section className="outcome-band"><div className="shell"><SectionHeading light eyebrow="The EFBI difference" title="Every pathway moves toward evidence." /><div className="outcome-grid"><article><strong>01</strong><h3>Clear understanding</h3><p>Know the concept, its purpose, and its limits.</p></article><article><strong>02</strong><h3>Practical application</h3><p>Use the skill through exercises and guided work.</p></article><article><strong>03</strong><h3>Portfolio evidence</h3><p>Create something you can demonstrate and discuss.</p></article></div></div></section>
+      <section className="section shell"><div className="program-grid">{programs.map((program) => <ProgramCard key={program.slug} program={program} />)}</div></section>
+      <section className="outcome-band"><div className="shell"><SectionHeading light eyebrow="What you will do" title="Learn it. Practice it. Build it." /><div className="outcome-grid"><article><strong>01</strong><h3>Understand</h3><p>Learn the idea in clear language.</p></article><article><strong>02</strong><h3>Practice</h3><p>Use it in guided exercises.</p></article><article><strong>03</strong><h3>Build</h3><p>Create work you can share.</p></article></div></div></section>
     </>
   )
 }
@@ -160,14 +137,14 @@ export function ProgramDetailPage() {
   return (
     <>
       <PageHero eyebrow={`${program.level} · ${program.duration}`} title={program.title} description={program.description}>
-        <div className={`detail-monogram accent-${program.accent}`}>{program.shortTitle}</div>
+        <span className="detail-program-icon"><Icon name="book" /></span>
       </PageHero>
       <section className="section shell detail-layout">
         <div>
-          <p className="eyebrow-label">Learning outcome</p><h2>What you will work toward</h2><p className="large-copy">{program.outcome}</p>
-          <div className="detail-points"><div><Icon name="book" /><span><strong>Structured lessons</strong>Clear explanations, notes, and guided examples.</span></div><div><Icon name="code" /><span><strong>Applied practice</strong>Tasks that turn knowledge into repeatable skill.</span></div><div><Icon name="spark" /><span><strong>Evidence of work</strong>A project or deliverable you can present honestly.</span></div></div>
+          <p className="eyebrow-label">Your goal</p><h2>What you’ll build toward</h2><p className="large-copy">{program.outcome}</p>
+          <div className="detail-points"><div><Icon name="book" /><span><strong>Short lessons</strong>Clear notes and examples.</span></div><div><Icon name="code" /><span><strong>Real practice</strong>Small tasks that build confidence.</span></div><div><Icon name="spark" /><span><strong>A finished project</strong>Work you can explain and share.</span></div></div>
         </div>
-        <aside className="enrollment-card"><span className="status-tag">Curriculum in development</span><h2>Enrollment is not open yet.</h2><p>We are validating course content, learner safety, account security, and progress tracking before accepting students.</p><Link className="button button--primary" to="/contact">Ask about this program</Link></aside>
+        <aside className="enrollment-card"><span className="status-tag">In development</span><h2>Enrollment is not open yet.</h2><p>We’re finishing the lessons and testing the student platform first.</p><Link className="button button--primary" to="/contact">Ask about this program</Link></aside>
       </section>
     </>
   )
@@ -176,9 +153,7 @@ export function ProgramDetailPage() {
 export function CoursesPage() {
   return (
     <>
-      <PageHero eyebrow="Course catalogue" title="Learn in focused, practical steps." description="The public catalogue shows what EFBI is preparing. Only tested and complete courses will open for enrollment.">
-        <RebuildNotice compact />
-      </PageHero>
+      <PageHero eyebrow="Courses" title="Courses built for doing." description="Learn in short steps, practice each idea, and finish with a project." className="page-hero--courses"><RebuildNotice compact /></PageHero>
       <section className="section shell">
         <article className="course-feature-card">
           <div className="course-cover">
@@ -189,13 +164,12 @@ export function CoursesPage() {
           <div className="course-feature-copy">
             <div className="course-tags"><span>Beginner</span><span>4 lessons</span><span>Self-paced</span></div>
             <h2>AI Foundations for Ethiopia</h2>
-            <p>Understand artificial intelligence, use it responsibly, and design a small solution for a challenge in your school or community.</p>
-            <ul><li><Icon name="check" /> Plain-language video and written lessons</li><li><Icon name="check" /> Responsible AI and privacy foundations</li><li><Icon name="check" /> One practical Ethiopian-context project</li><li><Icon name="check" /> Knowledge checks and reflection</li></ul>
-            <Link className="button button--primary" to="/courses/ai-foundations">View course details <Icon name="arrow" /></Link>
+            <p>Learn what AI can do, use it responsibly, and design a small solution for your school or community.</p>
+            <ul><li><Icon name="check" /> Video and written lessons</li><li><Icon name="check" /> Privacy and responsible AI</li><li><Icon name="check" /> One practical project</li><li><Icon name="check" /> Quick knowledge checks</li></ul>
+            <Link className="button button--primary" to="/courses/ai-foundations">View course <Icon name="arrow" /></Link>
           </div>
         </article>
-
-        <div className="catalog-heading"><div><p className="eyebrow-label">Curriculum roadmap</p><h2>More courses being prepared</h2></div><p>These pathways are planned, not yet open for enrollment.</p></div>
+        <div className="catalog-heading"><div><p className="eyebrow-label">Coming next</p><h2>More courses are on the way</h2></div><p>We’ll open each course after its lessons and learning tools are ready.</p></div>
         <div className="course-roadmap">{programs.slice(1).map((program, index) => <article key={program.slug}><span>{String(index + 2).padStart(2, '0')}</span><div><h3>{program.title}</h3><p>{program.description}</p></div><small>{program.level}</small></article>)}</div>
       </section>
     </>
@@ -205,15 +179,14 @@ export function CoursesPage() {
 export function CourseDetailPage() {
   return (
     <>
-      <PageHero eyebrow="Pilot course · Beginner" title="AI Foundations for Ethiopia" description="A four-lesson introduction to understanding, questioning, and responsibly using artificial intelligence.">
-        <div className="page-stat"><strong>4</strong><span>focused lessons</span></div>
-      </PageHero>
+      <PageHero eyebrow="Pilot course · Beginner" title="AI Foundations for Ethiopia" description="Four short lessons that help you understand AI and use it responsibly." className="page-hero--course-detail"><div className="page-stat"><strong>4</strong><span>lessons</span></div></PageHero>
       <section className="section shell course-detail-grid">
         <div>
-          <SectionHeading eyebrow="Course curriculum" title="A small course with a clear finish line" description="Every lesson includes an outcome, explanation, knowledge check, and practical step." />
+          <SectionHeading eyebrow="Course outline" title="A clear path from idea to project" description="Each lesson ends with one practical step." />
           <ol className="curriculum-list">{curriculum.map((item) => <li key={item.number}><span>{item.number}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div><Icon name="chevron" /></li>)}</ol>
+          <div className="video-note"><Icon name="play" /><div><strong>Video lessons come next</strong><p>YouTube lessons, transcripts, progress saving, and secure access will be connected in the backend phase.</p></div></div>
         </div>
-        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>Content, assessments, progress tracking, and student privacy controls are being tested.</p><div className="progress-label"><span>Preparation</span><strong>In progress</strong></div><div className="progress-track"><i /></div><Link className="button button--primary" to="/join">Join the interest list</Link></aside>
+        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>Lessons and student progress are being tested.</p><div className="progress-label"><span>Preparation</span><strong>In progress</strong></div><div className="progress-track"><i /></div><Link className="button button--primary" to="/join">Join the interest list</Link></aside>
       </section>
     </>
   )
@@ -222,17 +195,25 @@ export function CourseDetailPage() {
 export function CertificationPage() {
   return (
     <>
-      <PageHero eyebrow="EFBI credentials" title="Certificates backed by completed work." description="EFBI certificates are designed to represent verified learning, practical evidence, and a clear course record—not attendance alone.">
-        <Icon className="page-hero-icon" name="shield" />
-      </PageHero>
+      <PageHero eyebrow="Certificates" title="A certificate you earn." description="Finish the lessons, pass the checks, and submit your project." className="page-hero--certification"><Icon className="page-hero-icon" name="shield" /></PageHero>
       <section className="section shell certification-grid">
         <div>
-          <SectionHeading eyebrow="Completion standard" title="What a learner must complete" />
-          <ol className="requirement-list"><li><span>01</span><div><h3>Complete every lesson</h3><p>Progress must be recorded through the authenticated learning portal.</p></div></li><li><span>02</span><div><h3>Pass knowledge checks</h3><p>Course-specific assessments confirm the core ideas were understood.</p></div></li><li><span>03</span><div><h3>Submit practical evidence</h3><p>A project or deliverable demonstrates that learning can be applied.</p></div></li><li><span>04</span><div><h3>Receive final approval</h3><p>EFBI reviews completion before issuing a unique credential.</p></div></li></ol>
+          <SectionHeading eyebrow="How it works" title="Complete the course. Show your work." />
+          <ol className="requirement-list"><li><span>01</span><div><h3>Finish every lesson</h3><p>Your progress is saved in your account.</p></div></li><li><span>02</span><div><h3>Pass the knowledge checks</h3><p>Show that you understand the key ideas.</p></div></li><li><span>03</span><div><h3>Submit your project</h3><p>Use what you learned in a practical task.</p></div></li><li><span>04</span><div><h3>Receive approval</h3><p>EFBI reviews your work before issuing the certificate.</p></div></li></ol>
         </div>
-        <div className="certificate-mock" aria-label="Illustrative certificate design preview"><div className="certificate-top"><img src="/efbi-icon.png" alt="" /><span>ETHIOPIAN FUTURE BUILDERS INITIATIVE</span></div><p>Certificate of completion</p><h2>Learner Name</h2><small>has completed the requirements for</small><h3>Course Title</h3><div className="certificate-lines"><span>Issue date</span><span>EFBI-ID-XXXX</span></div><div className="certificate-seal"><Icon name="shield" /></div><em>Design preview · not a valid credential</em></div>
+        <div className="certificate-mock" aria-label="Sample EFBI certificate">
+          <div className="certificate-accent" aria-hidden="true"><i /><i /><i /></div>
+          <div className="certificate-top"><img src="/efbi-icon.png" alt="" /><span>EFBI ACADEMY</span></div>
+          <p>Certificate of completion</p>
+          <small>Presented to</small><h2>Learner Name</h2>
+          <small>for completing</small><h3>AI Foundations for Ethiopia</h3>
+          <div className="certificate-details"><span><small>Issued</small>Month 2026</span><span><small>Credential ID</small>EFBI-XXXX</span></div>
+          <div className="certificate-signature"><strong>Tamerat Gebeyehu</strong><span>Founder & Director</span></div>
+          <div className="certificate-seal"><Icon name="shield" /></div>
+          <em>Sample design · not a valid certificate</em>
+        </div>
       </section>
-      <section className="registry-callout"><div className="shell"><div><p className="eyebrow-label">Public trust</p><h2>A credential anyone can check.</h2><p>Each issued certificate will have a unique public record while private student learning data remains protected.</p></div><Link className="button button--light" to="/verify">Open verification <Icon name="arrow" /></Link></div></section>
+      <section className="registry-callout"><div className="shell"><div><p className="eyebrow-label">Easy to verify</p><h2>Every certificate has its own record.</h2><p>Anyone can check the credential ID. Private learning data stays private.</p></div><Link className="button button--light" to="/verify">Verify a certificate <Icon name="arrow" /></Link></div></section>
     </>
   )
 }
@@ -240,17 +221,17 @@ export function CertificationPage() {
 export function VerifyPage() {
   return (
     <>
-      <PageHero eyebrow="Credential registry" title="Verify an EFBI certificate." description="This public page will allow schools, universities, employers, and learners to confirm an issued EFBI credential." />
+      <PageHero eyebrow="Certificate verification" title="Check an EFBI certificate." description="Enter the credential ID to confirm that a certificate was issued by EFBI." className="page-hero--verify" />
       <section className="section shell verify-layout">
         <div className="verify-card">
           <div className="verify-icon"><Icon name="shield" /></div>
-          <h2>Verification is temporarily paused.</h2>
-          <p>The previous test registry has been retired. Verification will reopen after the secure certificate database and approval workflow are complete.</p>
-          <label htmlFor="certificate-id">Certificate ID</label>
-          <div className="verify-form"><input id="certificate-id" type="text" placeholder="Example: EFBI-2026-0001" disabled /><button className="button button--primary" type="button" disabled>Verify</button></div>
-          <small>No real certificates have been issued through the rebuilt system yet.</small>
+          <h2>Verification is not open yet.</h2>
+          <p>It will open when EFBI issues its first certificates through the new platform.</p>
+          <label htmlFor="certificate-id">Credential ID</label>
+          <div className="verify-form"><input id="certificate-id" type="text" placeholder="EFBI-2026-0001" disabled /><button className="button button--primary" type="button" disabled>Verify</button></div>
+          <small>No certificates have been issued through the new system.</small>
         </div>
-        <aside className="verification-info"><p className="eyebrow-label">What the future record will show</p><ul><li><Icon name="check" /><span><strong>Credential status</strong>Valid, replaced, or revoked.</span></li><li><Icon name="check" /><span><strong>Learner and course</strong>Only the public identity fields needed for verification.</span></li><li><Icon name="check" /><span><strong>Issue details</strong>Unique identifier and official issue date.</span></li></ul></aside>
+        <aside className="verification-info"><p className="eyebrow-label">The result will show</p><ul><li><Icon name="check" /><span><strong>Status</strong>Valid, replaced, or revoked.</span></li><li><Icon name="check" /><span><strong>Learner and course</strong>The public details on the certificate.</span></li><li><Icon name="check" /><span><strong>Issue information</strong>The credential ID and issue date.</span></li></ul></aside>
       </section>
     </>
   )
@@ -258,14 +239,15 @@ export function VerifyPage() {
 
 export function BlogPage() {
   const [query, setQuery] = useState('')
-  const filtered = useMemo(() => blogPosts.filter((post) => `${post.title} ${post.category} ${post.excerpt}`.toLowerCase().includes(query.toLowerCase())), [query])
+  const filtered = useMemo(() => blogPosts.slice(1).filter((post) => `${post.title} ${post.category} ${post.excerpt}`.toLowerCase().includes(query.toLowerCase())), [query])
+  const featured = blogPosts[0]
   return (
     <>
-      <PageHero eyebrow="Ideas & guidance" title="Technology & learning blog." description="Useful explanations, building notes, scholarship guidance, and honest updates from the EFBI journey." />
+      <PageHero eyebrow="EFBI blog" title="Ideas for learning and building." description="Simple guides, project lessons, and scholarship advice." className="page-hero--blog" />
       <section className="section shell">
-        <article className="featured-post"><div className="featured-post-art"><span>FIELD NOTE / 001</span><strong>Ideas become credible<br />when the work is visible.</strong><Icon name="spark" /></div><div><span className="article-tag">Scholarships</span><p className="article-status">Editorial draft</p><h2>How a Strong Project Portfolio Can Support Scholarship Applications</h2><p>A practical guide to documenting initiative, community impact, technical growth, and honest evidence in your application story.</p><button className="text-arrow" disabled>Article coming soon <Icon name="arrow" /></button></div></article>
-        <div className="blog-toolbar"><div><p className="eyebrow-label">From the EFBI desk</p><h2>All field notes</h2></div><label className="search-field"><span className="sr-only">Search articles</span><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search field notes" /></label></div>
-        <div className="blog-grid">{filtered.map((post, index) => <article key={post.title}><div className={`post-number post-number--${index + 1}`}>{String(index + 1).padStart(2, '0')}</div><span className="article-tag">{post.category}</span><h3>{post.title}</h3><p>{post.excerpt}</p><small>{post.status}</small></article>)}</div>
+        <article className="featured-post"><div className="featured-post-art"><span>FEATURED / 01</span><strong>Build work<br />you can show.</strong><Icon name="spark" /></div><div><span className="article-tag">{featured.category}</span><p className="article-status">{featured.status}</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><button className="text-arrow" disabled>Coming soon <Icon name="arrow" /></button></div></article>
+        <div className="blog-toolbar"><div><p className="eyebrow-label">More from EFBI</p><h2>Latest articles</h2></div><label className="search-field"><span className="sr-only">Search articles</span><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search articles" /></label></div>
+        <div className="blog-grid blog-grid--refined">{filtered.map((post, index) => <article key={post.title}><div className={`post-number post-number--${index + 2}`}>{String(index + 2).padStart(2, '0')}</div><span className="article-tag">{post.category}</span><h3>{post.title}</h3><p>{post.excerpt}</p><small>{post.status}</small></article>)}</div>
       </section>
     </>
   )
@@ -274,10 +256,10 @@ export function BlogPage() {
 export function AboutPage() {
   return (
     <>
-      <PageHero eyebrow="Who we are" title="A practical learning initiative, built in Ethiopia." description="EFBI Academy helps young people build technology skills, leadership capacity, and useful evidence of what they can create." />
-      <section className="section shell mission-vision-grid"><article><span>Mission</span><h2>Expand access to practical learning.</h2><p>Give Ethiopian youth access to technology training, mentorship, and leadership development that prepares them to solve real problems.</p></article><article><span>Vision</span><h2>Grow a community of builders.</h2><p>A thriving community of young Ethiopian builders driving local digital transformation and shaping globally relevant innovation.</p></article></section>
-      <section className="section values-section"><div className="shell"><SectionHeading eyebrow="Our foundation" title="Six values, one shared standard" /><div className="values-grid">{values.map((value) => <article key={value.number}><span>{value.number}</span><h3>{value.title}</h3><p>{value.description}</p></article>)}</div></div></section>
-      <section className="section shell leadership-full" id="leadership"><div className="founder-image-wrap"><img src="/tamerat-gebeyehu.webp" alt="Tamerat Gebeyehu, founder and lead builder of EFBI Academy" /><span>Founder & Lead Builder</span></div><div><p className="eyebrow-label">Leadership & vision</p><h2>Tamerat Gebeyehu</h2><p className="large-copy">Tamerat founded EFBI Academy and currently leads its strategy, curriculum design, media production, identity, and platform development.</p><p>The initiative is intentionally transparent about being founder-led at this stage. Its long-term direction is collaborative: educators, mentors, partners, and students will help shape a stronger learning community as the academy grows.</p><div className="founder-tags"><span>Strategy</span><span>Curriculum</span><span>Content & video</span><span>Platform development</span></div></div></section>
+      <PageHero eyebrow="About EFBI" title="Built in Ethiopia, for Ethiopian learners." description="EFBI helps young people learn practical skills, build useful projects, and grow as leaders." className="page-hero--about" />
+      <section className="section shell mission-vision-grid"><article><span>Mission</span><h2>Make practical learning easier to reach.</h2><p>Give Ethiopian students useful technology skills, guidance, and room to build.</p></article><article><span>Vision</span><h2>Grow a community of young builders.</h2><p>Students who use technology to solve local problems and create new opportunities.</p></article></section>
+      <section className="section values-section"><div className="shell"><SectionHeading eyebrow="What guides us" title="Six values we work by" /><div className="values-grid">{values.map((value) => <article key={value.number}><span>{value.number}</span><h3>{value.title}</h3><p>{value.description}</p></article>)}</div></div></section>
+      <section className="section shell leadership-full" id="leadership"><div className="founder-image-wrap"><img src="/tamerat-gebeyehu.webp" alt="Tamerat Gebeyehu, founder of EFBI Academy" /><span>Founder & Lead Builder</span></div><div><p className="eyebrow-label">Leadership</p><h2>Tamerat Gebeyehu</h2><p className="large-copy">Tamerat started EFBI and leads its courses, content, design, and platform development.</p><p>EFBI began with one builder, but its future is collaborative. Students, educators, mentors, and partners will all have a part in shaping it.</p><div className="founder-tags"><span>Strategy</span><span>Curriculum</span><span>Content</span><span>Platform</span></div></div></section>
     </>
   )
 }
@@ -285,30 +267,23 @@ export function AboutPage() {
 export function ContactPage() {
   return (
     <>
-      <PageHero eyebrow="Contact EFBI" title="Questions, ideas, or a way to help?" description="Reach out about learning, mentorship, partnerships, content, or the platform rebuild." />
+      <PageHero eyebrow="Contact EFBI" title="Let’s talk." description="Ask about courses, mentoring, partnerships, or the platform." className="page-hero--contact" />
       <section className="section shell contact-grid">
-        <div><SectionHeading eyebrow="Direct contact" title="Choose the easiest channel" description="The secure contact form is still being rebuilt, so use one of the direct channels below." /><div className="contact-cards"><a href="mailto:efbi.academy@gmail.com"><Icon name="mail" /><span><small>Email</small><strong>efbi.academy@gmail.com</strong></span><Icon name="external" /></a><a href="tel:+251725520306"><Icon name="phone" /><span><small>Phone</small><strong>+251 725 520 306</strong></span><Icon name="external" /></a><a href="https://t.me/EFBI_Academy" target="_blank" rel="noreferrer"><Icon name="send" /><span><small>Telegram channel</small><strong>@EFBI_Academy</strong></span><Icon name="external" /></a><a href="https://t.me/+HhBFWhYdfChhYTlk" target="_blank" rel="noreferrer"><Icon name="users" /><span><small>Student community</small><strong>Join the EFBI group</strong></span><Icon name="external" /></a></div></div>
-        <aside className="contact-side"><div className="contact-map"><Icon name="map" /><div><small>EFBI Academy</small><strong>Addis Ababa, Ethiopia</strong></div></div><h2>Interested in contributing?</h2><p>EFBI welcomes conversations with educators, mentors, student community leaders, sponsors, and guest instructors who share its learning and safety standards.</p><a className="button button--primary" href="mailto:efbi.academy@gmail.com?subject=EFBI%20Collaboration">Propose a collaboration</a></aside>
+        <div><SectionHeading eyebrow="Get in touch" title="Choose what works for you" description="Our contact form is being rebuilt, so reach us directly." /><div className="contact-cards"><a href="mailto:efbi.academy@gmail.com"><Icon name="mail" /><span><small>Email</small><strong>efbi.academy@gmail.com</strong></span><Icon name="external" /></a><a href="tel:+251725520306"><Icon name="phone" /><span><small>Phone</small><strong>+251 725 520 306</strong></span><Icon name="external" /></a><a href="https://t.me/EFBI_Academy" target="_blank" rel="noreferrer"><Icon name="send" /><span><small>Telegram</small><strong>@EFBI_Academy</strong></span><Icon name="external" /></a><a href="https://t.me/+HhBFWhYdfChhYTlk" target="_blank" rel="noreferrer"><Icon name="users" /><span><small>Community</small><strong>Join the student group</strong></span><Icon name="external" /></a></div></div>
+        <aside className="contact-side contact-side--refined"><div className="contact-side-mark"><span><Icon name="users" /></span><div><small>EFBI Academy</small><strong>Addis Ababa, Ethiopia</strong></div></div><h2>Want to build with us?</h2><p>We’d like to hear from educators, mentors, community leaders, and partners who care about practical learning.</p><a className="button button--primary" href="mailto:efbi.academy@gmail.com?subject=EFBI%20Collaboration">Propose a collaboration</a></aside>
       </section>
     </>
   )
 }
 
-export function JoinPage() {
-  return <AccessPage kind="join" />
-}
-
-export function SignInPage() {
-  return <AccessPage kind="signin" />
-}
+export function JoinPage() { return <AccessPage kind="join" /> }
+export function SignInPage() { return <AccessPage kind="signin" /> }
 
 function AccessPage({ kind }: { kind: 'join' | 'signin' }) {
   const joining = kind === 'join'
-  return (
-    <section className="access-page"><div className="access-panel"><Link className="brand-alone" to="/"><img src="/efbi-icon.png" alt="" /> EFBI Academy</Link><p className="eyebrow-label">{joining ? 'Join the academy' : 'Student portal'}</p><h1>{joining ? 'Enrollment will reopen safely.' : 'Sign-in is temporarily paused.'}</h1><p>{joining ? 'We are rebuilding registration, consent, authentication, and learner records before accepting applications.' : 'The previous sign-in system has been retired while secure authentication and progress tracking are implemented.'}</p><RebuildNotice /><div className="access-actions"><Link className="button button--primary" to="/courses">Explore courses</Link><Link className="button button--outline" to="/contact">Contact EFBI</Link></div></div></section>
-  )
+  return <section className="access-page"><div className="access-panel"><Link className="brand-alone" to="/"><img src="/efbi-icon.png" alt="" /> EFBI Academy</Link><p className="eyebrow-label">{joining ? 'Join EFBI' : 'Student portal'}</p><h1>{joining ? 'Enrollment will reopen soon.' : 'Sign-in is paused for now.'}</h1><p>{joining ? 'We’re finishing the new student platform before accepting applications.' : 'We’re replacing the old sign-in system with a safer one.'}</p><RebuildNotice /><div className="access-actions"><Link className="button button--primary" to="/courses">Explore courses</Link><Link className="button button--outline" to="/contact">Contact EFBI</Link></div></div></section>
 }
 
 export function NotFoundPage() {
-  return <section className="not-found shell"><span>404</span><h1>This page is not part of the pathway.</h1><p>The address may have changed during the EFBI rebuild.</p><Link className="button button--primary" to="/">Return home</Link></section>
+  return <section className="not-found shell"><span>404</span><h1>We couldn’t find that page.</h1><p>The address may have changed during the rebuild.</p><Link className="button button--primary" to="/">Return home</Link></section>
 }

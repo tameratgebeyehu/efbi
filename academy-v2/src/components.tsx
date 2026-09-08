@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { Program } from './data'
 import { Icon } from './icons'
@@ -12,11 +13,34 @@ export function SectionHeading({ eyebrow, title, description, light = false }: {
   )
 }
 
+function ProgramIcon({ slug }: { slug: string }) {
+  const icons: Record<string, ReactNode> = {
+    'artificial-intelligence': <Icon name="brain" />,
+    'ai-assisted-app-development': <Icon name="spark" />,
+    'web-development': <Icon name="code" />,
+    'programming-foundations': <Icon name="book" />,
+    'entrepreneurship': <Icon name="spark" />,
+    'leadership-development': <Icon name="compass" />,
+    'career-readiness': <Icon name="users" />,
+  }
+
+  if (slug === 'mobile-app-development') {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="6.5" y="2.5" width="11" height="19" rx="2" />
+        <path d="M10 5h4M11 18.5h2" />
+      </svg>
+    )
+  }
+
+  return icons[slug] ?? <Icon name="book" />
+}
+
 export function ProgramCard({ program, featured = false }: { program: Program; featured?: boolean }) {
   return (
     <article className={featured ? `program-card program-card--featured accent-${program.accent}` : `program-card accent-${program.accent}`}>
       <div className="program-card-top">
-        <span className="program-monogram" aria-hidden="true">{program.shortTitle}</span>
+        <span className="program-icon" aria-hidden="true"><ProgramIcon slug={program.slug} /></span>
         <span className="program-level">{program.level}</span>
       </div>
       <div>
@@ -31,9 +55,9 @@ export function ProgramCard({ program, featured = false }: { program: Program; f
   )
 }
 
-export function PageHero({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: React.ReactNode }) {
+export function PageHero({ eyebrow, title, description, children, className = '' }: { eyebrow: string; title: string; description: string; children?: ReactNode; className?: string }) {
   return (
-    <section className="page-hero">
+    <section className={`page-hero ${className}`.trim()}>
       <div className="shell page-hero-inner">
         <div>
           <p className="eyebrow-label">{eyebrow}</p>
@@ -50,7 +74,10 @@ export function RebuildNotice({ compact = false }: { compact?: boolean }) {
   return (
     <div className={compact ? 'rebuild-notice rebuild-notice--compact' : 'rebuild-notice'} role="status">
       <span className="pulse" aria-hidden="true" />
-      <div><strong>Secure rebuild in progress</strong><p>Student accounts and live submissions stay paused until the new system passes testing.</p></div>
+      <div>
+        <strong>Student access is being rebuilt</strong>
+        <p>We’ll reopen when accounts and progress tracking are fully tested.</p>
+      </div>
     </div>
   )
 }
