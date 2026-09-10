@@ -45,13 +45,22 @@ certificates/{credentialId}
 
 Course descriptions remain in the version-controlled website. Protected lesson records may later use `courses/{courseId}`, but the current rules do not permit browser writes.
 
+## Development environment
+
+- Firebase project: `efbi-academy-dev-doha`
+- Web app: `EFBI Academy Development Web`
+- Firestore: `(default)` in `me-central1` (Doha), Standard edition, deletion protection enabled
+- Authentication: Email/Password enabled
+- Password policy: enforced minimum of 10 characters
+- Email enumeration protection: enabled
+- Local SDK settings: `.env.local`, intentionally ignored by Git
+
 ## Local setup
 
-1. Copy `.env.example` to `.env.local`.
-2. Add the Firebase web-app settings from a development Firebase project.
-3. Set `VITE_USE_FIREBASE_EMULATORS=true` for local account and progress testing.
-4. Run `npm run emulators` in one terminal and `npm run dev` in another.
-5. Run `npm run test:rules` after every security-rule change.
+1. Use the existing ignored `.env.local` to test the real Doha development project.
+2. Set `VITE_USE_FIREBASE_EMULATORS=true` when isolated local account and progress testing is needed.
+3. Run `npm run emulators` in one terminal and `npm run dev` in another for emulator testing.
+4. Run `npm run test:rules` after every security-rule change.
 
 Do not place service-account JSON, private keys, reCAPTCHA secret keys, student exports, or production project credentials in this repository.
 

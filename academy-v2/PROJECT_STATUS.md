@@ -1,6 +1,6 @@
 # EFBI Academy v2 — Project Status
 
-Last updated: 2026-09-08
+Last updated: 2026-09-10
 
 ## Current state
 
@@ -23,10 +23,20 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Deny-by-default Firestore rules added and covered by eight emulator authorization tests.
 - Backend data model, privacy boundaries, and Firebase Console checklist documented in BACKEND_FOUNDATION.md.
 - Ten routes tested at 390px, 768px, and 1440px with no horizontal overflow or browser runtime errors.
+- Development Firebase project `efbi-academy-dev-doha` connected.
+- Default Firestore database verified in `me-central1` (Doha), Standard edition, free tier, with deletion protection.
+- Email/Password authentication, a server-enforced 10-character password minimum, and improved email privacy enabled.
+- Firestore rules and indexes deployed successfully to the Doha development database.
+- Cloud authentication smoke test passed; its synthetic account was deleted.
+
+## Firebase environments
+
+- Active development: `efbi-academy-dev-doha`. Use this project for all current backend testing.
+- Abandoned empty test: `efbi-academy-dev`. Its default database was unintentionally created in `nam5`; do not use it.
 
 ## Deliberately not active yet
 
-- Student registration and authentication.
+- Public student enrollment; development authentication is connected but not production-ready.
 - Learner profiles and progress records.
 - Contact form submissions.
 - Course video playback and completion tracking.
@@ -37,15 +47,14 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 
 ## Next implementation phase
 
-Connect a development Firebase project and complete the first real learning loop:
+Complete the first real learning loop in the Doha development project:
 
-1. Add development Firebase web settings to `.env.local` and keep the production project separate.
-2. Enable Email/Password Authentication, email verification, password policy, and email-enumeration protection.
-3. Deploy the tested Firestore rules to the development project and register App Check.
-4. Test registration, verification, sign-in, reset, sign-out, and protected-route behavior in the browser.
-5. Add the first lesson player, transcript, and accessible fallback.
-6. Save progress by authenticated user ID and verify it survives a second device/session.
-7. Design assessments and project review before enabling certificate issuance.
+1. Test registration, verification, sign-in, reset, sign-out, and protected-route behavior in the browser.
+2. Register App Check, monitor it first, then enforce it before any public enrollment.
+3. Add the first lesson player, transcript, and accessible fallback.
+4. Save progress by authenticated user ID and verify it survives a second device/session.
+5. Split Firebase from the public JavaScript bundle to improve first-load performance.
+6. Design assessments and project review before enabling certificate issuance.
 
 ## Recovery commands
 
