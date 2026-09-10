@@ -1,80 +1,90 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  sendEmailVerification,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  updateProfile,
-  type User,
-} from 'firebase/auth'
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import type { User } from 'firebase/auth'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Icon } from './icons'
-import { firebaseAuth, firebaseConfigured, firestore } from './lib/firebase'
+import { firebaseConfigured, getFirebaseFirestore, getFirebaseServices } from './lib/firebase'
 import { curriculum } from './data'
 import { AuthContext, useAuth, type AuthContextValue } from './auth-context'
 import './auth.css'
 
 
-function requireFirebase() {
-  if (!firebaseAuth || !firestore) {
+async function requireFirebase() {
+  const services = await getFirebaseServices()
+  if (!services) {
     throw new Error('Student accounts are not connected yet.')
   }
-  return { auth: firebaseAuth, db: firestore }
+  return services
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(Boolean(firebaseAuth))
+  const [loading, setLoading] = useState(firebaseConfigured)
 
   useEffect(() => {
-    if (!firebaseAuth) return undefined
-    return onAuthStateChanged(firebaseAuth, (nextUser) => {
-      setUser(nextUser)
-      setLoading(false)
-    })
+    let active = true
+    let unsubscribe = () => {}
+
+    if (!firebaseConfigured) return undefined
+
+    void getFirebaseServices()
+      .then((services) => {
+        if (!active || !services) return
+        unsubscribe = services.authSdk.onAuthStateChanged(services.auth, (nextUser) => {
+          setUser(nextUser)
+          setLoading(false)
+        })
+      })
+      .catch((error: unknown) => {
+        console.error('Firebase initialization failed.', error)
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+      unsubscribe()
+    }
   }, [])
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
     loading,
     async signUp(name, email, password) {
-      const { auth, db } = requireFirebase()
-      const credential = await createUserWithEmailAndPassword(auth, email.trim(), password)
+      const { auth, authSdk } = await requireFirebase()
+      const credential = await authSdk.createUserWithEmailAndPassword(auth, email.trim(), password)
       const displayName = name.trim()
-      await updateProfile(credential.user, { displayName })
-      await setDoc(doc(db, 'users', credential.user.uid), {
+      await authSdk.updateProfile(credential.user, { displayName })
+      const firestore = await getFirebaseFirestore()
+      if (!firestore) throw new Error('Student profiles are not connected yet.')
+      const { db, firestoreSdk } = firestore
+      await firestoreSdk.setDoc(firestoreSdk.doc(db, 'users', credential.user.uid), {
         displayName,
         status: 'active',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: firestoreSdk.serverTimestamp(),
+        updatedAt: firestoreSdk.serverTimestamp(),
       })
-      await sendEmailVerification(credential.user)
+      await authSdk.sendEmailVerification(credential.user)
     },
     async signIn(email, password) {
-      const { auth } = requireFirebase()
-      await signInWithEmailAndPassword(auth, email.trim(), password)
+      const { auth, authSdk } = await requireFirebase()
+      await authSdk.signInWithEmailAndPassword(auth, email.trim(), password)
     },
     async signOut() {
-      const { auth } = requireFirebase()
-      await firebaseSignOut(auth)
+      const { auth, authSdk } = await requireFirebase()
+      await authSdk.signOut(auth)
     },
     async sendPasswordReset(email) {
-      const { auth } = requireFirebase()
-      await sendPasswordResetEmail(auth, email.trim())
+      const { auth, authSdk } = await requireFirebase()
+      await authSdk.sendPasswordResetEmail(auth, email.trim())
     },
     async resendVerification() {
-      const { auth } = requireFirebase()
+      const { auth, authSdk } = await requireFirebase()
       if (!auth.currentUser) throw new Error('Sign in before requesting another verification email.')
-      await sendEmailVerification(auth.currentUser)
+      await authSdk.sendEmailVerification(auth.currentUser)
     },
   }), [loading, user])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
-
 
 function friendlyAuthError(error: unknown) {
   const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : ''

@@ -28,6 +28,11 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Email/Password authentication, a server-enforced 10-character password minimum, and improved email privacy enabled.
 - Firestore rules and indexes deployed successfully to the Doha development database.
 - Cloud authentication smoke test passed; its synthetic account was deleted.
+- Full browser authentication flow passed, including profile creation, verification gates, password reset messaging, and protected-route return.
+- Registration redirect race fixed so the Auth profile, Firestore profile, and verification request finish before navigation.
+- Firebase App Check registered for the development web app with a domain-restricted reCAPTCHA Enterprise score key.
+- App Check debug exchange passed in isolated Chrome; Authentication and Firestore remain in monitoring-only mode.
+- Firebase split out of the public application bundle: the main JavaScript bundle fell from about 792 KB to about 286 KB, and Firestore now loads only for profile/progress operations.
 
 ## Firebase environments
 
@@ -45,17 +50,30 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Administrative tools.
 - Production deployment or custom-domain migration.
 
+## Phase 3 status
+
+Implementation is complete and monitoring has started:
+
+1. reCAPTCHA Enterprise and Firebase App Check APIs are enabled in efbi-academy-dev-doha.
+2. The development web app is registered with a score-based key restricted to its Firebase Hosting domains.
+3. The risk threshold is 0.5 and token lifetime is one hour.
+4. A private localhost debug token is stored only in .env.development.local.
+5. Browser token exchange, registration, and Firestore profile creation passed.
+6. Authentication and Firestore enforcement remain off until monitoring is reviewed.
+7. Authentication email branding remains on Firebase defaults because the backend rejected template edits with EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED; the development project name still identifies EFBI.
+
+See APP_CHECK.md for the enforcement checklist and recovery notes.
+
 ## Next implementation phase
 
-Complete the first real learning loop in the Doha development project:
+Build the first real learning loop while App Check remains in monitoring mode:
 
-1. Test registration, verification, sign-in, reset, sign-out, and protected-route behavior in the browser.
-2. Register App Check, monitor it first, then enforce it before any public enrollment.
-3. Add the first lesson player, transcript, and accessible fallback.
-4. Save progress by authenticated user ID and verify it survives a second device/session.
-5. Split Firebase from the public JavaScript bundle to improve first-load performance.
+1. Add the first AI Foundations lesson player and transcript.
+2. Provide an accessible, low-bandwidth fallback.
+3. Store progress by authenticated user ID.
+4. Verify progress across refresh, sign-out/sign-in, and a second browser session.
+5. Review App Check metrics before enabling enforcement.
 6. Design assessments and project review before enabling certificate issuance.
-
 ## Recovery commands
 
 From this directory:

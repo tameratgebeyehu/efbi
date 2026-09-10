@@ -53,6 +53,11 @@ Course descriptions remain in the version-controlled website. Protected lesson r
 - Authentication: Email/Password enabled
 - Password policy: enforced minimum of 10 characters
 - Email enumeration protection: enabled
+- App Check provider: reCAPTCHA Enterprise score key, development Hosting domains only
+- App Check risk threshold: 0.5
+- App Check token lifetime: one hour
+- App Check enforcement: monitoring only for Authentication and Firestore
+- Local App Check: registered private debug token in .env.development.local
 - Local SDK settings: `.env.local`, intentionally ignored by Git
 
 ## Local setup
@@ -62,7 +67,9 @@ Course descriptions remain in the version-controlled website. Protected lesson r
 3. Run `npm run emulators` in one terminal and `npm run dev` in another for emulator testing.
 4. Run `npm run test:rules` after every security-rule change.
 
-Do not place service-account JSON, private keys, reCAPTCHA secret keys, student exports, or production project credentials in this repository.
+Do not place service-account JSON, private keys, reCAPTCHA secret keys, App Check debug tokens, student exports, or production project credentials in this repository.
+
+See APP_CHECK.md for the development configuration and enforcement checklist.
 
 ## Firebase Console checklist
 
