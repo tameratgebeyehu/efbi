@@ -3,7 +3,6 @@ import type { User } from 'firebase/auth'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Icon } from './icons'
 import { firebaseConfigured, getFirebaseFirestore, getFirebaseServices } from './lib/firebase'
-import { curriculum } from './data'
 import { AuthContext, useAuth, type AuthContextValue } from './auth-context'
 import './auth.css'
 
@@ -266,19 +265,6 @@ export function RequireVerifiedUser({ children }: { children: ReactNode }) {
   if (!user) return <Navigate to={`/signin?returnTo=${encodeURIComponent(location.pathname)}`} replace />
   if (!user.emailVerified) return <Navigate to="/account" replace />
   return children
-}
-
-export function LearningPage() {
-  const { user } = useAuth()
-  return (
-    <section className="learning-page">
-      <div className="shell learning-header"><div><p className="eyebrow-label">AI Foundations for Ethiopia</p><h1>Welcome, {user?.displayName?.split(' ')[0] || 'learner'}.</h1><p>Your secure account is ready. Lesson playback and saved progress are the next build step.</p></div><div className="learning-progress"><strong>0%</strong><span>Course progress</span></div></div>
-      <div className="section shell learning-grid">
-        <div><h2>Course lessons</h2><ol className="learning-lessons">{curriculum.map((lesson, index) => <li key={lesson.number}><span>{lesson.number}</span><div><h3>{lesson.title}</h3><p>{lesson.detail}</p></div><small>{index === 0 ? 'Next' : 'Locked'}</small></li>)}</ol></div>
-        <aside className="learning-note"><Icon name="shield" /><h2>Progress stays private.</h2><p>Only you can read or update your course record. EFBI administrators can review it only when support or certificate approval requires it.</p><Link to="/courses/ai-foundations">View course outline</Link></aside>
-      </div>
-    </section>
-  )
 }
 
 export function CourseAccessButton() {

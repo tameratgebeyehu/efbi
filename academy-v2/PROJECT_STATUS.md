@@ -33,6 +33,9 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Firebase App Check registered for the development web app with a domain-restricted reCAPTCHA Enterprise score key.
 - App Check debug exchange passed in isolated Chrome; Authentication and Firestore remain in monitoring-only mode.
 - Firebase split out of the public application bundle: the main JavaScript bundle fell from about 792 KB to about 286 KB, and Firestore now loads only for profile/progress operations.
+- First AI Foundations lesson built with concise objectives, Ethiopia-relevant examples, and a complete written lesson.
+- Protected lesson route redesigned for desktop and mobile with clear course navigation.
+- Privacy-aware YouTube gate and remembered low-bandwidth mode added; no video request is made until the learner chooses to load it.
 
 ## Firebase environments
 
@@ -44,7 +47,8 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Public student enrollment; development authentication is connected but not production-ready.
 - Learner profiles and progress records.
 - Contact form submissions.
-- Course video playback and completion tracking.
+- Published course video playback; no EFBI YouTube lesson ID has been supplied yet.
+- Firestore-backed lesson completion and resume state.
 - Assessments and project submissions.
 - Certificate issuance and public verification records.
 - Administrative tools.
@@ -64,16 +68,30 @@ Implementation is complete and monitoring has started:
 
 See APP_CHECK.md for the enforcement checklist and recovery notes.
 
+## Phase 4 status
+
+The first learning experience is implemented:
+
+1. Lesson 1 now has objectives, a full written lesson, and an accessible transcript area.
+2. The protected course page has responsive lesson navigation and clear availability states.
+3. Video uses a click-to-load `youtube-nocookie.com` embed when a valid ID is configured.
+4. Low-bandwidth mode prevents video loading and remembers the choice in the browser.
+5. No real EFBI YouTube lesson ID was found, so the page shows a professional written-lesson fallback instead of a broken player.
+6. Authentication and email verification still gate the learning route; progress is not falsely shown as saved.
+
+See LEARNING_CONTENT.md for the video publishing checklist and the YouTube privacy limitation.
+
 ## Next implementation phase
 
-Build the first real learning loop while App Check remains in monitoring mode:
+Phase 5 will add honest, private progress tracking while App Check remains in monitoring mode:
 
-1. Add the first AI Foundations lesson player and transcript.
-2. Provide an accessible, low-bandwidth fallback.
-3. Store progress by authenticated user ID.
-4. Verify progress across refresh, sign-out/sign-in, and a second browser session.
+1. Create the authenticated Firestore progress service.
+2. Add a deliberate lesson-completion action; watching or scrolling alone will not mark completion.
+3. Restore the last lesson and completion percentage after refresh and sign-in.
+4. Verify isolation, refresh, sign-out/sign-in, and second-browser behavior with synthetic learners.
 5. Review App Check metrics before enabling enforcement.
-6. Design assessments and project review before enabling certificate issuance.
+6. Keep assessments, submissions, and certificates disabled until their rules and review workflow are tested.
+
 ## Recovery commands
 
 From this directory:

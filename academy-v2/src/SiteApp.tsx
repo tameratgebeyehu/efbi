@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './Layout'
-import { AccountPage, AuthProvider, JoinPage, LearningPage, RequireVerifiedUser, SignInPage } from './auth'
+import { AccountPage, AuthProvider, JoinPage, RequireVerifiedUser, SignInPage } from './auth'
+import { LearningPage } from './learning'
 import {
   AboutPage,
   BlogPage,

@@ -137,10 +137,74 @@ export const buildPillars = [
 ]
 
 export const curriculum = [
-  { number: '01', title: 'Understanding artificial intelligence', detail: 'Learn what AI is, where it appears in daily life, and how to evaluate its limits.' },
-  { number: '02', title: 'Prompting with purpose', detail: 'Practice asking clear questions, checking results, and improving weak answers.' },
-  { number: '03', title: 'Responsible use', detail: 'Explore privacy, misinformation, bias, and when human judgment must lead.' },
-  { number: '04', title: 'Build an Ethiopian solution', detail: 'Turn a local challenge into a small, documented project you can share.' },
+  {
+    number: '01',
+    slug: 'understanding-ai',
+    title: 'Understanding artificial intelligence',
+    detail: 'Learn what AI is, where it appears in daily life, and where its limits begin.',
+    duration: '8 min',
+    objectives: [
+      'Explain AI in simple language.',
+      'Recognize AI in tools you already use.',
+      'Check an AI result before you trust or share it.',
+    ],
+    sections: [
+      {
+        heading: 'What is artificial intelligence?',
+        paragraphs: [
+          'Artificial intelligence is technology that learns patterns from examples. It can use those patterns to predict, classify, recommend, or create something new.',
+          'AI does not understand the world in the same way a person does. It produces an answer from patterns in its training data and the information you give it.',
+        ],
+      },
+      {
+        heading: 'Where do we meet AI?',
+        paragraphs: [
+          'You may already use AI when a phone suggests the next word, a map estimates travel time, an email service filters spam, or an app recommends a video.',
+          'In Ethiopia, students and builders can use AI to explore ideas, translate an early draft, organize information, or prototype a local solution. The useful question is not only “Can AI do this?” It is also “Should I use it here, and how will I check the result?”',
+        ],
+      },
+      {
+        heading: 'Why can AI be wrong?',
+        paragraphs: [
+          'An AI system can repeat mistakes or bias from its data. It may also invent a confident answer when it does not have enough reliable information.',
+          'Always check important claims with trusted sources. For schoolwork, explain what you used AI for and follow your teacher’s rules. Never enter passwords, private documents, health details, or another person’s personal information into an AI tool.',
+        ],
+      },
+      {
+        heading: 'Use judgment first',
+        paragraphs: [
+          'Treat AI as a tool, not as the final decision-maker. You bring the goal, local context, values, and responsibility. AI can suggest a route, but you decide whether that route is accurate, fair, and useful.',
+        ],
+      },
+    ],
+  },
+  {
+    number: '02',
+    slug: 'prompting-with-purpose',
+    title: 'Prompting with purpose',
+    detail: 'Practice asking clear questions, checking results, and improving weak answers.',
+    duration: '10 min',
+    objectives: [],
+    sections: [],
+  },
+  {
+    number: '03',
+    slug: 'responsible-use',
+    title: 'Responsible use',
+    detail: 'Explore privacy, misinformation, bias, and when human judgment must lead.',
+    duration: '10 min',
+    objectives: [],
+    sections: [],
+  },
+  {
+    number: '04',
+    slug: 'build-an-ethiopian-solution',
+    title: 'Build an Ethiopian solution',
+    detail: 'Turn a local challenge into a small, documented project you can share.',
+    duration: 'Project',
+    objectives: [],
+    sections: [],
+  },
 ]
 
 export const blogPosts = [

@@ -185,7 +185,7 @@ export function CourseDetailPage() {
         <div>
           <SectionHeading eyebrow="Course outline" title="A clear path from idea to project" description="Each lesson ends with one practical step." />
           <ol className="curriculum-list">{curriculum.map((item) => <li key={item.number}><span>{item.number}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div><Icon name="chevron" /></li>)}</ol>
-          <div className="video-note"><Icon name="play" /><div><strong>Video lessons come next</strong><p>YouTube lessons, transcripts, progress saving, and secure access will be connected in the backend phase.</p></div></div>
+          <div className="video-note"><Icon name="play" /><div><strong>Lesson 1 is ready to read</strong><p>Verified learners can use the complete written lesson now. The privacy-friendly video player will activate when the first EFBI video is published.</p></div></div>
         </div>
         <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>Lessons and student progress are being tested.</p><div className="progress-label"><span>Preparation</span><strong>In progress</strong></div><div className="progress-track"><i /></div><CourseAccessButton /></aside>
       </section>

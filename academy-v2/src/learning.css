@@ -1,0 +1,90 @@
+.learning-page { min-height: 70vh; }
+.learning-topbar { border-bottom: 1px solid var(--line); background: rgba(255,255,255,.42); }
+.learning-topbar-inner { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 20px; color: var(--muted); font-size: .8rem; }
+.learning-topbar a { color: var(--green); font-weight: 800; text-decoration: none; }
+.learning-header { display: grid; grid-template-columns: 1fr auto; gap: 50px; align-items: end; padding-block: 70px; }
+.learning-header h1 { max-width: 780px; margin: 8px 0 14px; color: var(--green-dark); font-size: clamp(2.8rem, 6vw, 5.2rem); letter-spacing: -.06em; }
+.learning-header > div:first-child > p:last-child { max-width: 650px; color: var(--muted); font-size: 1rem; line-height: 1.65; }
+.learning-progress { width: 205px; padding: 24px; color: #fff; background: var(--green-deep); }
+.learning-progress strong { display: block; font: 800 2.5rem/1 Manrope, sans-serif; }
+.learning-progress span { display: block; margin-top: 9px; color: #b9cec1; font-size: .78rem; line-height: 1.45; }
+.lesson-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: clamp(45px, 6vw, 80px); border-top: 1px solid var(--line); }
+.lesson-main { min-width: 0; }
+.lesson-heading { display: grid; grid-template-columns: 64px 1fr; gap: 20px; align-items: start; margin-bottom: 36px; }
+.lesson-number { width: 54px; height: 54px; display: grid; place-items: center; color: #fff; background: var(--green); font: 800 .84rem Manrope, sans-serif; }
+.lesson-heading > div:last-child > p:first-child { margin-bottom: 8px; color: var(--green); font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.lesson-heading h2 { margin-bottom: 12px; color: var(--green-dark); font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.12; letter-spacing: -.05em; }
+.lesson-heading > div:last-child > p:last-child { max-width: 690px; margin-bottom: 0; color: var(--muted); line-height: 1.65; }
+.lesson-objectives { margin-bottom: 24px; padding: 28px; border: 1px solid var(--line); background: rgba(255,255,255,.55); }
+.lesson-objectives h3 { margin: 5px 0 20px; color: var(--green-dark); font-size: 1.3rem; }
+.lesson-objectives ul { display: grid; gap: 13px; margin: 0; padding: 0; list-style: none; }
+.lesson-objectives li { display: flex; align-items: flex-start; gap: 10px; color: #34463d; line-height: 1.5; }
+.lesson-objectives svg { flex: 0 0 auto; width: 18px; margin-top: 2px; color: var(--green); }
+.lesson-media { overflow: hidden; margin: 24px 0 54px; border: 1px solid var(--line); background: #fff; }
+.lesson-media-header { min-height: 80px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 17px 22px; border-bottom: 1px solid var(--line); }
+.lesson-media-header h3 { margin: 4px 0 0; color: var(--green-dark); font-size: 1.2rem; }
+.lesson-media-header > span { color: var(--muted); font-size: .8rem; font-weight: 700; }
+.video-frame { aspect-ratio: 16 / 9; background: #061e15; }
+.video-frame iframe { width: 100%; height: 100%; display: block; border: 0; }
+.video-gate { min-height: 390px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 42px 28px; color: #fff; background: radial-gradient(circle at 72% 22%, rgba(232,182,56,.2), transparent 28%), linear-gradient(145deg, #073d2a, #061e15); text-align: center; }
+.video-gate-icon { width: 70px; height: 70px; display: grid; place-items: center; margin-bottom: 25px; color: var(--gold); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; background: rgba(255,255,255,.06); }
+.video-gate-icon svg { width: 28px; height: 28px; }
+.video-gate h3 { margin-bottom: 10px; font-size: clamp(1.45rem, 3vw, 2rem); }
+.video-gate p { max-width: 510px; margin-bottom: 22px; color: #b9cec1; line-height: 1.6; }
+.bandwidth-control { display: flex; align-items: flex-start; gap: 12px; padding: 17px 22px; border-top: 1px solid var(--line); cursor: pointer; }
+.bandwidth-control input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--green); }
+.bandwidth-control span { display: grid; gap: 3px; }
+.bandwidth-control strong { color: var(--green-dark); font-size: .88rem; }
+.bandwidth-control small { color: var(--muted); line-height: 1.45; }
+.written-lesson { color: #2f4037; }
+.written-lesson-intro { padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+.written-lesson-intro h2 { margin: 7px 0 12px; color: var(--green-dark); font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -.045em; }
+.written-lesson-intro > p:last-child { max-width: 650px; margin-bottom: 0; color: var(--muted); line-height: 1.65; }
+.written-lesson > section { padding-block: 34px; border-bottom: 1px solid var(--line); }
+.written-lesson > section h3 { margin-bottom: 14px; color: var(--green-dark); font-size: 1.45rem; }
+.written-lesson > section p { max-width: 720px; margin-bottom: 15px; font-size: 1.02rem; line-height: 1.82; }
+.written-lesson > section p:last-child { margin-bottom: 0; }
+.lesson-takeaway { display: grid; grid-template-columns: 36px 1fr; gap: 16px; margin-top: 36px; padding: 25px; color: var(--green-dark); background: var(--green-soft); }
+.lesson-takeaway > svg { width: 28px; height: 28px; color: var(--green); }
+.lesson-takeaway strong { display: block; margin-bottom: 5px; }
+.lesson-takeaway p { margin: 0; color: #456052; line-height: 1.55; }
+.lesson-next { display: flex; align-items: center; justify-content: space-between; gap: 30px; margin-top: 60px; padding-top: 35px; border-top: 1px solid var(--line); }
+.lesson-next h2 { margin: 5px 0 7px; color: var(--green-dark); font-size: 1.6rem; }
+.lesson-next p:last-child { margin: 0; color: var(--muted); }
+.lesson-sidebar { position: sticky; top: 24px; align-self: start; border: 1px solid var(--line); background: rgba(255,255,255,.55); }
+.lesson-sidebar-heading { padding: 25px; border-bottom: 1px solid var(--line); }
+.lesson-sidebar-heading h2 { margin: 7px 0 0; color: var(--green-dark); font-size: 1.25rem; }
+.lesson-sidebar ol { margin: 0; padding: 0; list-style: none; }
+.lesson-sidebar li { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: start; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.lesson-sidebar li > span { color: var(--muted); font: 800 .73rem Manrope, sans-serif; }
+.lesson-sidebar li div { display: grid; gap: 5px; }
+.lesson-sidebar li strong { color: #48584f; font-size: .84rem; line-height: 1.35; }
+.lesson-sidebar li small { color: #849087; font-size: .73rem; }
+.lesson-sidebar li > svg { width: 17px; color: var(--green); }
+.lesson-sidebar li.is-current { background: #fff; box-shadow: inset 3px 0 var(--green); }
+.lesson-sidebar li.is-current strong { color: var(--green-dark); }
+.lesson-sidebar li.is-current small { color: var(--green); font-weight: 700; }
+.lesson-privacy { display: grid; grid-template-columns: 27px 1fr; gap: 12px; padding: 22px; background: var(--green-deep); }
+.lesson-privacy > svg { width: 23px; height: 23px; color: var(--gold); }
+.lesson-privacy strong { color: #fff; font-size: .84rem; }
+.lesson-privacy p { margin: 7px 0 0; color: #b9cec1; font-size: .77rem; line-height: 1.55; }
+
+@media (max-width: 920px) {
+  .learning-header, .lesson-layout { grid-template-columns: 1fr; }
+  .learning-header { align-items: start; }
+  .learning-progress { width: min(100%, 260px); }
+  .lesson-sidebar { position: static; grid-row: 1; }
+}
+
+@media (max-width: 620px) {
+  .learning-topbar-inner { align-items: flex-start; flex-direction: column; justify-content: center; gap: 4px; padding-block: 10px; }
+  .learning-header { gap: 28px; padding-block: 52px; }
+  .learning-header h1 { font-size: 2.7rem; }
+  .lesson-heading { grid-template-columns: 46px 1fr; gap: 14px; }
+  .lesson-number { width: 42px; height: 42px; }
+  .lesson-objectives { padding: 22px 19px; }
+  .video-gate { min-height: 330px; padding-inline: 20px; }
+  .lesson-media-header, .bandwidth-control { padding-inline: 18px; }
+  .lesson-next { align-items: flex-start; flex-direction: column; }
+  .lesson-next .button { width: 100%; }
+}
