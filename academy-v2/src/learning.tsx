@@ -1,11 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from './auth-context'
 import { curriculum } from './data'
 import { Icon } from './icons'
+import { completeLesson, readCourseProgress, type CourseProgress } from './lib/progress'
 import './learning.css'
 
+const courseId = 'ai-foundations'
 const lowBandwidthPreference = 'efbi-low-bandwidth'
+const initialProgress: CourseProgress = { completedLessonIds: [], lastLessonId: '', percent: 0 }
+const availableLessonIds = [curriculum[0].slug]
 
 function readLowBandwidthPreference() {
   try {
@@ -28,17 +32,83 @@ function getYouTubeVideoId() {
   return /^[A-Za-z0-9_-]{11}$/.test(value) ? value : ''
 }
 
+function progressErrorMessage(error: unknown) {
+  const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : ''
+  if (code.includes('unavailable') || code.includes('network')) return 'Your progress could not reach EFBI. Check your connection and try again.'
+  if (code.includes('permission-denied')) return 'Your session cannot update progress. Sign out, sign in again, and retry.'
+  return 'Your progress could not be updated. Please try again.'
+}
+
 export function LearningPage() {
   const { user } = useAuth()
   const [lowBandwidth, setLowBandwidth] = useState(readLowBandwidthPreference)
   const [videoLoaded, setVideoLoaded] = useState(false)
+  const [progress, setProgress] = useState<CourseProgress>(initialProgress)
+  const [progressState, setProgressState] = useState<'loading' | 'ready' | 'saving' | 'error'>('loading')
+  const [progressError, setProgressError] = useState('')
   const lesson = curriculum[0]
+  const lessonComplete = progress.completedLessonIds.includes(lesson.slug)
   const videoId = getYouTubeVideoId()
+
+  useEffect(() => {
+    if (!user) return undefined
+    let active = true
+
+    void readCourseProgress({ uid: user.uid, courseId, allowedLessonIds: availableLessonIds, totalLessonCount: curriculum.length })
+      .then((savedProgress) => {
+        if (!active) return
+        setProgress(savedProgress)
+        setProgressState('ready')
+      })
+      .catch((error: unknown) => {
+        if (!active) return
+        setProgressError(progressErrorMessage(error))
+        setProgressState('error')
+      })
+
+    return () => { active = false }
+  }, [user])
 
   function updateLowBandwidth(enabled: boolean) {
     saveLowBandwidthPreference(enabled)
     setLowBandwidth(enabled)
     if (enabled) setVideoLoaded(false)
+  }
+
+  async function markLessonComplete() {
+    if (!user || lessonComplete || progressState === 'saving') return
+    setProgressError('')
+    setProgressState('saving')
+
+    try {
+      const savedProgress = await completeLesson({
+        uid: user.uid,
+        courseId,
+        lessonId: lesson.slug,
+        allowedLessonIds: availableLessonIds,
+        totalLessonCount: curriculum.length,
+      })
+      setProgress(savedProgress)
+      setProgressState('ready')
+    } catch (error) {
+      setProgressError(progressErrorMessage(error))
+      setProgressState('error')
+    }
+  }
+
+  function retryProgress() {
+    if (!user) return
+    setProgressError('')
+    setProgressState('loading')
+    void readCourseProgress({ uid: user.uid, courseId, allowedLessonIds: availableLessonIds, totalLessonCount: curriculum.length })
+      .then((savedProgress) => {
+        setProgress(savedProgress)
+        setProgressState('ready')
+      })
+      .catch((error: unknown) => {
+        setProgressError(progressErrorMessage(error))
+        setProgressState('error')
+      })
   }
 
   return (
@@ -56,9 +126,10 @@ export function LearningPage() {
           <h1>Welcome, {user?.displayName?.split(' ')[0] || 'learner'}.</h1>
           <p>Start with a simple question: what is AI, and when should you trust it?</p>
         </div>
-        <div className="learning-progress" aria-label="Course progress: zero percent">
-          <strong>0%</strong>
-          <span>Progress saving comes in Phase 5</span>
+        <div className="learning-progress" aria-label={`Course progress: ${progress.percent} percent`}>
+          <strong>{progressState === 'loading' ? '—' : `${progress.percent}%`}</strong>
+          <span>{lessonComplete ? '1 of 4 lessons complete' : progressState === 'loading' ? 'Checking saved progress' : 'Your course progress'}</span>
+          <div className="learning-progress-track" aria-hidden="true"><i style={{ width: `${progress.percent}%` }} /></div>
         </div>
       </div>
 
@@ -133,6 +204,23 @@ export function LearningPage() {
             </div>
           </article>
 
+          <section className={lessonComplete ? 'lesson-completion is-complete' : 'lesson-completion'} aria-labelledby="lesson-completion-title">
+            <span className="lesson-completion-icon"><Icon name={lessonComplete ? 'check' : 'book'} /></span>
+            <div>
+              <p className="eyebrow-label">Your progress</p>
+              <h2 id="lesson-completion-title">{lessonComplete ? 'Lesson completed.' : 'Finished reading?'}</h2>
+              <p>{lessonComplete ? 'This completion is saved to your EFBI account.' : 'Mark the lesson complete only after you understand the main ideas. EFBI will save it to your account.'}</p>
+              {progressError && <p className="form-status form-status--error" role="alert">{progressError}</p>}
+            </div>
+            {progressState === 'error' ? (
+              <button className="button button--outline" type="button" onClick={retryProgress}>Retry progress</button>
+            ) : (
+              <button className="button button--primary" type="button" disabled={lessonComplete || progressState !== 'ready'} onClick={() => void markLessonComplete()}>
+                {lessonComplete ? 'Completed' : progressState === 'loading' ? 'Checking progress…' : progressState === 'saving' ? 'Saving…' : 'Mark lesson complete'}
+              </button>
+            )}
+          </section>
+
           <div className="lesson-next">
             <div><p className="eyebrow-label">Up next</p><h2>Prompting with purpose</h2><p>The next lesson is being prepared.</p></div>
             <button className="button button--outline" type="button" disabled>Coming soon</button>
@@ -145,12 +233,12 @@ export function LearningPage() {
             {curriculum.map((item, index) => (
               <li className={index === 0 ? 'is-current' : ''} key={item.number}>
                 <span>{item.number}</span>
-                <div><strong>{item.title}</strong><small>{index === 0 ? 'Available now' : 'Coming soon'}</small></div>
-                {index === 0 && <Icon name="check" />}
+                <div><strong>{item.title}</strong><small>{index === 0 ? lessonComplete ? 'Completed' : 'Available now' : 'Coming soon'}</small></div>
+                {index === 0 && lessonComplete && <Icon name="check" />}
               </li>
             ))}
           </ol>
-          <div className="lesson-privacy"><Icon name="shield" /><div><strong>Your learning is private.</strong><p>This page requires a verified account. Progress will be stored only under your user ID.</p></div></div>
+          <div className="lesson-privacy"><Icon name="shield" /><div><strong>Your learning is private.</strong><p>This page requires a verified account. Progress is stored only under your user ID.</p></div></div>
         </aside>
       </div>
     </section>

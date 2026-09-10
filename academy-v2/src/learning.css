@@ -8,6 +8,8 @@
 .learning-progress { width: 205px; padding: 24px; color: #fff; background: var(--green-deep); }
 .learning-progress strong { display: block; font: 800 2.5rem/1 Manrope, sans-serif; }
 .learning-progress span { display: block; margin-top: 9px; color: #b9cec1; font-size: .78rem; line-height: 1.45; }
+.learning-progress-track { height: 4px; margin-top: 18px; overflow: hidden; background: rgba(255,255,255,.18); }
+.learning-progress-track i { height: 100%; display: block; background: var(--gold); transition: width .3s ease; }
 .lesson-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: clamp(45px, 6vw, 80px); border-top: 1px solid var(--line); }
 .lesson-main { min-width: 0; }
 .lesson-heading { display: grid; grid-template-columns: 64px 1fr; gap: 20px; align-items: start; margin-bottom: 36px; }
@@ -48,6 +50,14 @@
 .lesson-takeaway > svg { width: 28px; height: 28px; color: var(--green); }
 .lesson-takeaway strong { display: block; margin-bottom: 5px; }
 .lesson-takeaway p { margin: 0; color: #456052; line-height: 1.55; }
+.lesson-completion { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 20px; align-items: center; margin-top: 45px; padding: 28px; border: 1px solid rgba(8,115,66,.25); background: rgba(255,255,255,.65); }
+.lesson-completion.is-complete { border-color: rgba(8,115,66,.35); background: var(--green-soft); }
+.lesson-completion-icon { width: 52px; height: 52px; display: grid; place-items: center; color: #fff; background: var(--green); border-radius: 50%; }
+.lesson-completion-icon svg { width: 23px; height: 23px; }
+.lesson-completion h2 { margin: 5px 0 7px; color: var(--green-dark); font-size: 1.45rem; }
+.lesson-completion > div > p:not(.eyebrow-label):not(.form-status) { max-width: 600px; margin: 0; color: var(--muted); line-height: 1.55; }
+.lesson-completion .form-status { margin-top: 15px; }
+.lesson-completion .button { min-width: 178px; }
 .lesson-next { display: flex; align-items: center; justify-content: space-between; gap: 30px; margin-top: 60px; padding-top: 35px; border-top: 1px solid var(--line); }
 .lesson-next h2 { margin: 5px 0 7px; color: var(--green-dark); font-size: 1.6rem; }
 .lesson-next p:last-child { margin: 0; color: var(--muted); }
@@ -85,6 +95,9 @@
   .lesson-objectives { padding: 22px 19px; }
   .video-gate { min-height: 330px; padding-inline: 20px; }
   .lesson-media-header, .bandwidth-control { padding-inline: 18px; }
+  .lesson-completion { grid-template-columns: 46px 1fr; padding: 22px 18px; }
+  .lesson-completion-icon { width: 44px; height: 44px; }
+  .lesson-completion .button { grid-column: 1 / 3; width: 100%; }
   .lesson-next { align-items: flex-start; flex-direction: column; }
   .lesson-next .button { width: 100%; }
 }

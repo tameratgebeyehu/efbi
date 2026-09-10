@@ -36,6 +36,8 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - First AI Foundations lesson built with concise objectives, Ethiopia-relevant examples, and a complete written lesson.
 - Protected lesson route redesigned for desktop and mobile with clear course navigation.
 - Privacy-aware YouTube gate and remembered low-bandwidth mode added; no video request is made until the learner chooses to load it.
+- Authenticated Firestore progress added with explicit completion, refresh/sign-in restoration, retry handling, and honest 0%/25% states.
+- Progress rules hardened against unknown lessons, forged percentages, duplicate IDs, timestamp rewriting, resets, and cross-user access.
 
 ## Firebase environments
 
@@ -45,10 +47,8 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 ## Deliberately not active yet
 
 - Public student enrollment; development authentication is connected but not production-ready.
-- Learner profiles and progress records.
 - Contact form submissions.
 - Published course video playback; no EFBI YouTube lesson ID has been supplied yet.
-- Firestore-backed lesson completion and resume state.
 - Assessments and project submissions.
 - Certificate issuance and public verification records.
 - Administrative tools.
@@ -81,17 +81,31 @@ The first learning experience is implemented:
 
 See LEARNING_CONTENT.md for the video publishing checklist and the YouTube privacy limitation.
 
+## Phase 5 status
+
+Private progress tracking is implemented and verified:
+
+1. Lesson completion requires an explicit learner action.
+2. Progress is stored at `users/{uid}/progress/ai-foundations` and restored after refresh or a fresh sign-in.
+3. Lesson 1 completion displays an honest 25% for the four-lesson course.
+4. Firestore rules permit only the published lesson and reject forged or regressed progress.
+5. Nine emulator authorization tests pass.
+6. Live Doha testing passed for write, restore, anti-forgery, and cross-user isolation.
+7. The synthetic users and progress records were deleted after testing.
+8. App Check remains in monitoring mode.
+
+See PROGRESS_TRACKING.md for the schema, rule invariants, and Lesson 2 publishing checklist.
+
 ## Next implementation phase
 
-Phase 5 will add honest, private progress tracking while App Check remains in monitoring mode:
+Phase 6 should expand learning carefully rather than opening unfinished records:
 
-1. Create the authenticated Firestore progress service.
-2. Add a deliberate lesson-completion action; watching or scrolling alone will not mark completion.
-3. Restore the last lesson and completion percentage after refresh and sign-in.
-4. Verify isolation, refresh, sign-out/sign-in, and second-browser behavior with synthetic learners.
-5. Review App Check metrics before enabling enforcement.
-6. Keep assessments, submissions, and certificates disabled until their rules and review workflow are tested.
-
+1. Write and review Lesson 2: Prompting with purpose.
+2. Add its accessible written version and optional video slot.
+3. Design a low-stakes knowledge check with clear feedback.
+4. Expand progress rules from one published lesson to two and test the valid 50% state.
+5. Review App Check metrics before enforcement.
+6. Keep certificate eligibility separate from client-only knowledge checks.
 ## Recovery commands
 
 From this directory:

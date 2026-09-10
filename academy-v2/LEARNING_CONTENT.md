@@ -11,7 +11,7 @@ The first protected lesson is available at `/learn/ai-foundations` after sign-in
 - a remembered low-bandwidth preference; and
 - a privacy-aware video gate.
 
-Progress is intentionally not presented as saved yet. Phase 5 will connect completion state to the authenticated learner's Firestore record.
+Progress is saved only after the learner deliberately chooses **Mark lesson complete**. Phase 5 connects that completion to the authenticated learner's private Firestore record and restores it after refresh or sign-in.
 
 ## Add the first video
 

@@ -51,8 +51,8 @@ function verifiedUser(uid, claims = {}) {
 function progressRecord() {
   return {
     courseId: 'ai-foundations',
-    completedLessonIds: ['what-is-ai'],
-    lastLessonId: 'what-is-ai',
+    completedLessonIds: ['understanding-ai'],
+    lastLessonId: 'understanding-ai',
     percent: 25,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -97,10 +97,28 @@ test('an unverified learner cannot write course progress', async () => {
   await assertFails(setDoc(doc(db, 'users', 'alice', 'progress', 'ai-foundations'), progressRecord()))
 })
 
-test('progress rejects unexpected fields and invalid percentages', async () => {
+test('progress accepts only published, unique lessons with a consistent percentage', async () => {
   const db = verifiedUser('alice')
-  await assertFails(setDoc(doc(db, 'users', 'alice', 'progress', 'ai-foundations'), { ...progressRecord(), percent: 101 }))
-  await assertFails(setDoc(doc(db, 'users', 'alice', 'progress', 'ai-foundations'), { ...progressRecord(), email: 'alice@example.com' }))
+  const reference = doc(db, 'users', 'alice', 'progress', 'ai-foundations')
+
+  await assertFails(setDoc(reference, { ...progressRecord(), percent: 100 }))
+  await assertFails(setDoc(reference, { ...progressRecord(), completedLessonIds: ['unknown-lesson'], lastLessonId: 'unknown-lesson' }))
+  await assertFails(setDoc(reference, { ...progressRecord(), completedLessonIds: ['understanding-ai', 'understanding-ai'], percent: 50 }))
+  await assertFails(setDoc(reference, { ...progressRecord(), email: 'alice@example.com' }))
+  await assertFails(setDoc(doc(db, 'users', 'alice', 'progress', 'another-course'), { ...progressRecord(), courseId: 'another-course' }))
+})
+
+test('completed progress cannot be reset or have its creation time rewritten', async () => {
+  const db = verifiedUser('alice')
+  const reference = doc(db, 'users', 'alice', 'progress', 'ai-foundations')
+  await assertSucceeds(setDoc(reference, progressRecord()))
+  await assertFails(setDoc(reference, {
+    ...progressRecord(),
+    completedLessonIds: [],
+    lastLessonId: '',
+    percent: 0,
+  }))
+  await assertFails(setDoc(reference, progressRecord()))
 })
 
 test('a certificate can be fetched by id but the registry cannot be listed', async () => {

@@ -33,6 +33,7 @@ service cloud.firestore {
     }
 
     function validProgress(data, courseId) {
+      let publishedLessonIds = ['understanding-ai'];
       return data.keys().hasOnly([
           'courseId',
           'completedLessonIds',
@@ -41,14 +42,15 @@ service cloud.firestore {
           'createdAt',
           'updatedAt'
         ])
+        && courseId == 'ai-foundations'
         && data.courseId == courseId
         && data.completedLessonIds is list
-        && data.completedLessonIds.size() <= 100
-        && data.lastLessonId is string
-        && data.lastLessonId.size() <= 120
-        && data.percent is int
-        && data.percent >= 0
-        && data.percent <= 100
+        && data.completedLessonIds.size() == 1
+        && data.completedLessonIds.toSet().size() == data.completedLessonIds.size()
+        && data.completedLessonIds.toSet().difference(publishedLessonIds.toSet()).size() == 0
+        && data.lastLessonId == 'understanding-ai'
+        && data.lastLessonId in data.completedLessonIds
+        && data.percent == 25
         && data.createdAt is timestamp
         && data.updatedAt == request.time;
     }
@@ -95,7 +97,9 @@ service cloud.firestore {
         allow update: if owns(uid)
           && verified()
           && validProgress(request.resource.data, courseId)
-          && request.resource.data.createdAt == resource.data.createdAt;
+          && request.resource.data.createdAt == resource.data.createdAt
+          && resource.data.completedLessonIds.toSet()
+            .difference(request.resource.data.completedLessonIds.toSet()).size() == 0;
         allow delete: if false;
       }
 

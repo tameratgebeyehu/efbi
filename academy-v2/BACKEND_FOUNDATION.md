@@ -9,6 +9,7 @@ This phase replaces the legacy public Apps Script endpoint with Firebase Authent
 - Firestore records are keyed by the Firebase user ID, never by an email supplied by the browser.
 - Learner profiles store only a display name, status, and timestamps. Email remains in Firebase Authentication.
 - A learner can read only their own profile and progress.
+- Progress accepts only published lesson IDs, server timestamps, and percentages that match completed lessons; completed work cannot be reset from the browser.
 - Public certificate lookup requires an exact credential ID. Listing the certificate registry is denied.
 - Public certificate records must not contain email, phone, date of birth, school, private submissions, or Firebase user IDs.
 - Certificate issuance requires an administrator custom claim. No browser user can grant that claim.
@@ -31,6 +32,8 @@ users/{uid}/progress/{courseId}
   percent
   createdAt
   updatedAt
+
+Current Phase 5 validation permits only `understanding-ai` at 25%. Expand the rule allowlist and percentage validation only when another lesson is published.
 
 certificates/{credentialId}
   credentialId
