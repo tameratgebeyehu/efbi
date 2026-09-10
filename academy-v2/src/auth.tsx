@@ -123,7 +123,7 @@ export function JoinPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  if (user) return <Navigate to="/account" replace />
+  if (user && !submitting) return <Navigate to="/account" replace />
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
