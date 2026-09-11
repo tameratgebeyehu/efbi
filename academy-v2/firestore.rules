@@ -163,14 +163,133 @@ service cloud.firestore {
         && data.lastAuditId.size() <= 180;
     }
 
+    function validPracticeQuestion(data) {
+      return data.keys().hasOnly(['enabled', 'prompt', 'options', 'correctOption', 'explanation'])
+        && data.enabled is bool
+        && data.prompt is string
+        && data.options is list
+        && data.options.size() == 3
+        && data.options[0] is string
+        && data.options[1] is string
+        && data.options[2] is string
+        && data.correctOption is int
+        && data.explanation is string
+        && (
+          (
+            data.enabled == false
+            && data.prompt == ''
+            && data.options == ['', '', '']
+            && data.correctOption == 0
+            && data.explanation == ''
+          )
+          ||
+          (
+            data.enabled == true
+            && data.prompt.size() >= 12
+            && data.prompt.size() <= 240
+            && data.options[0].size() >= 1
+            && data.options[0].size() <= 160
+            && data.options[1].size() >= 1
+            && data.options[1].size() <= 160
+            && data.options[2].size() >= 1
+            && data.options[2].size() <= 160
+            && data.correctOption >= 0
+            && data.correctOption <= 2
+            && data.explanation.size() >= 12
+            && data.explanation.size() <= 300
+          )
+        );
+    }
+
+    function validLessonId(lessonId) {
+      return lessonId is string
+        && lessonId.size() >= 3
+        && lessonId.size() <= 64
+        && lessonId.matches('[a-z0-9]+(-[a-z0-9]+)*');
+    }
+
+    function validLessonContent(data) {
+      return validCourseId(data.courseId)
+        && validLessonId(data.lessonId)
+        && data.order is int
+        && data.order >= 1
+        && data.order <= 50
+        && data.title is string
+        && data.title.size() >= 5
+        && data.title.size() <= 100
+        && data.summary is string
+        && data.summary.size() >= 20
+        && data.summary.size() <= 240
+        && data.durationMinutes is int
+        && data.durationMinutes >= 5
+        && data.durationMinutes <= 300
+        && data.videoYoutubeId is string
+        && (data.videoYoutubeId == '' || data.videoYoutubeId.matches('[A-Za-z0-9_-]{11}'))
+        && data.bodyMarkdown is string
+        && data.bodyMarkdown.size() >= 100
+        && data.bodyMarkdown.size() <= 12000
+        && validPracticeQuestion(data.question1)
+        && validPracticeQuestion(data.question2)
+        && validPracticeQuestion(data.question3);
+    }
+
+    function validLessonDraft(data, lessonId) {
+      return data.keys().hasOnly([
+          'lessonId',
+          'courseId',
+          'order',
+          'title',
+          'summary',
+          'durationMinutes',
+          'videoYoutubeId',
+          'bodyMarkdown',
+          'question1',
+          'question2',
+          'question3',
+          'status',
+          'revision',
+          'createdAt',
+          'createdBy',
+          'updatedAt',
+          'updatedBy',
+          'lastAuditId'
+        ])
+        && data.lessonId == lessonId
+        && validLessonContent(data)
+        && data.status in ['draft', 'ready']
+        && data.revision is int
+        && data.revision >= 1
+        && data.createdAt is timestamp
+        && data.createdBy is string
+        && data.createdBy.size() > 0
+        && data.updatedAt == request.time
+        && data.updatedBy == request.auth.uid
+        && data.lastAuditId is string
+        && data.lastAuditId.size() >= 16
+        && data.lastAuditId.size() <= 180;
+    }
+
+    function sameLessonContent() {
+      return request.resource.data.lessonId == resource.data.lessonId
+        && request.resource.data.courseId == resource.data.courseId
+        && request.resource.data.order == resource.data.order
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.summary == resource.data.summary
+        && request.resource.data.durationMinutes == resource.data.durationMinutes
+        && request.resource.data.videoYoutubeId == resource.data.videoYoutubeId
+        && request.resource.data.bodyMarkdown == resource.data.bodyMarkdown
+        && request.resource.data.question1 == resource.data.question1
+        && request.resource.data.question2 == resource.data.question2
+        && request.resource.data.question3 == resource.data.question3;
+    }
     function validAuditEvent(data, eventId) {
       return data.keys().hasOnly([
           'eventId', 'action', 'entityType', 'entityId', 'actorUid',
           'revision', 'releaseId', 'createdAt'
         ])
         && data.eventId == eventId
-        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published']
-        && data.entityType in ['courseDraft', 'courseRelease']
+        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published', 'lesson.draft.created', 'lesson.draft.updated']
+        && data.entityType in ['courseDraft', 'courseRelease', 'lessonDraft']
         && validCourseId(data.entityId)
         && data.actorUid == request.auth.uid
         && data.revision is int
@@ -242,6 +361,7 @@ service cloud.firestore {
 
     function auditLinksToCourseOperation(data, eventId) {
       let draft = getAfter(/databases/$(database)/documents/courseDrafts/$(data.entityId)).data;
+      let lesson = getAfter(/databases/$(database)/documents/lessonDrafts/$(data.entityId)).data;
       return (
           data.entityType == 'courseDraft'
           && data.action in ['course.draft.created', 'course.draft.updated']
@@ -261,6 +381,14 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/courseReleases/$(data.releaseId)).data.auditId == eventId
           && getAfter(/databases/$(database)/documents/courseReleases/$(data.releaseId)).data.courseId == data.entityId
           && getAfter(/databases/$(database)/documents/courseReleases/$(data.releaseId)).data.publishedBy == request.auth.uid
+        )
+        || (
+          data.entityType == 'lessonDraft'
+          && data.action in ['lesson.draft.created', 'lesson.draft.updated']
+          && lesson.lastAuditId == eventId
+          && lesson.revision == data.revision
+          && lesson.updatedBy == request.auth.uid
+          && data.releaseId == ''
         );
     }
 
@@ -393,6 +521,41 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Lesson drafts are private authoring records. Phase 11 keeps them out of
+    // the student catalog until migration and progress compatibility are tested.
+    match /lessonDrafts/{lessonId} {
+      allow get, list: if admin();
+      allow create: if admin()
+        && validLessonDraft(request.resource.data, lessonId)
+        && request.resource.data.status == 'draft'
+        && request.resource.data.revision == 1
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid
+        && linkedAuditIsValid(
+          request.resource.data.lastAuditId,
+          'lesson.draft.created',
+          'lessonDraft',
+          lessonId,
+          1,
+          ''
+        );
+      allow update: if admin()
+        && validLessonDraft(request.resource.data, lessonId)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.revision == resource.data.revision + 1
+        && request.resource.data.status in ['draft', 'ready']
+        && (request.resource.data.status != resource.data.status || !sameLessonContent())
+        && linkedAuditIsValid(
+          request.resource.data.lastAuditId,
+          'lesson.draft.updated',
+          'lessonDraft',
+          lessonId,
+          request.resource.data.revision,
+          ''
+        );
+      allow delete: if false;
+    }
     match /reviewAssignments/{assignmentId} {
       allow get, list: if admin() || reviewer();
       allow create, update, delete: if false;

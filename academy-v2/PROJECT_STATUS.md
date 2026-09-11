@@ -20,7 +20,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Production build and lint checks passing.
 - Frontend copy and layouts refined across all public pages.
 - Firebase web SDK, secure account forms, email-verification gate, and protected learning route added.
-- Deny-by-default Firestore rules added and now covered by 27 emulator authorization tests.
+- Deny-by-default Firestore rules added and now covered by 33 emulator authorization tests.
 - Backend data model, privacy boundaries, and Firebase Console checklist documented in BACKEND_FOUNDATION.md.
 - Ten routes tested at 390px, 768px, and 1440px with no horizontal overflow or browser runtime errors.
 - Development Firebase project `efbi-academy-dev-doha` connected.
@@ -203,15 +203,35 @@ The secure course-management foundation is implemented and verified:
 
 See `../ADMIN_STUDIO.md`, `COURSE_MANAGEMENT.md`, and `COURSE_VERSIONING.md` for operation and integrity rules.
 
+## Phase 11 status
+
+The private lesson-management foundation is implemented and verified:
+
+1. The local Admin Studio now has a Lessons workspace beside Courses.
+2. Administrators can create, edit, preview, and mark lesson drafts ready.
+3. Lesson drafts use strict fields for parent course, permanent lesson ID, order, title, summary, duration, optional YouTube ID, written lesson text, status, revision, timestamps, actor IDs, and audit link.
+4. Each lesson can include up to three fixed practice questions with three options, one correct answer, and a short explanation.
+5. Disabled practice-question slots must stay empty, keeping the data shape predictable and certificate-safe.
+6. Every accepted lesson create or update requires a matching immutable `adminAudit` event in the same Firestore batch.
+7. Learners, reviewers, support accounts, and unauthenticated visitors cannot read or write lesson drafts.
+8. No-op updates, skipped revisions, changed ownership, invalid video IDs, invalid question state, unknown fields, missing audits, direct audit writes, and deletion are denied.
+9. Thirty-three Firestore emulator authorization tests pass.
+10. Student and Admin Studio builds and lint checks pass.
+11. The tested Firestore rules were deployed only to the Doha development project.
+12. The student app still uses the version-controlled AI Foundations curriculum; Phase 11 does not publish lesson drafts to learners or change saved progress meaning.
+13. No administrator role, course data, lesson data, learner data, public Admin Studio, Hosting release, upload path, or new certificate workflow was created in this phase.
+14. App Check remains in monitoring-only mode.
+
+See `LESSON_MANAGEMENT.md`, `COURSE_MANAGEMENT.md`, and `../ADMIN_STUDIO.md` for operation and integrity rules.
 ## Next implementation phase
 
-Phase 11 should implement structured lesson and practice-question management without opening public enrollment:
+Phase 12 should define lesson release snapshots and the student catalog migration without opening public enrollment:
 
-1. Define immutable lesson IDs, ordering, allowed content blocks, and draft/release relationships.
-2. Add safe lesson and practice-question editors only after their Firestore schemas and emulator tests pass.
-3. Keep practice answers browser-only; do not turn them into certificate evidence.
-4. Plan an explicit migration from the version-controlled AI Foundations pilot to release records without changing existing progress meaning.
-5. Preserve low-bandwidth written lessons and click-to-load privacy-aware video behavior.
+1. Add immutable lesson release records only after their schemas and emulator tests pass.
+2. Publish course releases and lesson releases together without partial state.
+3. Migrate the current AI Foundations student route from version-controlled data to release records without changing existing progress meaning.
+4. Preserve low-bandwidth written lessons and click-to-load privacy-aware video behavior.
+5. Keep practice answers browser-only; do not turn them into certificate evidence.
 6. Keep reviewed assessments, submissions, uploads, certificate issuance, public enrollment, and production deployment disabled.
 
 ## Recovery commands

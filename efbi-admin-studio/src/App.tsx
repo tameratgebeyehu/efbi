@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import type { User } from 'firebase/auth'
 import { firebaseConfigured, getAdminFirebase } from './firebase'
 import CourseManager from './CourseManager'
+import LessonManager from './LessonManager'
 
 type AccessState = 'loading' | 'signed-out' | 'denied' | 'admin' | 'error'
 
@@ -48,10 +49,10 @@ function SignIn({ onError }: { onError: (message: string) => void }) {
 }
 
 function Dashboard({ user, signOut }: { user: User; signOut: () => Promise<void> }) {
-  const [section, setSection] = useState<'overview' | 'courses'>('overview')
+  const [section, setSection] = useState<'overview' | 'courses' | 'lessons'>('overview')
   const areas = [
     { number: '01', title: 'Courses', detail: 'Create, review, preview, and publish versioned course records.', status: 'Available' },
-    { number: '02', title: 'Lessons & questions', detail: 'Structured lesson and practice editors arrive in Phase 11.', status: 'Locked' },
+    { number: '02', title: 'Lessons & questions', detail: 'Draft lessons and browser-only practice checks with audited saves.', status: 'Available' },
     { number: '03', title: 'Submissions', detail: 'Text and evidence-link review arrives after course migration.', status: 'Locked' },
     { number: '04', title: 'Certificates', detail: 'Issuance stays disabled until reviewed assessment is proven.', status: 'Locked' },
   ]
@@ -63,6 +64,7 @@ function Dashboard({ user, signOut }: { user: User; signOut: () => Promise<void>
         <nav aria-label="Admin sections">
           <button className={section === 'overview' ? 'active' : ''} onClick={() => setSection('overview')}>Overview</button>
           <button className={section === 'courses' ? 'active' : ''} onClick={() => setSection('courses')}>Courses</button>
+          <button className={section === 'lessons' ? 'active' : ''} onClick={() => setSection('lessons')}>Lessons</button>
           <button disabled>Reviews</button>
           <button disabled>Certificates</button>
           <button disabled>Audit log</button>
@@ -70,15 +72,15 @@ function Dashboard({ user, signOut }: { user: User; signOut: () => Promise<void>
         <div className="operator"><small>Verified operator</small><strong>{user.email}</strong><button onClick={() => void signOut()}>Sign out</button></div>
       </aside>
       <main className="workspace">
-        {section === 'courses' ? <CourseManager user={user} /> : <>
-        <header><div><p className="eyebrow">Phase 10 workspace</p><h1>Good morning, builder.</h1><p>Course publishing is available through validated, audited, and immutable release steps.</p></div><span className="security-badge">Admin claim verified</span></header>
+        {section === 'courses' ? <CourseManager user={user} /> : section === 'lessons' ? <LessonManager user={user} /> : <>
+        <header><div><p className="eyebrow">Phase 11 workspace</p><h1>Good morning, builder.</h1><p>Course publishing and lesson drafting are available through validated, audited steps.</p></div><span className="security-badge">Admin claim verified</span></header>
         <section className="safety-grid" aria-label="Security status">
           <article><small>Network</small><strong>Localhost only</strong><p>Not published with the student website.</p></article>
           <article><small>Session</small><strong>Browser session</strong><p>No shared admin password or permanent browser role.</p></article>
-          <article><small>Publishing</small><strong>Atomic releases</strong><p>Draft, release, and audit succeed or fail together.</p></article>
+          <article><small>Lessons</small><strong>Audited drafts</strong><p>Lesson saves require matching audit records.</p></article>
         </section>
         <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Control areas</p><h2>Built in secure stages</h2></div><p>Only tested workflows are enabled. Later operations remain visibly locked.</p></div><div className="area-grid">{areas.map((area) => <article key={area.number}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>{area.status}</small></article>)}</div></section>
-        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Courses are controlled records</h2><p>A course begins as a private draft, becomes review ready, and publishes as an immutable release. Lessons remain the next separate security boundary.</p></div><span className="next-step__badge">Phase 10 active</span></section>
+        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Lessons are controlled drafts</h2><p>Lessons can now be prepared with browser-only practice questions. Student migration and public lesson publishing stay separate.</p></div><span className="next-step__badge">Phase 11 active</span></section>
         </>}
       </main>
     </div>

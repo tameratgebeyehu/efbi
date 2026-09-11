@@ -15,8 +15,8 @@ This phase replaces the legacy public Apps Script endpoint with Firebase Authent
 - Certificate issuance requires an administrator custom claim. No browser user can grant that claim.
 - Administrative access lives in a separate localhost-only application, never at a public `/admin` route.
 - A verified Firebase email and server-issued custom claim are required; hiding a route is never treated as authorization.
-- Course changes use strict field lists, length limits, allowed values, server timestamps, immutable ownership metadata, and one-step revision changes.
-- A course change and its audit event must succeed in one atomic batch; publication also creates an immutable release snapshot in that batch.
+- Course and lesson changes use strict field lists, length limits, allowed values, server timestamps, immutable ownership metadata, and one-step revision changes.
+- A course or lesson change and its audit event must succeed in one atomic batch; course publication also creates an immutable release snapshot in that batch.
 - Review assignments remain read-only in browser code until their own workflow and tests are implemented.
 - Project submissions remain denied until their workflow and rules are separately designed and tested.
 - App Check should be monitored before enforcement is enabled. It limits abuse but does not replace Authentication or Firestore rules.
@@ -72,8 +72,6 @@ courseDrafts/{courseId}
 courseReleases/{releaseId}
   releaseId
   courseId
-  releaseNumber
-  revision
   title
   summary
   description
@@ -81,25 +79,47 @@ courseReleases/{releaseId}
   level
   language
   estimatedMinutes
+  version
+  draftRevision
   publishedAt
   publishedBy
-  sourceAuditId
+  auditId
+
+lessonDrafts/{lessonId}
+  lessonId
+  courseId
+  order
+  title
+  summary
+  durationMinutes
+  videoYoutubeId
+  bodyMarkdown
+  question1
+  question2
+  question3
+  status                 # draft | ready
+  revision
+  createdAt
+  createdBy
+  updatedAt
+  updatedBy
+  lastAuditId
 
 reviewAssignments/{assignmentId}
   # admin/reviewer read; all browser writes still denied
 
 adminAudit/{eventId}
   eventId
-  action                 # approved course action
-  targetType             # courseDraft | courseRelease
-  targetId
-  courseId
+  action                 # approved course or lesson action
+  entityType             # courseDraft | courseRelease | lessonDraft
+  entityId
+  actorUid
   revision
-  actorId
+  releaseId
   createdAt
 ```
 
-The student app still uses its version-controlled pilot curriculum. Phase 10 release records are not public catalog records and are not yet connected to student learning routes.
+The student app still uses its version-controlled pilot curriculum. Course releases and lesson drafts are not public catalog records and are not yet connected to student learning routes.
 
 ## Development environment
 

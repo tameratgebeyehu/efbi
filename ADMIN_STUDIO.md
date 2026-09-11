@@ -2,9 +2,9 @@
 
 The EFBI Admin Studio is a separate, local-only application for trusted operators. It is not a route in the student website and must never be deployed to Firebase Hosting, GitHub Pages, or another public host.
 
-## Current Phase 10 boundary
+## Current Phase 11 boundary
 
-Phase 10 adds the first validated operation: course draft and release management.
+Phase 11 keeps course publishing available and adds structured lesson draft management with browser-only practice questions.
 
 - the server binds to `127.0.0.1` on port `5174`;
 - the interface blocks non-local hostnames;
@@ -52,7 +52,7 @@ npm run manage:roles -- set --email "owner@example.com" --role admin --value tru
 
 6. Sign out and sign in again so Firebase issues a fresh ID token.
 
-No role has been granted as part of Phases 9 or 10. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
+No role has been granted as part of Phases 9, 10, or 11. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
 
 ## Remove access
 
@@ -64,7 +64,7 @@ Then revoke the user's refresh tokens in Firebase Console if access must end imm
 
 ## Role meanings
 
-- `admin`: may manage validated course drafts and releases, and may read reviewer assignments and the admin audit.
+- `admin`: may manage validated course drafts, course releases, lesson drafts, and may read reviewer assignments and the admin audit.
 - `reviewer`: may read review assignments only. It cannot read course drafts or the admin audit.
 - `support`: reserved for future limited support work. It currently receives no private operational reads.
 
@@ -81,7 +81,16 @@ A route name, hidden button, or local interface is not authorization. Firebase A
 
 The browser keeps a best-effort recovery copy of unsaved course text. After a power cut, the studio offers **Restore** or **Discard**. Recovery is refused when the server revision changed in the meantime. It is not a backup and never overrides Firestore.
 
-Firestore remains the source of truth. Do not edit `courseDrafts`, `courseReleases`, or `adminAudit` manually in the Firebase Console except during a documented recovery investigation.
+Firestore remains the source of truth. Do not edit `courseDrafts`, `courseReleases`, `lessonDrafts`, or `adminAudit` manually in the Firebase Console except during a documented recovery investigation.
+## Lesson workflow
+
+1. Open **Lessons** and choose **New lesson**, or select an existing lesson draft.
+2. Choose the parent course and set a permanent lowercase lesson ID.
+3. Add order, title, short summary, learning time, optional YouTube video ID, and the written lesson text.
+4. Add up to three practice questions. These are learner practice only and do not create certificate evidence.
+5. Save as draft, or mark the lesson review ready.
+
+Lesson drafts stay private to administrators. They are not connected to the student learning route until a later migration phase proves ordering, progress compatibility, and release behavior.
 
 ## Security rules
 
@@ -97,6 +106,6 @@ Firestore remains the source of truth. Do not edit `courseDrafts`, `courseReleas
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 11 gate
+## Phase 12 gate
 
-Phase 11 may add structured lesson and practice-question management only after defining immutable lesson identity, ordering rules, safe content rendering, draft/release relationships, migrations for the current pilot, and emulator tests. Public enrollment, project submissions, file uploads, reviewed assessments, and certificate issuance remain outside that phase.
+Phase 12 may connect lesson drafts to immutable lesson releases and plan the student catalog migration only after proving ordering, progress compatibility, release snapshots, and rollback behavior in emulator tests. Public enrollment, project submissions, file uploads, reviewed assessments, and certificate issuance remain outside that phase.

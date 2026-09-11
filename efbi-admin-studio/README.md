@@ -24,8 +24,8 @@ npm run lint
 
 Do not deploy this directory. Do not expose its development port to the internet. Do not add an `/admin` route to the student app. Do not place service-account credentials or role-management logic in browser code.
 
-Phase 10 enables validated course draft and immutable release management. Every change is linked to an audit event in the same Firestore batch. Reviews, certificates, lesson editing, submissions, and the Audit Log interface remain locked.
+Phase 11 enables validated course publishing plus private lesson draft editing with up to three browser-only practice questions. Every accepted course or lesson change is linked to an audit event in the same Firestore batch. Reviews, certificates, submissions, public lesson publishing, and the Audit Log interface remain locked.
 
-Unsaved course text has a best-effort browser recovery copy for power-loss recovery. Firestore is still authoritative, and recovery is blocked if the saved server revision changed.
+Unsaved course and lesson text have best-effort browser recovery copies for power-loss recovery. Firestore is still authoritative, and recovery is blocked if the saved server revision changed.
 
-See `../ADMIN_STUDIO.md` for role provisioning, revocation, workflow, and the Phase 11 gate.
+See `../ADMIN_STUDIO.md` for role provisioning, revocation, workflow, and the Phase 12 gate.

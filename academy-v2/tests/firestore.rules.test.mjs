@@ -152,6 +152,63 @@ function addDraftCreation(batch, db, courseId, overrides = {}) {
   return auditId
 }
 
+function disabledQuestion() {
+  return {
+    enabled: false,
+    prompt: '',
+    options: ['', '', ''],
+    correctOption: 0,
+    explanation: '',
+  }
+}
+
+function enabledQuestion(overrides = {}) {
+  return {
+    enabled: true,
+    prompt: 'What should a learner do before trusting an AI answer?',
+    options: ['Check the answer with a reliable source.', 'Copy it immediately.', 'Share private information first.'],
+    correctOption: 0,
+    explanation: 'Important AI answers should be checked before they are used.',
+    ...overrides,
+  }
+}
+
+function lessonRecord({ lessonId, auditId, actorUid = 'admin-user', ...overrides }) {
+  return {
+    lessonId,
+    courseId: 'ai-foundations-v2',
+    order: 1,
+    title: 'Understanding AI safely',
+    summary: 'A short lesson that helps learners understand AI and check important answers.',
+    durationMinutes: 20,
+    videoYoutubeId: '',
+    bodyMarkdown: 'Artificial intelligence can help learners explore ideas, but every important answer needs human review. This lesson explains how to use AI carefully, protect private information, and check results before sharing them.',
+    question1: enabledQuestion(),
+    question2: disabledQuestion(),
+    question3: disabledQuestion(),
+    status: 'draft',
+    revision: 1,
+    createdAt: serverTimestamp(),
+    createdBy: actorUid,
+    updatedAt: serverTimestamp(),
+    updatedBy: actorUid,
+    lastAuditId: auditId,
+    ...overrides,
+  }
+}
+
+function addLessonCreation(batch, db, lessonId, overrides = {}) {
+  const auditId = `audit-create-${lessonId}-0001`
+  batch.set(doc(db, 'lessonDrafts', lessonId), lessonRecord({ lessonId, auditId, ...overrides }))
+  batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+    eventId: auditId,
+    action: 'lesson.draft.created',
+    entityType: 'lessonDraft',
+    entityId: lessonId,
+    revision: 1,
+  }))
+  return auditId
+}
 function progressRecord() {
   return {
     courseId: 'ai-foundations',
@@ -634,6 +691,129 @@ test('an administrator cannot create an orphan or invented audit event', async (
   })))
 })
 
+test('an administrator creates a validated lesson draft and linked audit atomically', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const batch = writeBatch(db)
+  const lessonId = 'safe-ai-start'
+  const auditId = addLessonCreation(batch, db, lessonId)
+  await assertSucceeds(batch.commit())
+
+  const lesson = await getDoc(doc(db, 'lessonDrafts', lessonId))
+  const audit = await getDoc(doc(db, 'adminAudit', auditId))
+  assert.equal(lesson.data().revision, 1)
+  assert.equal(lesson.data().status, 'draft')
+  assert.equal(audit.data().action, 'lesson.draft.created')
+})
+
+test('lesson drafts stay private to administrators', async () => {
+  const adminDb = verifiedUser('admin-user', { admin: true })
+  const batch = writeBatch(adminDb)
+  addLessonCreation(batch, adminDb, 'private-lesson')
+  await assertSucceeds(batch.commit())
+
+  await assertSucceeds(getDoc(doc(adminDb, 'lessonDrafts', 'private-lesson')))
+  await assertFails(getDoc(doc(verifiedUser('alice'), 'lessonDrafts', 'private-lesson')))
+  await assertFails(getDoc(doc(verifiedUser('reviewer-user', { reviewer: true }), 'lessonDrafts', 'private-lesson')))
+})
+
+test('lesson creation rejects missing audits, invalid question state, invalid video IDs, and forged actors', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  await assertFails(setDoc(doc(db, 'lessonDrafts', 'missing-lesson-audit'), lessonRecord({
+    lessonId: 'missing-lesson-audit',
+    auditId: 'audit-missing-lesson-link-0001',
+  })))
+
+  for (const [lessonId, overrides] of [
+    ['bad-question-lesson', { question1: enabledQuestion({ options: ['Only one option'] }) }],
+    ['bad-disabled-question', { question2: { ...disabledQuestion(), prompt: 'Should stay empty' } }],
+    ['bad-video-id', { videoYoutubeId: 'not-a-valid-id' }],
+    ['forged-lesson-actor', { createdBy: 'another-admin', updatedBy: 'another-admin' }],
+    ['unknown-lesson-field', { unexpected: true }],
+  ]) {
+    const batch = writeBatch(db)
+    addLessonCreation(batch, db, lessonId, overrides)
+    await assertFails(batch.commit())
+  }
+})
+
+test('an administrator updates a lesson draft with one revision and audit event', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const createBatch = writeBatch(db)
+  addLessonCreation(createBatch, db, 'update-lesson')
+  await assertSucceeds(createBatch.commit())
+
+  const reference = doc(db, 'lessonDrafts', 'update-lesson')
+  const current = (await getDoc(reference)).data()
+  const auditId = 'audit-update-lesson-0002'
+  const batch = writeBatch(db)
+  batch.update(reference, {
+    ...current,
+    title: 'Understanding AI with review',
+    status: 'ready',
+    revision: 2,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'admin-user',
+    lastAuditId: auditId,
+  })
+  batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+    eventId: auditId,
+    action: 'lesson.draft.updated',
+    entityType: 'lessonDraft',
+    entityId: 'update-lesson',
+    revision: 2,
+  }))
+  await assertSucceeds(batch.commit())
+  assert.equal((await getDoc(reference)).data().status, 'ready')
+})
+
+test('lesson updates reject no-ops, skipped revisions, changed ownership, and deletion', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const createBatch = writeBatch(db)
+  addLessonCreation(createBatch, db, 'guarded-lesson')
+  await assertSucceeds(createBatch.commit())
+
+  const reference = doc(db, 'lessonDrafts', 'guarded-lesson')
+  const current = (await getDoc(reference)).data()
+
+  for (const [auditId, changes] of [
+    ['audit-noop-lesson-0002', { revision: 2 }],
+    ['audit-skip-lesson-0003', { revision: 3, title: 'Skipped lesson revision' }],
+    ['audit-owner-lesson-0002', { revision: 2, title: 'Changed owner lesson', createdBy: 'another-admin' }],
+  ]) {
+    const batch = writeBatch(db)
+    batch.update(reference, {
+      ...current,
+      ...changes,
+      updatedAt: serverTimestamp(),
+      updatedBy: 'admin-user',
+      lastAuditId: auditId,
+    })
+    batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+      eventId: auditId,
+      action: 'lesson.draft.updated',
+      entityType: 'lessonDraft',
+      entityId: 'guarded-lesson',
+      revision: changes.revision,
+    }))
+    await assertFails(batch.commit())
+  }
+  await assertFails(deleteDoc(reference))
+})
+
+test('non-administrators cannot create lesson drafts or lesson audit events', async () => {
+  for (const db of [verifiedUser('alice'), verifiedUser('reviewer-user', { reviewer: true })]) {
+    const batch = writeBatch(db)
+    addLessonCreation(batch, db, 'blocked-lesson')
+    await assertFails(batch.commit())
+    await assertFails(setDoc(doc(db, 'adminAudit', 'audit-blocked-lesson-0001'), auditEvent({
+      eventId: 'audit-blocked-lesson-0001',
+      action: 'lesson.draft.created',
+      entityType: 'lessonDraft',
+      entityId: 'blocked-lesson',
+      revision: 1,
+    })))
+  }
+})
 test('learners cannot issue certificates', async () => {
   const db = verifiedUser('alice')
   await assertFails(setDoc(doc(db, 'certificates', 'EFBI-FAKE-001'), {

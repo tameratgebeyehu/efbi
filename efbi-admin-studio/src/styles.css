@@ -191,3 +191,23 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   .editor-actions { flex-direction: column-reverse; }
   .editor-actions button { width: 100%; }
 }
+
+.lesson-layout-admin { grid-template-columns: 245px minmax(430px, 1fr) minmax(300px, .7fr); }
+.lesson-editor .lesson-body-input { min-height: 320px; }
+.question-editor { display: grid; gap: 14px; margin: 0; padding: 18px; border: 1px solid #dce2dc; background: #f8faf8; }
+.question-editor legend { padding: 0 6px; color: var(--deep); font-size: .78rem; font-weight: 850; }
+.question-editor legend label { display: inline-flex; grid-template-columns: none; align-items: center; gap: 8px; }
+.question-editor legend input { width: 16px; height: 16px; min-height: auto; accent-color: var(--green); }
+.question-editor label { min-width: 0; }
+.lesson-preview .preview-description { max-height: 420px; overflow: auto; }
+.lesson-preview .release-panel article { align-items: start; }
+.lesson-preview .release-panel article span { overflow-wrap: anywhere; line-height: 1.45; }
+
+@media (max-width: 900px) {
+  .lesson-layout-admin { grid-template-columns: 190px minmax(0, 1fr); }
+}
+
+@media (max-width: 620px) {
+  .lesson-layout-admin { grid-template-columns: 1fr; }
+  .question-editor { padding: 15px; }
+}
