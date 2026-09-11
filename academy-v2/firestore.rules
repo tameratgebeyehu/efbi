@@ -33,7 +33,13 @@ service cloud.firestore {
     }
 
     function validProgress(data, courseId) {
-      let publishedLessonIds = ['understanding-ai'];
+      let publishedLessonIds = ['understanding-ai', 'prompting-with-purpose'];
+      let validFirstLesson = data.completedLessonIds == ['understanding-ai']
+        && data.lastLessonId == 'understanding-ai'
+        && data.percent == 25;
+      let validSecondLesson = data.completedLessonIds == ['understanding-ai', 'prompting-with-purpose']
+        && data.lastLessonId == 'prompting-with-purpose'
+        && data.percent == 50;
       return data.keys().hasOnly([
           'courseId',
           'completedLessonIds',
@@ -45,12 +51,12 @@ service cloud.firestore {
         && courseId == 'ai-foundations'
         && data.courseId == courseId
         && data.completedLessonIds is list
-        && data.completedLessonIds.size() == 1
+        && data.completedLessonIds.size() >= 1
+        && data.completedLessonIds.size() <= 2
         && data.completedLessonIds.toSet().size() == data.completedLessonIds.size()
         && data.completedLessonIds.toSet().difference(publishedLessonIds.toSet()).size() == 0
-        && data.lastLessonId == 'understanding-ai'
         && data.lastLessonId in data.completedLessonIds
-        && data.percent == 25
+        && (validFirstLesson || validSecondLesson)
         && data.createdAt is timestamp
         && data.updatedAt == request.time;
     }
@@ -93,6 +99,7 @@ service cloud.firestore {
         allow create: if owns(uid)
           && verified()
           && validProgress(request.resource.data, courseId)
+          && request.resource.data.completedLessonIds == ['understanding-ai']
           && request.resource.data.createdAt == request.time;
         allow update: if owns(uid)
           && verified()

@@ -38,6 +38,8 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Privacy-aware YouTube gate and remembered low-bandwidth mode added; no video request is made until the learner chooses to load it.
 - Authenticated Firestore progress added with explicit completion, refresh/sign-in restoration, retry handling, and honest 0%/25% states.
 - Progress rules hardened against unknown lessons, forged percentages, duplicate IDs, timestamp rewriting, resets, and cross-user access.
+- Lesson 2 published with a concise written lesson, three-question knowledge check, routed lesson navigation, and an optional privacy-aware video slot.
+- Sequential progress expanded from 25% to 50%, with resume-to-next-lesson behavior and anti-skip rules.
 
 ## Firebase environments
 
@@ -96,16 +98,33 @@ Private progress tracking is implemented and verified:
 
 See PROGRESS_TRACKING.md for the schema, rule invariants, and Lesson 2 publishing checklist.
 
+## Phase 6 status
+
+The second learning step is implemented and verified:
+
+1. Prompting with purpose now has objectives, an accessible written lesson, and its own optional video setting.
+2. Protected lesson routes support direct navigation and resume the first unfinished published lesson.
+3. Lesson 2 remains locked for completion until Lesson 1 is saved.
+4. A three-question browser-only knowledge check gives immediate feedback and stores no answers.
+5. Sequential progress supports only the exact 25% and 50% states.
+6. Ten emulator authorization tests pass.
+7. Live Doha testing passed for anti-skip, 25→50%, two fresh-session restores, anti-reset, and cross-user isolation.
+8. Synthetic users and progress records were deleted after testing.
+9. Desktop and phone Chrome renders produced screenshots; a duplicate React key found in the first render was fixed. The image-inspection helper remained blocked by Windows ACLs.
+10. App Check remains in monitoring mode: the CLI exposes no request metrics, browser automation is ACL-blocked, and incomplete evidence does not justify enforcement.
+
+See LEARNING_CONTENT.md and PROGRESS_TRACKING.md for the content, quiz, video, and security boundaries.
+
 ## Next implementation phase
 
-Phase 6 should expand learning carefully rather than opening unfinished records:
+Phase 7 should build the responsible-use lesson and review abuse protection:
 
-1. Write and review Lesson 2: Prompting with purpose.
-2. Add its accessible written version and optional video slot.
-3. Design a low-stakes knowledge check with clear feedback.
-4. Expand progress rules from one published lesson to two and test the valid 50% state.
-5. Review App Check metrics before enforcement.
-6. Keep certificate eligibility separate from client-only knowledge checks.
+1. Write and review Lesson 3: Responsible use.
+2. Add its accessible written version, optional video slot, and low-stakes knowledge check.
+3. Expand sequential progress from 50% to 75% with emulator and live isolation tests.
+4. Review App Check metrics and decide whether Authentication and Firestore are ready for enforcement.
+5. Define a versioning policy so major lesson changes do not silently alter completed work.
+6. Keep certificate eligibility separate from browser-only knowledge checks.
 ## Recovery commands
 
 From this directory:

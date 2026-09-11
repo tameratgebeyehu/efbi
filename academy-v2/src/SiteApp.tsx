@@ -37,6 +37,7 @@ export default function SiteApp() {
           <Route path="signin" element={<SignInPage />} />
           <Route path="account" element={<AccountPage />} />
           <Route path="learn/ai-foundations" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />
+          <Route path="learn/ai-foundations/:lessonSlug" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

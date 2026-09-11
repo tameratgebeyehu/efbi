@@ -50,6 +50,27 @@
 .lesson-takeaway > svg { width: 28px; height: 28px; color: var(--green); }
 .lesson-takeaway strong { display: block; margin-bottom: 5px; }
 .lesson-takeaway p { margin: 0; color: #456052; line-height: 1.55; }
+.knowledge-check { margin-top: 60px; border: 1px solid var(--line); background: #fff; }
+.knowledge-check-heading { padding: 32px; color: #fff; background: var(--green-deep); }
+.knowledge-check-heading h2 { margin: 7px 0 10px; font-size: clamp(1.8rem, 3.5vw, 2.5rem); letter-spacing: -.04em; }
+.knowledge-check-heading > p:last-child { max-width: 650px; margin: 0; color: #bdd0c5; line-height: 1.6; }
+.knowledge-check form { padding: 0 32px 32px; }
+.knowledge-check fieldset { min-width: 0; margin: 0; padding: 30px 0; border: 0; border-bottom: 1px solid var(--line); }
+.knowledge-check legend { width: 100%; padding: 0; color: var(--green-dark); font-family: 'Manrope', sans-serif; font-size: 1.05rem; font-weight: 800; line-height: 1.45; }
+.knowledge-check legend span { display: inline-block; margin-right: 13px; color: var(--green); font-size: .72rem; letter-spacing: .08em; }
+.answer-options { display: grid; gap: 9px; margin-top: 20px; }
+.answer-options label { display: grid; grid-template-columns: 20px 1fr; gap: 11px; align-items: start; padding: 14px 16px; color: #394a41; border: 1px solid var(--line); background: #faf9f5; cursor: pointer; line-height: 1.5; }
+.answer-options label:hover { border-color: rgba(8,115,66,.45); }
+.answer-options label.is-answer { border-color: rgba(8,115,66,.4); background: var(--green-soft); }
+.answer-options input { width: 17px; height: 17px; margin: 3px 0 0; accent-color: var(--green); }
+.knowledge-check fieldset.is-correct { box-shadow: inset 3px 0 var(--green); }
+.knowledge-check fieldset.is-incorrect { box-shadow: inset 3px 0 var(--gold); }
+.answer-feedback { margin: 18px 0 0; padding: 14px 16px; color: #43564b; background: var(--green-soft); font-size: .9rem; line-height: 1.55; }
+.is-incorrect .answer-feedback { background: #fff7df; }
+.answer-feedback strong { color: var(--green-dark); }
+.knowledge-check-actions { display: flex; align-items: center; gap: 22px; padding-top: 28px; }
+.knowledge-check-actions p { margin: 0; color: var(--muted); font-size: .9rem; }
+.knowledge-check-actions p strong { color: var(--green-dark); }
 .lesson-completion { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 20px; align-items: center; margin-top: 45px; padding: 28px; border: 1px solid rgba(8,115,66,.25); background: rgba(255,255,255,.65); }
 .lesson-completion.is-complete { border-color: rgba(8,115,66,.35); background: var(--green-soft); }
 .lesson-completion-icon { width: 52px; height: 52px; display: grid; place-items: center; color: #fff; background: var(--green); border-radius: 50%; }
@@ -69,6 +90,8 @@
 .lesson-sidebar li > span { color: var(--muted); font: 800 .73rem Manrope, sans-serif; }
 .lesson-sidebar li div { display: grid; gap: 5px; }
 .lesson-sidebar li strong { color: #48584f; font-size: .84rem; line-height: 1.35; }
+.lesson-sidebar li a { color: inherit; text-decoration: none; }
+.lesson-sidebar li a:hover strong { color: var(--green); }
 .lesson-sidebar li small { color: #849087; font-size: .73rem; }
 .lesson-sidebar li > svg { width: 17px; color: var(--green); }
 .lesson-sidebar li.is-current { background: #fff; box-shadow: inset 3px 0 var(--green); }
@@ -95,6 +118,11 @@
   .lesson-objectives { padding: 22px 19px; }
   .video-gate { min-height: 330px; padding-inline: 20px; }
   .lesson-media-header, .bandwidth-control { padding-inline: 18px; }
+  .knowledge-check-heading { padding: 25px 20px; }
+  .knowledge-check form { padding-inline: 20px; }
+  .knowledge-check fieldset { padding-block: 25px; }
+  .knowledge-check-actions { align-items: stretch; flex-direction: column; }
+  .knowledge-check-actions .button { width: 100%; }
   .lesson-completion { grid-template-columns: 46px 1fr; padding: 22px 18px; }
   .lesson-completion-icon { width: 44px; height: 44px; }
   .lesson-completion .button { grid-column: 1 / 3; width: 100%; }

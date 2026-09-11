@@ -38,6 +38,11 @@ Keep enforcement off until all of these conditions are true:
 
 When enforcement is approved, enable it one service at a time, starting with Firestore. Wait for propagation and rerun the complete browser test before considering Authentication enforcement.
 
+## Phase 6 monitoring review
+
+On 2026-09-11, the authenticated Firebase CLI was checked for App Check monitoring data. Its App Check commands expose debug-token management but not request metrics. The Firebase Console browser path remains unavailable to automation because of the current Windows ACL failure.
+
+No enforcement change was made. Authentication and Firestore remain in monitoring mode because verified-versus-unverified traffic could not be reviewed reliably. The synthetic Phase 6 Web SDK test did not attach an App Check token, so those requests may appear as unverified development traffic and must not be mistaken for real learners during the later Console review.
 ## Authentication email note
 
 The development project display name is EFBI Academy Development Doha, so Firebase default verification and reset subjects still identify EFBI. A direct template-branding update was rejected by Identity Toolkit with EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED. Keep the safe default templates for development and retry branding through the Firebase console when the production domain and action URL are configured.

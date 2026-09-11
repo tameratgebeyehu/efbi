@@ -1,29 +1,28 @@
 # EFBI learning content and video delivery
 
-## Phase 4 learning loop
+## Current learning loop
 
-The first protected lesson is available at `/learn/ai-foundations` after sign-in and email verification. It includes:
+The first two protected lessons are available after sign-in and email verification:
 
-- short learning objectives;
-- a complete written lesson;
-- an accessible transcript area;
-- responsive course navigation;
-- a remembered low-bandwidth preference; and
-- a privacy-aware video gate.
+1. Understanding artificial intelligence.
+2. Prompting with purpose.
 
-Progress is saved only after the learner deliberately chooses **Mark lesson complete**. Phase 5 connects that completion to the authenticated learner's private Firestore record and restores it after refresh or sign-in.
+Each published lesson includes short objectives, a complete written version, responsive course navigation, a remembered low-bandwidth preference, and a privacy-aware video gate. Lesson 2 also includes a three-question knowledge check with immediate feedback.
 
-## Add the first video
+Progress is saved only after the learner deliberately chooses **Mark lesson complete**. The base course route resumes the first unfinished published lesson after refresh or sign-in.
 
-No EFBI lesson video or YouTube ID was present in the repository when Phase 4 was built. When the video is ready, add only its 11-character YouTube video ID to the ignored local environment file:
+## Add lesson videos
+
+No EFBI lesson video or YouTube ID was present in the repository when Phase 6 was built. When recordings are ready, add only each video's 11-character YouTube ID to the ignored local environment file:
 
 ```text
 VITE_AI_LESSON_01_YOUTUBE_ID=XXXXXXXXXXX
+VITE_AI_LESSON_02_YOUTUBE_ID=YYYYYYYYYYY
 ```
 
-Do not add the full URL. Restart the development server after changing an environment value. The public `.env.example` contains an empty placeholder; the active value belongs in `.env.local` or the hosting environment.
+Do not add full URLs. Restart the development server after changing an environment value. The public `.env.example` contains empty placeholders; active values belong in `.env.local` or the hosting environment.
 
-Before publishing the video:
+Before publishing a video:
 
 1. Confirm EFBI owns or has permission to use every image, music track, and clip.
 2. Remove personal student information from the recording and screen captures.
@@ -37,9 +36,15 @@ The page does not contact YouTube when it first opens. A learner must choose **L
 
 Low-bandwidth mode keeps the iframe unloaded and saves that preference only in the learner's browser. The written lesson remains complete without video. This preference is not part of the learner's Firestore profile.
 
+## Knowledge checks
+
+Knowledge-check answers are evaluated only in the browser and are not stored. This keeps the exercise low-pressure and avoids collecting unnecessary learner data.
+
+The correct answers are necessarily included in the downloaded application code. These checks support learning but cannot prove independent work and must not be used to issue certificates.
+
 ## Security boundary
 
-EFBI is a free academy. Authentication protects learner accounts, future progress, and future submissions. It is not digital-rights management for free course text.
+EFBI is a free academy. Authentication protects learner accounts, progress, and future submissions. It is not digital-rights management for free course text.
 
 An unlisted YouTube video is not truly private or website-only. A determined viewer can discover or share its video ID, and YouTube controls the embedded player. If EFBI later needs strict video access control, it will need a video service with signed, expiring playback URLs; that usually requires a paid backend or paid video hosting.
 

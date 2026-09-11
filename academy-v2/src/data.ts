@@ -136,7 +136,26 @@ export const buildPillars = [
   },
 ]
 
-export const curriculum = [
+export type KnowledgeCheckQuestion = {
+  id: string
+  prompt: string
+  options: string[]
+  correctOption: number
+  explanation: string
+}
+
+export type CourseLesson = {
+  number: string
+  slug: string
+  title: string
+  detail: string
+  duration: string
+  objectives: string[]
+  sections: Array<{ heading: string; paragraphs: string[] }>
+  knowledgeCheck: KnowledgeCheckQuestion[]
+}
+
+export const curriculum: CourseLesson[] = [
   {
     number: '01',
     slug: 'understanding-ai',
@@ -177,15 +196,84 @@ export const curriculum = [
         ],
       },
     ],
+    knowledgeCheck: [],
   },
   {
     number: '02',
     slug: 'prompting-with-purpose',
     title: 'Prompting with purpose',
-    detail: 'Practice asking clear questions, checking results, and improving weak answers.',
+    detail: 'Ask clearer questions, improve weak answers, and check the result before using it.',
     duration: '10 min',
-    objectives: [],
-    sections: [],
+    objectives: [
+      'Give AI a clear task, useful context, and an output format.',
+      'Improve a vague prompt without making it unnecessarily long.',
+      'Check important claims instead of trusting a confident answer.',
+    ],
+    sections: [
+      {
+        heading: 'A prompt is an instruction',
+        paragraphs: [
+          'A prompt is the message you give an AI tool. A useful prompt tells the tool what you need, why you need it, and what a good answer should look like.',
+          'You do not need complicated words. Clear language works better than trying to sound technical.',
+        ],
+      },
+      {
+        heading: 'Use task, context, and format',
+        paragraphs: [
+          'Start with the task: explain, compare, plan, rewrite, or create. Add only the context that changes the answer. Then name the format you want, such as three bullet points, a short table, or a Grade 10 explanation.',
+          'For example, “Help me study” is vague. A clearer prompt is: “Create five short practice questions about photosynthesis for a Grade 10 student. Put the answers after the questions.”',
+        ],
+      },
+      {
+        heading: 'Improve the conversation',
+        paragraphs: [
+          'The first answer does not need to be the final answer. Tell the tool what is missing: “Use simpler language,” “Give an Ethiopian example,” or “Shorten this to 100 words.”',
+          'Change one or two things at a time. This makes it easier to see which instruction improved the result.',
+        ],
+      },
+      {
+        heading: 'Check before you use',
+        paragraphs: [
+          'A strong prompt can still produce a wrong answer. Check names, dates, statistics, quotations, and safety advice with a reliable source. If the tool gives sources, open them and confirm they support the claim.',
+          'Keep private information out of prompts. Replace real names and personal details with general descriptions whenever possible.',
+        ],
+      },
+    ],
+    knowledgeCheck: [
+      {
+        id: 'clear-prompt',
+        prompt: 'Which prompt gives the clearest direction?',
+        options: [
+          'Help me study science.',
+          'Create five short photosynthesis questions for a Grade 10 student. Put the answers after the questions.',
+          'Tell me everything you know.',
+        ],
+        correctOption: 1,
+        explanation: 'It gives a specific task, learner context, amount, and output format.',
+      },
+      {
+        id: 'verify-claim',
+        prompt: 'An AI answer includes a statistic but no reliable source. What should you do?',
+        options: [
+          'Use it because the answer sounds confident.',
+          'Ask for a source and verify the statistic before using it.',
+          'Change the wording so nobody notices.',
+        ],
+        correctOption: 1,
+        explanation: 'Confidence is not evidence. Important claims should be checked with a reliable source.',
+      },
+      {
+        id: 'improve-result',
+        prompt: 'The first answer is too broad. What is the best next step?',
+        options: [
+          'Add the missing context and say what format you need.',
+          'Repeat the same prompt many times.',
+          'Share private details so the answer feels personal.',
+        ],
+        correctOption: 0,
+        explanation: 'A small, clear improvement helps the AI respond more usefully without exposing private information.',
+      },
+    ],
   },
   {
     number: '03',
@@ -195,6 +283,7 @@ export const curriculum = [
     duration: '10 min',
     objectives: [],
     sections: [],
+    knowledgeCheck: [],
   },
   {
     number: '04',
@@ -204,6 +293,7 @@ export const curriculum = [
     duration: 'Project',
     objectives: [],
     sections: [],
+    knowledgeCheck: [],
   },
 ]
 

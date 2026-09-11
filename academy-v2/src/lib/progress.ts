@@ -27,7 +27,8 @@ function normalizeProgress(data: Record<string, unknown> | undefined, allowedLes
   if (!data || !Array.isArray(data.completedLessonIds) || totalLessonCount < 1) return emptyProgress
 
   const allowed = new Set(allowedLessonIds)
-  const completedLessonIds = [...new Set(data.completedLessonIds.filter((value): value is string => typeof value === 'string' && allowed.has(value)))]
+  const savedLessonIds = new Set(data.completedLessonIds.filter((value): value is string => typeof value === 'string' && allowed.has(value)))
+  const completedLessonIds = allowedLessonIds.filter((lessonId) => savedLessonIds.has(lessonId))
   const storedLastLessonId = typeof data.lastLessonId === 'string' ? data.lastLessonId : ''
   const lastLessonId = completedLessonIds.includes(storedLastLessonId) ? storedLastLessonId : completedLessonIds.at(-1) ?? ''
 
@@ -54,8 +55,10 @@ export async function readCourseProgress({ uid, courseId, allowedLessonIds, tota
 }
 
 export async function completeLesson({ uid, courseId, lessonId, allowedLessonIds, totalLessonCount }: CompleteLessonOptions) {
-  if (!allowedLessonIds.includes(lessonId)) throw new Error('This lesson is not open for completion yet.')
+  const lessonIndex = allowedLessonIds.indexOf(lessonId)
+  if (lessonIndex < 0) throw new Error('This lesson is not open for completion yet.')
   if (totalLessonCount < 1) throw new Error('The course outline is not ready.')
+  const prerequisiteLessonIds = allowedLessonIds.slice(0, lessonIndex)
 
   const { db, firestoreSdk } = await requireFirestore()
   const reference = firestoreSdk.doc(db, 'users', uid, 'progress', courseId)
@@ -67,6 +70,9 @@ export async function completeLesson({ uid, courseId, lessonId, allowedLessonIds
       : emptyProgress
 
     if (current.completedLessonIds.includes(lessonId)) return current
+    if (!prerequisiteLessonIds.every((requiredId) => current.completedLessonIds.includes(requiredId))) {
+      throw new Error('Complete the earlier lesson before saving this one.')
+    }
 
     const completedLessonIds = [...current.completedLessonIds, lessonId]
     const progress: CourseProgress = {

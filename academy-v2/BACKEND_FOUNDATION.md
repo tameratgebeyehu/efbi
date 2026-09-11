@@ -33,7 +33,7 @@ users/{uid}/progress/{courseId}
   createdAt
   updatedAt
 
-Current Phase 5 validation permits only `understanding-ai` at 25%. Expand the rule allowlist and percentage validation only when another lesson is published.
+Current Phase 6 validation permits the ordered states `understanding-ai` at 25% and `understanding-ai` plus `prompting-with-purpose` at 50%. Expand the rule allowlist and percentage validation only when another lesson is published.
 
 certificates/{credentialId}
   credentialId

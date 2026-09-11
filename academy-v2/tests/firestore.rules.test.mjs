@@ -59,6 +59,17 @@ function progressRecord() {
   }
 }
 
+function twoLessonProgressRecord() {
+  return {
+    courseId: 'ai-foundations',
+    completedLessonIds: ['understanding-ai', 'prompting-with-purpose'],
+    lastLessonId: 'prompting-with-purpose',
+    percent: 50,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }
+}
+
 test('an unauthenticated visitor cannot read learner data', async () => {
   const db = environment.unauthenticatedContext().firestore()
   await assertFails(getDoc(doc(db, 'users', 'alice')))
@@ -102,12 +113,26 @@ test('progress accepts only published, unique lessons with a consistent percenta
   const reference = doc(db, 'users', 'alice', 'progress', 'ai-foundations')
 
   await assertFails(setDoc(reference, { ...progressRecord(), percent: 100 }))
+  await assertFails(setDoc(reference, twoLessonProgressRecord()))
   await assertFails(setDoc(reference, { ...progressRecord(), completedLessonIds: ['unknown-lesson'], lastLessonId: 'unknown-lesson' }))
   await assertFails(setDoc(reference, { ...progressRecord(), completedLessonIds: ['understanding-ai', 'understanding-ai'], percent: 50 }))
   await assertFails(setDoc(reference, { ...progressRecord(), email: 'alice@example.com' }))
   await assertFails(setDoc(doc(db, 'users', 'alice', 'progress', 'another-course'), { ...progressRecord(), courseId: 'another-course' }))
 })
 
+test('a learner advances from Lesson 1 to Lesson 2 and 50 percent', async () => {
+  const db = verifiedUser('alice')
+  const reference = doc(db, 'users', 'alice', 'progress', 'ai-foundations')
+  await assertSucceeds(setDoc(reference, progressRecord()))
+  const firstProgress = await getDoc(reference)
+  await assertSucceeds(setDoc(reference, {
+    ...twoLessonProgressRecord(),
+    createdAt: firstProgress.data().createdAt,
+  }))
+  const secondProgress = await getDoc(reference)
+  assert.equal(secondProgress.data().percent, 50)
+  assert.deepEqual(secondProgress.data().completedLessonIds, ['understanding-ai', 'prompting-with-purpose'])
+})
 test('completed progress cannot be reset or have its creation time rewritten', async () => {
   const db = verifiedUser('alice')
   const reference = doc(db, 'users', 'alice', 'progress', 'ai-foundations')
