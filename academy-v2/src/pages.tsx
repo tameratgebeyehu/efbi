@@ -185,9 +185,9 @@ export function CourseDetailPage() {
         <div>
           <SectionHeading eyebrow="Course outline" title="A clear path from idea to project" description="Each lesson ends with one practical step." />
           <ol className="curriculum-list">{curriculum.map((item) => <li key={item.number}><span>{item.number}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div><Icon name="chevron" /></li>)}</ol>
-          <div className="video-note"><Icon name="play" /><div><strong>The first two lessons are ready</strong><p>Verified learners can read both lessons, check their understanding, and save 50% progress. Video slots activate when EFBI publishes each recording.</p></div></div>
+          <div className="video-note"><Icon name="play" /><div><strong>The first three lessons are ready</strong><p>Verified learners can read all three lessons, check their understanding, and save 75% progress. Video slots activate when EFBI publishes each recording.</p></div></div>
         </div>
-        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>Two lessons are open in the development academy.</p><div className="progress-label"><span>Preparation</span><strong>In progress</strong></div><div className="progress-track"><i /></div><CourseAccessButton /></aside>
+        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>Three lessons are open in the development academy.</p><div className="progress-label"><span>Preparation</span><strong>In progress</strong></div><div className="progress-track"><i /></div><CourseAccessButton /></aside>
       </section>
     </>
   )
@@ -196,11 +196,11 @@ export function CourseDetailPage() {
 export function CertificationPage() {
   return (
     <>
-      <PageHero eyebrow="Certificates" title="A certificate you earn." description="Finish the lessons, pass the checks, and submit your project." className="page-hero--certification"><Icon className="page-hero-icon" name="shield" /></PageHero>
+      <PageHero eyebrow="Certificates" title="A certificate you earn." description="Finish the lessons, complete a reviewed assessment, and submit your project." className="page-hero--certification"><Icon className="page-hero-icon" name="shield" /></PageHero>
       <section className="section shell certification-grid">
         <div>
           <SectionHeading eyebrow="How it works" title="Complete the course. Show your work." />
-          <ol className="requirement-list"><li><span>01</span><div><h3>Finish every lesson</h3><p>Your progress is saved in your account.</p></div></li><li><span>02</span><div><h3>Pass the knowledge checks</h3><p>Show that you understand the key ideas.</p></div></li><li><span>03</span><div><h3>Submit your project</h3><p>Use what you learned in a practical task.</p></div></li><li><span>04</span><div><h3>Receive approval</h3><p>EFBI reviews your work before issuing the certificate.</p></div></li></ol>
+          <ol className="requirement-list"><li><span>01</span><div><h3>Finish every lesson</h3><p>Your progress is saved in your account.</p></div></li><li><span>02</span><div><h3>Complete the final assessment</h3><p>This reviewed assessment is separate from the practice questions inside lessons.</p></div></li><li><span>03</span><div><h3>Submit your project</h3><p>Use what you learned in a practical task.</p></div></li><li><span>04</span><div><h3>Receive approval</h3><p>EFBI reviews your work before issuing the certificate.</p></div></li></ol>
         </div>
         <div className="certificate-mock" aria-label="Sample EFBI certificate">
           <div className="certificate-accent" aria-hidden="true"><i /><i /><i /></div>

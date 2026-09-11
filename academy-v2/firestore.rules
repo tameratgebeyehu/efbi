@@ -33,13 +33,16 @@ service cloud.firestore {
     }
 
     function validProgress(data, courseId) {
-      let publishedLessonIds = ['understanding-ai', 'prompting-with-purpose'];
+      let publishedLessonIds = ['understanding-ai', 'prompting-with-purpose', 'responsible-use'];
       let validFirstLesson = data.completedLessonIds == ['understanding-ai']
         && data.lastLessonId == 'understanding-ai'
         && data.percent == 25;
       let validSecondLesson = data.completedLessonIds == ['understanding-ai', 'prompting-with-purpose']
         && data.lastLessonId == 'prompting-with-purpose'
         && data.percent == 50;
+      let validThirdLesson = data.completedLessonIds == ['understanding-ai', 'prompting-with-purpose', 'responsible-use']
+        && data.lastLessonId == 'responsible-use'
+        && data.percent == 75;
       return data.keys().hasOnly([
           'courseId',
           'completedLessonIds',
@@ -52,11 +55,11 @@ service cloud.firestore {
         && data.courseId == courseId
         && data.completedLessonIds is list
         && data.completedLessonIds.size() >= 1
-        && data.completedLessonIds.size() <= 2
+        && data.completedLessonIds.size() <= 3
         && data.completedLessonIds.toSet().size() == data.completedLessonIds.size()
         && data.completedLessonIds.toSet().difference(publishedLessonIds.toSet()).size() == 0
         && data.lastLessonId in data.completedLessonIds
-        && (validFirstLesson || validSecondLesson)
+        && (validFirstLesson || validSecondLesson || validThirdLesson)
         && data.createdAt is timestamp
         && data.updatedAt == request.time;
     }
@@ -105,6 +108,8 @@ service cloud.firestore {
           && verified()
           && validProgress(request.resource.data, courseId)
           && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.completedLessonIds.size() == resource.data.completedLessonIds.size() + 1
+          && request.resource.data.percent == resource.data.percent + 25
           && resource.data.completedLessonIds.toSet()
             .difference(request.resource.data.completedLessonIds.toSet()).size() == 0;
         allow delete: if false;

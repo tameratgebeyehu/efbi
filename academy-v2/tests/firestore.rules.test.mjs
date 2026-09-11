@@ -70,6 +70,17 @@ function twoLessonProgressRecord() {
   }
 }
 
+function threeLessonProgressRecord() {
+  return {
+    courseId: 'ai-foundations',
+    completedLessonIds: ['understanding-ai', 'prompting-with-purpose', 'responsible-use'],
+    lastLessonId: 'responsible-use',
+    percent: 75,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }
+}
+
 test('an unauthenticated visitor cannot read learner data', async () => {
   const db = environment.unauthenticatedContext().firestore()
   await assertFails(getDoc(doc(db, 'users', 'alice')))
@@ -114,6 +125,7 @@ test('progress accepts only published, unique lessons with a consistent percenta
 
   await assertFails(setDoc(reference, { ...progressRecord(), percent: 100 }))
   await assertFails(setDoc(reference, twoLessonProgressRecord()))
+  await assertFails(setDoc(reference, threeLessonProgressRecord()))
   await assertFails(setDoc(reference, { ...progressRecord(), completedLessonIds: ['unknown-lesson'], lastLessonId: 'unknown-lesson' }))
   await assertFails(setDoc(reference, { ...progressRecord(), completedLessonIds: ['understanding-ai', 'understanding-ai'], percent: 50 }))
   await assertFails(setDoc(reference, { ...progressRecord(), email: 'alice@example.com' }))
@@ -133,17 +145,57 @@ test('a learner advances from Lesson 1 to Lesson 2 and 50 percent', async () => 
   assert.equal(secondProgress.data().percent, 50)
   assert.deepEqual(secondProgress.data().completedLessonIds, ['understanding-ai', 'prompting-with-purpose'])
 })
+
+test('a learner advances from Lesson 2 to Lesson 3 and 75 percent', async () => {
+  const db = verifiedUser('alice')
+  const reference = doc(db, 'users', 'alice', 'progress', 'ai-foundations')
+  await assertSucceeds(setDoc(reference, progressRecord()))
+  const firstProgress = await getDoc(reference)
+  await assertSucceeds(setDoc(reference, {
+    ...twoLessonProgressRecord(),
+    createdAt: firstProgress.data().createdAt,
+  }))
+  const secondProgress = await getDoc(reference)
+  await assertSucceeds(setDoc(reference, {
+    ...threeLessonProgressRecord(),
+    createdAt: secondProgress.data().createdAt,
+  }))
+  const thirdProgress = await getDoc(reference)
+  assert.equal(thirdProgress.data().percent, 75)
+  assert.deepEqual(thirdProgress.data().completedLessonIds, ['understanding-ai', 'prompting-with-purpose', 'responsible-use'])
+})
+
+test('a learner cannot skip from Lesson 1 directly to Lesson 3', async () => {
+  const db = verifiedUser('alice')
+  const reference = doc(db, 'users', 'alice', 'progress', 'ai-foundations')
+  await assertSucceeds(setDoc(reference, progressRecord()))
+  const firstProgress = await getDoc(reference)
+  await assertFails(setDoc(reference, {
+    ...threeLessonProgressRecord(),
+    createdAt: firstProgress.data().createdAt,
+  }))
+})
+
 test('completed progress cannot be reset or have its creation time rewritten', async () => {
   const db = verifiedUser('alice')
   const reference = doc(db, 'users', 'alice', 'progress', 'ai-foundations')
   await assertSucceeds(setDoc(reference, progressRecord()))
-  await assertFails(setDoc(reference, {
-    ...progressRecord(),
-    completedLessonIds: [],
-    lastLessonId: '',
-    percent: 0,
+  const firstProgress = await getDoc(reference)
+  await assertSucceeds(setDoc(reference, {
+    ...twoLessonProgressRecord(),
+    createdAt: firstProgress.data().createdAt,
   }))
-  await assertFails(setDoc(reference, progressRecord()))
+  const secondProgress = await getDoc(reference)
+  await assertSucceeds(setDoc(reference, {
+    ...threeLessonProgressRecord(),
+    createdAt: secondProgress.data().createdAt,
+  }))
+  const thirdProgress = await getDoc(reference)
+  await assertFails(setDoc(reference, {
+    ...twoLessonProgressRecord(),
+    createdAt: thirdProgress.data().createdAt,
+  }))
+  await assertFails(setDoc(reference, threeLessonProgressRecord()))
 })
 
 test('a certificate can be fetched by id but the registry cannot be listed', async () => {

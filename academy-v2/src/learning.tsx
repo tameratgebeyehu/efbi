@@ -8,10 +8,15 @@ import './learning.css'
 
 const courseId = 'ai-foundations'
 const coursePath = '/learn/ai-foundations'
-const publishedLessons = curriculum.slice(0, 2)
+const publishedLessons = curriculum.slice(0, 3)
 const publishedLessonIds = publishedLessons.map((lesson) => lesson.slug)
 const lowBandwidthPreference = 'efbi-low-bandwidth'
 const initialProgress: CourseProgress = { completedLessonIds: [], lastLessonId: '', percent: 0 }
+const lessonTakeaways: Record<string, string> = {
+  'understanding-ai': 'AI can help you work, but you are responsible for checking the result and protecting private information.',
+  'prompting-with-purpose': 'A useful prompt is clear and specific. A useful learner still checks the answer.',
+  'responsible-use': 'Protect people, verify important claims, and keep a responsible person in every high-impact decision.',
+}
 
 function readLowBandwidthPreference() {
   try {
@@ -33,6 +38,7 @@ function getYouTubeVideoId(lessonSlug: string) {
   const videoIds: Record<string, string | undefined> = {
     'understanding-ai': import.meta.env.VITE_AI_LESSON_01_YOUTUBE_ID,
     'prompting-with-purpose': import.meta.env.VITE_AI_LESSON_02_YOUTUBE_ID,
+    'responsible-use': import.meta.env.VITE_AI_LESSON_03_YOUTUBE_ID,
   }
   const value = videoIds[lessonSlug]?.trim() ?? ''
   return /^[A-Za-z0-9_-]{11}$/.test(value) ? value : ''
@@ -283,7 +289,7 @@ export function LearningPage() {
             ))}
             <div className="lesson-takeaway">
               <Icon name="spark" />
-              <div><strong>Remember</strong><p>{lessonIndex === 0 ? 'AI can help you work, but you are responsible for checking the result and protecting private information.' : 'A useful prompt is clear and specific. A useful learner still checks the answer.'}</p></div>
+              <div><strong>Remember</strong><p>{lessonTakeaways[lesson.slug]}</p></div>
             </div>
           </article>
 

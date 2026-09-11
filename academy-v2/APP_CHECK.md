@@ -43,6 +43,13 @@ When enforcement is approved, enable it one service at a time, starting with Fir
 On 2026-09-11, the authenticated Firebase CLI was checked for App Check monitoring data. Its App Check commands expose debug-token management but not request metrics. The Firebase Console browser path remains unavailable to automation because of the current Windows ACL failure.
 
 No enforcement change was made. Authentication and Firestore remain in monitoring mode because verified-versus-unverified traffic could not be reviewed reliably. The synthetic Phase 6 Web SDK test did not attach an App Check token, so those requests may appear as unverified development traffic and must not be mistaken for real learners during the later Console review.
+
+## Phase 7 monitoring review
+
+On 2026-09-11, Firebase Console access was attempted twice through the approved Windows computer-control runtime. The runtime failed during initialization because Windows could not apply its deny-read ACLs, so no trustworthy App Check request metrics could be inspected.
+
+Authentication and Firestore enforcement remain off. The live Phase 7 REST security test also did not attach an App Check token, so its synthetic requests may appear as unverified traffic. Do not enable enforcement until the Console shows that normal hosted browser flows are verified and a rollback owner is ready.
+
 ## Authentication email note
 
 The development project display name is EFBI Academy Development Doha, so Firebase default verification and reset subjects still identify EFBI. A direct template-branding update was rejected by Identity Toolkit with EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED. Keep the safe default templates for development and retry branding through the Firebase console when the production domain and action URL are configured.

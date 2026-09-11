@@ -279,11 +279,78 @@ export const curriculum: CourseLesson[] = [
     number: '03',
     slug: 'responsible-use',
     title: 'Responsible use',
-    detail: 'Explore privacy, misinformation, bias, and when human judgment must lead.',
-    duration: '10 min',
-    objectives: [],
-    sections: [],
-    knowledgeCheck: [],
+    detail: 'Protect people, question unreliable results, and know when a person must make the decision.',
+    duration: '12 min',
+    objectives: [
+      'Protect private information when using AI tools.',
+      'Notice misinformation and unfair or incomplete results.',
+      'Choose when AI can assist and when human judgment must lead.',
+    ],
+    sections: [
+      {
+        heading: 'Protect people and their information',
+        paragraphs: [
+          'Before entering information into an AI tool, ask whether it belongs to you and whether it needs to be shared. Keep passwords, identification numbers, private messages, school records, health information, and another person’s details out of prompts.',
+          'Use a general description when the real identity is not needed. For example, write “a Grade 10 student” instead of a student’s name, school, phone number, and personal story.',
+        ],
+      },
+      {
+        heading: 'Do not confuse confidence with truth',
+        paragraphs: [
+          'AI can invent facts, sources, quotations, or instructions while sounding certain. Pause before sharing an answer that could affect someone’s education, health, safety, money, or reputation.',
+          'Check important claims with a reliable source. If you cannot confirm a claim, say that it is uncertain or leave it out.',
+        ],
+      },
+      {
+        heading: 'Look for unfair results',
+        paragraphs: [
+          'AI learns from data made by people and institutions. Missing communities, old assumptions, and unequal examples can lead to biased results.',
+          'Ask who may be missing or harmed. Test more than one example, include local context, and invite feedback from people affected by the result.',
+        ],
+      },
+      {
+        heading: 'Keep a person responsible',
+        paragraphs: [
+          'Use AI as support, not as an excuse. Follow your school’s rules, explain meaningful AI help in your work, and never present generated work as your own when that is not allowed.',
+          'A person should make the final decision when the result affects rights, safety, opportunities, or another person’s future. Responsible builders can explain what the tool did, what they checked, and why they chose the final answer.',
+        ],
+      },
+    ],
+    knowledgeCheck: [
+      {
+        id: 'protect-private-data',
+        prompt: 'A classmate asks you to summarize a document containing student phone numbers. What is the safest first step?',
+        options: [
+          'Upload the complete document because the task is educational.',
+          'Remove personal details and use only the information needed for the summary.',
+          'Ask the AI to promise that it will keep the document private.',
+        ],
+        correctOption: 1,
+        explanation: 'Share the minimum information needed and remove details that can identify people.',
+      },
+      {
+        id: 'check-confident-claim',
+        prompt: 'An AI gives a confident health claim with a source you cannot find. What should you do?',
+        options: [
+          'Share it quickly because it includes a source name.',
+          'Rewrite it in simpler words and treat it as correct.',
+          'Do not rely on it; verify it with a trustworthy source or qualified person.',
+        ],
+        correctOption: 2,
+        explanation: 'A confident tone or invented citation is not evidence, especially when health or safety is involved.',
+      },
+      {
+        id: 'human-decision',
+        prompt: 'Which decision should not be left to an AI system alone?',
+        options: [
+          'Suggesting three titles for a school poster.',
+          'Deciding which student deserves a scholarship.',
+          'Changing a paragraph into bullet points.',
+        ],
+        correctOption: 1,
+        explanation: 'A high-impact decision about a person’s opportunity needs accountable human review.',
+      },
+    ],
   },
   {
     number: '04',

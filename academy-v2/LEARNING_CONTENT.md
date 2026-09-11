@@ -2,22 +2,24 @@
 
 ## Current learning loop
 
-The first two protected lessons are available after sign-in and email verification:
+The first three protected lessons are available after sign-in and email verification:
 
 1. Understanding artificial intelligence.
 2. Prompting with purpose.
+3. Responsible use.
 
-Each published lesson includes short objectives, a complete written version, responsive course navigation, a remembered low-bandwidth preference, and a privacy-aware video gate. Lesson 2 also includes a three-question knowledge check with immediate feedback.
+Each published lesson includes short objectives, a complete written version, responsive course navigation, a remembered low-bandwidth preference, and a privacy-aware video gate. Lessons 2 and 3 include three-question knowledge checks with immediate feedback.
 
 Progress is saved only after the learner deliberately chooses **Mark lesson complete**. The base course route resumes the first unfinished published lesson after refresh or sign-in.
 
 ## Add lesson videos
 
-No EFBI lesson video or YouTube ID was present in the repository when Phase 6 was built. When recordings are ready, add only each video's 11-character YouTube ID to the ignored local environment file:
+No EFBI lesson video or YouTube ID was present in the repository when Phase 7 was built. When recordings are ready, add only each video's 11-character YouTube ID to the ignored local environment file:
 
 ```text
 VITE_AI_LESSON_01_YOUTUBE_ID=XXXXXXXXXXX
 VITE_AI_LESSON_02_YOUTUBE_ID=YYYYYYYYYYY
+VITE_AI_LESSON_03_YOUTUBE_ID=ZZZZZZZZZZZ
 ```
 
 Do not add full URLs. Restart the development server after changing an environment value. The public `.env.example` contains empty placeholders; active values belong in `.env.local` or the hosting environment.
@@ -41,6 +43,12 @@ Low-bandwidth mode keeps the iframe unloaded and saves that preference only in t
 Knowledge-check answers are evaluated only in the browser and are not stored. This keeps the exercise low-pressure and avoids collecting unnecessary learner data.
 
 The correct answers are necessarily included in the downloaded application code. These checks support learning but cannot prove independent work and must not be used to issue certificates.
+
+The public certificate page now states that certificate eligibility requires a separate reviewed final assessment and project submission. Browser knowledge checks never issue a certificate or write an eligibility result.
+
+## Content versioning
+
+Published lesson slugs and completion meaning are durable records. Follow COURSE_VERSIONING.md before changing a published learning objective, required lesson, or course structure.
 
 ## Security boundary
 

@@ -1,6 +1,6 @@
 # EFBI Academy v2 — Project Status
 
-Last updated: 2026-09-10
+Last updated: 2026-09-11
 
 ## Current state
 
@@ -20,7 +20,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Production build and lint checks passing.
 - Frontend copy and layouts refined across all public pages.
 - Firebase web SDK, secure account forms, email-verification gate, and protected learning route added.
-- Deny-by-default Firestore rules added and covered by eight emulator authorization tests.
+- Deny-by-default Firestore rules added and covered by twelve emulator authorization tests.
 - Backend data model, privacy boundaries, and Firebase Console checklist documented in BACKEND_FOUNDATION.md.
 - Ten routes tested at 390px, 768px, and 1440px with no horizontal overflow or browser runtime errors.
 - Development Firebase project `efbi-academy-dev-doha` connected.
@@ -40,6 +40,9 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Progress rules hardened against unknown lessons, forged percentages, duplicate IDs, timestamp rewriting, resets, and cross-user access.
 - Lesson 2 published with a concise written lesson, three-question knowledge check, routed lesson navigation, and an optional privacy-aware video slot.
 - Sequential progress expanded from 25% to 50%, with resume-to-next-lesson behavior and anti-skip rules.
+- Lesson 3 published with practical privacy, misinformation, bias, academic-honesty, and human-oversight guidance.
+- Sequential progress expanded to 75% with exact one-step transitions and live anti-skip/anti-rollback testing.
+- Published-content versioning and a certificate-safe knowledge-check boundary documented.
 
 ## Firebase environments
 
@@ -115,16 +118,34 @@ The second learning step is implemented and verified:
 
 See LEARNING_CONTENT.md and PROGRESS_TRACKING.md for the content, quiz, video, and security boundaries.
 
+## Phase 7 status
+
+The third learning step is implemented and verified:
+
+1. Responsible use now covers privacy, unreliable claims, bias, academic honesty, and accountable human decisions in plain language.
+2. Lesson 3 has an accessible written version, three-question browser-only knowledge check, and optional privacy-aware video setting.
+3. Protected navigation and resume behavior now include the first three lessons.
+4. Sequential progress accepts only 25%, 50%, and 75%, with exactly one lesson added per update.
+5. Twelve emulator authorization tests pass, including direct-skip and rollback denial.
+6. The Doha development rules compile and are deployed.
+7. Live Doha testing passed for 25→50→75, restore, anti-skip, anti-rollback, and cross-user isolation.
+8. The one synthetic progress record and two synthetic authentication accounts were deleted after testing.
+9. Certificate copy now separates browser practice questions from the future reviewed final assessment.
+10. COURSE_VERSIONING.md defines immutable published slugs and a new-course-ID rule for major revisions.
+11. App Check enforcement remains off because Windows ACL failures prevented trustworthy Console metrics review; incomplete evidence does not justify enforcement.
+
+See LEARNING_CONTENT.md, PROGRESS_TRACKING.md, COURSE_VERSIONING.md, and APP_CHECK.md for the content and security boundaries.
+
 ## Next implementation phase
 
-Phase 7 should build the responsible-use lesson and review abuse protection:
+Phase 8 should complete the pilot learning path and design the assessment boundary:
 
-1. Write and review Lesson 3: Responsible use.
-2. Add its accessible written version, optional video slot, and low-stakes knowledge check.
-3. Expand sequential progress from 50% to 75% with emulator and live isolation tests.
-4. Review App Check metrics and decide whether Authentication and Firestore are ready for enforcement.
-5. Define a versioning policy so major lesson changes do not silently alter completed work.
-6. Keep certificate eligibility separate from browser-only knowledge checks.
+1. Build Lesson 4: Build an Ethiopian solution.
+2. Expand sequential progress from 75% to 100% with emulator and live isolation tests.
+3. Define the project-submission schema, consent language, file limits, retention, and reviewer roles before enabling uploads.
+4. Design a reviewed final assessment that is separate from browser practice questions.
+5. Review App Check metrics in Firebase Console before considering service-by-service enforcement.
+6. Keep certificate issuance disabled until submission review and administrator authorization are implemented and tested.
 ## Recovery commands
 
 From this directory:
