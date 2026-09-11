@@ -20,7 +20,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Production build and lint checks passing.
 - Frontend copy and layouts refined across all public pages.
 - Firebase web SDK, secure account forms, email-verification gate, and protected learning route added.
-- Deny-by-default Firestore rules added and covered by fourteen emulator authorization tests.
+- Deny-by-default Firestore rules added and covered by eighteen emulator authorization tests.
 - Backend data model, privacy boundaries, and Firebase Console checklist documented in BACKEND_FOUNDATION.md.
 - Ten routes tested at 390px, 768px, and 1440px with no horizontal overflow or browser runtime errors.
 - Development Firebase project `efbi-academy-dev-doha` connected.
@@ -47,6 +47,11 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Sequential progress completed at 100% with exact one-step rules, fourteen emulator tests, and a live Doha isolation test.
 - Project submission, consent, upload, retention, reviewer-role, and assessment-rubric boundaries specified before any uploads were enabled.
 - Course completion remains separate from assessment approval and administrator-only certificate issuance.
+- Separate `efbi-admin-studio` application created with no public student-app route.
+- Admin Studio bound to localhost with session-only Firebase Authentication and verified-email plus admin-claim authorization.
+- Development-only owner role utility added with exact confirmation, verified-email checks, and no service-account key.
+- Private course-draft, review-assignment, and audit paths reserved with all browser writes locked.
+- Legacy Apps Script browser loading and default credentials removed; its handlers now return a retired response.
 
 ## Firebase environments
 
@@ -60,7 +65,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Published course video playback; no EFBI YouTube lesson ID has been supplied yet.
 - Assessments and project submissions.
 - Certificate issuance and public verification records.
-- Administrative tools.
+- Administrative writes; the Phase 9 local shell is available but all operational actions are locked.
 - Production deployment or custom-domain migration.
 
 ## Phase 3 status
@@ -158,17 +163,36 @@ The four-lesson pilot learning path is complete and verified:
 
 See LEARNING_CONTENT.md, PROGRESS_TRACKING.md, ASSESSMENT_AND_SUBMISSIONS.md, COURSE_VERSIONING.md, and APP_CHECK.md for the complete boundaries.
 
+## Phase 9 status
+
+The private administration foundation is implemented and verified:
+
+1. Admin Studio is a separate React application with no `/admin` route or code in the student build.
+2. Vite binds development and preview servers only to `127.0.0.1`; the interface also blocks non-local hostnames.
+3. Authentication uses browser-session persistence and requires both verified email and an `admin: true` custom claim.
+4. Courses, Lessons, Submissions, Certificates, and Audit Log remain visibly locked; the browser has no operational write path.
+5. A local owner role utility supports `admin`, `reviewer`, and `support`, preserves existing claims, refuses unverified grants, and is hard-limited to `efbi-academy-dev-doha`.
+6. Role mutations require an exact confirmation phrase. No role was provisioned during this phase.
+7. Firestore reserves private course drafts, review assignments, and audit events with least-privilege reads and universal browser-write denial.
+8. Eighteen emulator authorization tests pass, including role separation and denied writes for learner, reviewer, and administrator browser identities; the warning-free rules were deployed only to `efbi-academy-dev-doha`.
+9. Student and Admin Studio production builds and lint checks pass.
+10. The root maintenance page no longer loads legacy API/application scripts; default legacy credentials were removed and Apps Script handlers were retired in source.
+11. The Apps Script owner must still confirm every historical web deployment is archived in **Deploy > Manage deployments**.
+12. App Check remains in monitoring mode; Phase 9 did not weaken or prematurely enable enforcement.
+
+See `../ADMIN_STUDIO.md` and `../LEGACY_SYSTEM_RETIRED.md` for operating and containment rules.
+
 ## Next implementation phase
 
-Phase 9 should implement the reviewed project workflow in development without opening public enrollment:
+Phase 10 should implement the course-management foundation in development without opening public enrollment:
 
-1. Implement learner draft and submit states with deny-by-default Firestore rules and emulator tests.
-2. Add private Storage rules and trusted file validation/quarantine before accepting any attachment.
-3. Implement trusted reviewer assignment and versioned rubric decisions; learners must not write reviewer fields.
-4. Add retention and deletion jobs only after the policy receives local legal and safeguarding review.
-5. Test the complete workflow with synthetic learners and reviewers in Doha development.
-6. Review App Check metrics manually before service-by-service enforcement.
-7. Keep certificate issuance disabled until an approved assessment can be verified through an administrator-only path.
+1. Define and test a strict course-draft schema with length limits, allowed status values, and immutable ownership metadata.
+2. Add Admin Studio create/edit/preview controls only after those rules pass emulator tests.
+3. Publish immutable course releases; major revisions receive a new course ID under COURSE_VERSIONING.md.
+4. Keep lesson questions structured and browser-only until the later assessment phase defines scored server evidence.
+5. Record every administrative transition in a validated audit event without exposing the audit collection to learners.
+6. Test the complete workflow with synthetic administrator and learner accounts in Doha development, then delete them.
+7. Keep project submissions, uploads, certificate issuance, public enrollment, and production deployment disabled.
 
 ## Recovery commands
 

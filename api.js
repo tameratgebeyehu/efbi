@@ -79,23 +79,18 @@
 })();
 
 // 1. WEBHOOK CONFIGURATION
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzExxZzi9AZ-bBsJJQQkcrYkcIT4kBKZGBK5sG1GmoLa6CUp4oHQZ2D-m5GcR6qenDm/exec"; 
+const GOOGLE_SCRIPT_URL = "";
 
-// Helper to resolve the script URL dynamically (allows editing in UI)
+// The legacy webhook is retired. This file is preserved only in Git history.
 function getActiveScriptUrl() {
-  const saved = localStorage.getItem('efbi_script_url');
-  if (saved === "https://script.google.com/macros/s/AKfycbxTVnBEFdPvpFTAxQlh9pnsSqSkr_W3A5-FH2E___shLhp-tDEd4LYwh4zxp6HwsqjP/exec") {
-    localStorage.removeItem('efbi_script_url');
-    return GOOGLE_SCRIPT_URL;
-  }
-  return saved || GOOGLE_SCRIPT_URL;
+  localStorage.removeItem('efbi_script_url');
+  return GOOGLE_SCRIPT_URL;
 }
 
 // Helper to get active sync mode ('live' or 'sandbox')
-// Defaults to 'live' so data flows from Google Sheets on first visit.
-// Falls back to 'sandbox' only on network failure or explicit admin override.
+// The retired client must never reconnect to a live backend.
 function getActiveSyncMode() {
-  return localStorage.getItem('efbi_sync_mode') || 'live';
+  return 'sandbox';
 }
 
 // Auto-detect backend and configure sync mode on first page load.
@@ -349,7 +344,7 @@ const EFBIDatabase = {
           id: students.length + 1,
           name: payload.name,
           email: payload.email,
-          password: payload.password || 'efbi2026',
+          password: '',
           country: payload.country || 'Ethiopia',
           region: payload.region,
           school: payload.school,
@@ -500,10 +495,7 @@ const EFBIDatabase = {
         return Promise.resolve(true);
 
       case 'verifyAdmin':
-        if (payload.username === 'admin' && payload.password === 'efbi2026') {
-          return Promise.resolve({ authenticated: true, role: 'super-admin', username: 'admin' });
-        }
-        return Promise.reject(new Error('Invalid username or password. Please try again.'));
+        return Promise.reject(new Error('The legacy administration system is retired.'));
 
       case 'verifyStudentLogin':
         const stud = students.find(s => s.email.trim().toLowerCase() === payload.email.trim().toLowerCase());

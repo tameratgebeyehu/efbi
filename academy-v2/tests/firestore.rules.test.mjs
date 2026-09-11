@@ -37,6 +37,19 @@ beforeEach(async () => {
       public: true,
       updatedAt: new Date('2026-09-08T00:00:00Z'),
     })
+    await setDoc(doc(context.firestore(), 'courseDrafts', 'ai-foundations-v2'), {
+      title: 'Private course draft',
+      status: 'draft',
+    })
+    await setDoc(doc(context.firestore(), 'reviewAssignments', 'review-001'), {
+      reviewerUid: 'reviewer-user',
+      status: 'assigned',
+    })
+    await setDoc(doc(context.firestore(), 'adminAudit', 'event-001'), {
+      action: 'phase9-test',
+      actorUid: 'admin-user',
+      createdAt: new Date('2026-09-11T00:00:00Z'),
+    })
   })
 })
 
@@ -248,6 +261,52 @@ test('a certificate can be fetched by id but the registry cannot be listed', asy
   const result = await assertSucceeds(getDoc(doc(db, 'certificates', 'EFBI-DEMO-001')))
   assert.equal(result.data().status, 'active')
   await assertFails(getDocs(collection(db, 'certificates')))
+})
+
+test('an administrator can read reserved operational collections', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  await assertSucceeds(getDoc(doc(db, 'courseDrafts', 'ai-foundations-v2')))
+  await assertSucceeds(getDoc(doc(db, 'reviewAssignments', 'review-001')))
+  await assertSucceeds(getDoc(doc(db, 'adminAudit', 'event-001')))
+})
+
+test('learners and support accounts cannot read private course or audit data', async () => {
+  const learner = verifiedUser('alice')
+  const support = verifiedUser('support-user', { support: true })
+  for (const db of [learner, support]) {
+    await assertFails(getDoc(doc(db, 'courseDrafts', 'ai-foundations-v2')))
+    await assertFails(getDoc(doc(db, 'adminAudit', 'event-001')))
+  }
+})
+
+test('a reviewer can read assignments but not course drafts or the admin audit', async () => {
+  const db = verifiedUser('reviewer-user', { reviewer: true })
+  await assertSucceeds(getDoc(doc(db, 'reviewAssignments', 'review-001')))
+  await assertFails(getDoc(doc(db, 'courseDrafts', 'ai-foundations-v2')))
+  await assertFails(getDoc(doc(db, 'adminAudit', 'event-001')))
+})
+
+test('all browser identities are denied writes to reserved Phase 9 collections', async () => {
+  const identities = [
+    verifiedUser('alice'),
+    verifiedUser('admin-user', { admin: true }),
+    verifiedUser('reviewer-user', { reviewer: true }),
+  ]
+  for (const db of identities) {
+    await assertFails(setDoc(doc(db, 'courseDrafts', 'new-draft'), {
+      title: 'Unvalidated draft',
+      status: 'draft',
+    }))
+    await assertFails(setDoc(doc(db, 'reviewAssignments', 'new-assignment'), {
+      reviewerUid: 'reviewer-user',
+      status: 'assigned',
+    }))
+    await assertFails(setDoc(doc(db, 'adminAudit', 'new-event'), {
+      action: 'untrusted-write',
+      actorUid: 'admin-user',
+      createdAt: serverTimestamp(),
+    }))
+  }
 })
 
 test('learners cannot issue certificates', async () => {

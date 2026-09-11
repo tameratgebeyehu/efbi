@@ -21,9 +21,9 @@ const SPREADSHEET_ID = "PASTE_YOUR_SPREADSHEET_ID_HERE";
  * STEP 6: Deploy > Manage Deployments > Edit > Version: New version > Deploy
  */
 
-// Default admin credentials used if no "Admins" sheet row exists yet
-const DEFAULT_ADMIN_USERNAME = "admin";
-const DEFAULT_ADMIN_PASSWORD = "efbi2026";
+// Retired: this historical backend must not be redeployed.
+const DEFAULT_ADMIN_USERNAME = "";
+const DEFAULT_ADMIN_PASSWORD = "";
 
 // =============================================================
 // MAIN ENTRY POINTS
@@ -33,6 +33,7 @@ const DEFAULT_ADMIN_PASSWORD = "efbi2026";
  * Handles POST requests from the website
  */
 function doPost(e) {
+  return createResponse({ status: 'error', message: 'This legacy EFBI backend is retired.' });
   try {
     const requestData = JSON.parse(e.postData.contents);
     const action = requestData.action;
@@ -172,6 +173,7 @@ function doPost(e) {
  * Handles GET requests — for browser testing and ping
  */
 function doGet(e) {
+  return ContentService.createTextOutput('This legacy EFBI backend is retired.');
   const action = e && e.parameter && e.parameter.action;
 
   if (action === 'ping') {
@@ -349,7 +351,7 @@ function migrateStudentsSheet(ss) {
     const isStatus = ['pending', 'approved', 'rejected'].includes(val8.toLowerCase());
     const hasVal10 = (row[10] !== undefined && row[10] !== "");
 
-    const password = 'efbi2026'; // Default password for historical accounts
+    const password = '';
     const country = row[3] || 'Ethiopia';
     const region = row[4];
     const school = row[5];
@@ -532,7 +534,7 @@ function addStudentRow(ss, data) {
     newId,
     data.name     || '',
     data.email    || '',
-    String(data.password || 'efbi2026'),
+    '',
     data.country  || 'Ethiopia',
     data.region   || '',
     data.school   || '',
@@ -696,13 +698,7 @@ function sendApprovalEmail(email, name, course) {
         <a href="http://localhost:8000/#profile" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2);">Go to Student Dashboard</a>
       </div>
       
-      <div style="background-color: #f1f5f9; padding: 16px; border-radius: 10px; font-size: 13.5px; color: #475569; line-height: 1.5; border: 1px solid #e2e8f0;">
-        <strong>Login Instructions:</strong><br>
-        Log in using your registered email address and the password you selected during registration. 
-        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1; font-size: 12.5px; color: #64748b;">
-          * Note: If you registered before this system was active, your default password is <strong>efbi2026</strong>. You can change this anytime from your profile settings.
-        </div>
-      </div>
+      <p style="font-size: 13.5px; color: #475569;">This historical email template is retired.</p>
       
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0;" />
       

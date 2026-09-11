@@ -13,7 +13,10 @@ This phase replaces the legacy public Apps Script endpoint with Firebase Authent
 - Public certificate lookup requires an exact credential ID. Listing the certificate registry is denied.
 - Public certificate records must not contain email, phone, date of birth, school, private submissions, or Firebase user IDs.
 - Certificate issuance requires an administrator custom claim. No browser user can grant that claim.
-- Project submissions and administrative tools remain denied until their workflows and rules are separately designed and tested.
+- Administrative access lives in a separate localhost-only application, never at a public `/admin` route.
+- A verified Firebase email and server-issued custom claim are required; hiding a route is never treated as authorization.
+- Phase 9 reserves private course-draft, review-assignment, and audit paths while denying every browser write until Phase 10 schemas and tests exist.
+- Project submissions remain denied until their workflow and rules are separately designed and tested.
 - App Check should be monitored before enforcement is enabled. It limits abuse but does not replace Authentication or Firestore rules.
 
 ## Collections
@@ -44,6 +47,15 @@ certificates/{credentialId}
   status
   public
   updatedAt
+
+courseDrafts/{courseId}
+  # admin read; all browser writes denied in Phase 9
+
+reviewAssignments/{assignmentId}
+  # admin/reviewer read; all browser writes denied in Phase 9
+
+adminAudit/{eventId}
+  # admin read; all browser writes denied in Phase 9
 ```
 
 Course descriptions remain in the version-controlled website. Protected lesson records may later use `courses/{courseId}`, but the current rules do not permit browser writes.
@@ -71,6 +83,12 @@ Course descriptions remain in the version-controlled website. Protected lesson r
 4. Run `npm run test:rules` after every security-rule change.
 
 Do not place service-account JSON, private keys, reCAPTCHA secret keys, App Check debug tokens, student exports, or production project credentials in this repository.
+
+The local owner role utility uses the existing Firebase CLI sign-in, is hard-limited to `efbi-academy-dev-doha`, and requires an exact confirmation phrase for every mutation. Role changes still require the project owner's explicit approval for the exact account email. See `../ADMIN_STUDIO.md`.
+
+```powershell
+npm run manage:roles -- inspect --email "owner@example.com"
+```
 
 See APP_CHECK.md for the development configuration and enforcement checklist.
 

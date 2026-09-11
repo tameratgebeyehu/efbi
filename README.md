@@ -1,5 +1,31 @@
 # 🇪🇹 Ethiopian Future Builders Initiative (EFBI)
 
+> [!IMPORTANT]
+> The original root application and Google Apps Script backend are retired and remain only as a maintenance shell and migration reference. Do not restore their login, registration, spreadsheet, or admin behavior.
+
+## Current rebuild
+
+The active student application is `academy-v2`, a React and Firebase rebuild with clean routes, verified-email learning access, private progress, and deny-by-default Firestore rules. The private operations interface is `efbi-admin-studio`, a separate localhost-only application that must never be publicly deployed.
+
+```powershell
+cd academy-v2
+npm install
+npm run dev
+```
+
+Run the Admin Studio separately at `127.0.0.1:5174` only after following `ADMIN_STUDIO.md`.
+
+Key documents:
+
+- `academy-v2/PROJECT_STATUS.md` — completed phases, evidence, and next work
+- `academy-v2/BACKEND_FOUNDATION.md` — Firebase data and security model
+- `ADMIN_STUDIO.md` — private operator setup and role controls
+- `LEGACY_SYSTEM_RETIRED.md` — permanent containment rules for the old system
+
+## Legacy reference below
+
+The remaining sections describe the retired prototype and are not instructions for the current rebuild.
+
 > **Empowering Ethiopia's Next Generation of Technology Builders, Software Engineers, and Innovation Catalysts.**
 
 [![Live Platform](https://img.shields.io/badge/Live_Platform-EFBI_Initiative-6366f1?style=for-the-badge&logo=google-chrome&logoColor=white)](https://tameratgebeyehu.github.io/efbi/)

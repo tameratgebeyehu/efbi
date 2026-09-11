@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview --configLoader native",
     "emulators": "firebase emulators:start --only auth,firestore --project demo-efbi",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-efbi \"node --test tests/firestore.rules.test.mjs\""
+    "test:rules": "firebase emulators:exec --only firestore --project demo-efbi \"node --test tests/firestore.rules.test.mjs\"",
+    "manage:roles": "node tools/manage-role.cjs"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",

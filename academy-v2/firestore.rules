@@ -20,6 +20,12 @@ service cloud.firestore {
         && request.auth.token.admin == true;
     }
 
+    function reviewer() {
+      return verified()
+        && 'reviewer' in request.auth.token
+        && request.auth.token.reviewer == true;
+    }
+
     function validDisplayName(name) {
       return name is string && name.size() >= 2 && name.size() <= 80;
     }
@@ -130,6 +136,27 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Phase 9 reserves private operational paths. Content writes remain locked
+    // until their schemas and state transitions ship with Phase 10 tests.
+    match /courseDrafts/{courseId} {
+      allow get, list: if admin();
+      allow create, update, delete: if false;
+
+      match /{document=**} {
+        allow read: if admin();
+        allow write: if false;
+      }
+    }
+
+    match /reviewAssignments/{assignmentId} {
+      allow get, list: if admin() || reviewer();
+      allow create, update, delete: if false;
+    }
+
+    match /adminAudit/{eventId} {
+      allow get, list: if admin();
+      allow create, update, delete: if false;
+    }
     match /courses/{courseId} {
       allow read: if verified();
       allow write: if false;
