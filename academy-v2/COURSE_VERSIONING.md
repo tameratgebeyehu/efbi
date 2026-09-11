@@ -31,12 +31,18 @@ For a major course revision, create a new ID such as `ai-foundations-v2`. Do not
 
 ## Publishing checklist
 
-1. Review the content change and classify it as editorial or material.
-2. Keep every already-published slug immutable.
-3. Update curriculum data, routes, Firestore rules, tests, and documentation in one checkpoint.
-4. Deploy tested rules before exposing a new completion action.
-5. Preserve old progress records and their meaning.
-6. Record the release decision and Git commit in PROJECT_STATUS.md.
+1. Create or edit the course draft in the local Admin Studio.
+2. Review the preview and classify the change as editorial or material.
+3. Use a new course ID for a material revision that changes earlier completion meaning.
+4. Mark the complete draft ready for review.
+5. Confirm the exact preview and publish an immutable release.
+6. Preserve old release and progress records and their meaning.
+7. Update curriculum data, routes, Firestore rules, tests, and documentation before exposing a new completion action.
+8. Record the release decision and Git commit in PROJECT_STATUS.md.
+
+A Phase 10 publication is an atomic Firestore batch: it advances the draft by exactly one revision, creates the next immutable `courseReleases` snapshot, and creates a linked immutable `adminAudit` event. A partial publication is rejected.
+
+The published release currently records course-level metadata only. It does not publish lessons or change the student catalog; that migration belongs to Phase 11.
 
 ## Certificate boundary
 

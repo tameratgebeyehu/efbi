@@ -96,6 +96,174 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
+    function validCourseContent(data) {
+      return data.title is string
+        && data.title.size() >= 5
+        && data.title.size() <= 100
+        && data.summary is string
+        && data.summary.size() >= 20
+        && data.summary.size() <= 240
+        && data.description is string
+        && data.description.size() >= 40
+        && data.description.size() <= 4000
+        && data.category in ['artificial-intelligence', 'app-development', 'web-development', 'mobile-development']
+        && data.level in ['beginner', 'intermediate', 'advanced']
+        && data.language is string
+        && data.language.size() >= 2
+        && data.language.size() <= 40
+        && data.estimatedMinutes is int
+        && data.estimatedMinutes >= 15
+        && data.estimatedMinutes <= 20000;
+    }
+
+    function validCourseId(courseId) {
+      return courseId is string
+        && courseId.size() >= 3
+        && courseId.size() <= 64
+        && courseId.matches('[a-z0-9]+(-[a-z0-9]+)*');
+    }
+
+    function validCourseDraft(data, courseId) {
+      return data.keys().hasOnly([
+          'courseId',
+          'title',
+          'summary',
+          'description',
+          'category',
+          'level',
+          'language',
+          'estimatedMinutes',
+          'status',
+          'revision',
+          'latestReleaseNumber',
+          'latestReleaseId',
+          'createdAt',
+          'createdBy',
+          'updatedAt',
+          'updatedBy',
+          'lastAuditId'
+        ])
+        && validCourseId(courseId)
+        && data.courseId == courseId
+        && validCourseContent(data)
+        && data.status in ['draft', 'ready', 'published']
+        && data.revision is int
+        && data.revision >= 1
+        && data.latestReleaseNumber is int
+        && data.latestReleaseNumber >= 0
+        && data.latestReleaseId is string
+        && data.latestReleaseId.size() <= 120
+        && data.createdAt is timestamp
+        && data.createdBy is string
+        && data.createdBy.size() > 0
+        && data.updatedAt == request.time
+        && data.updatedBy == request.auth.uid
+        && data.lastAuditId is string
+        && data.lastAuditId.size() >= 16
+        && data.lastAuditId.size() <= 180;
+    }
+
+    function validAuditEvent(data, eventId) {
+      return data.keys().hasOnly([
+          'eventId', 'action', 'entityType', 'entityId', 'actorUid',
+          'revision', 'releaseId', 'createdAt'
+        ])
+        && data.eventId == eventId
+        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published']
+        && data.entityType in ['courseDraft', 'courseRelease']
+        && validCourseId(data.entityId)
+        && data.actorUid == request.auth.uid
+        && data.revision is int
+        && data.revision >= 1
+        && data.releaseId is string
+        && data.releaseId.size() <= 120
+        && data.createdAt == request.time;
+    }
+
+    function linkedAuditIsValid(auditId, action, entityType, entityId, revision, releaseId) {
+      let event = getAfter(/databases/$(database)/documents/adminAudit/$(auditId)).data;
+      return event.eventId == auditId
+        && event.action == action
+        && event.entityType == entityType
+        && event.entityId == entityId
+        && event.actorUid == request.auth.uid
+        && event.revision == revision
+        && event.releaseId == releaseId
+        && event.createdAt == request.time;
+    }
+
+    function sameCourseContent() {
+      return request.resource.data.title == resource.data.title
+        && request.resource.data.summary == resource.data.summary
+        && request.resource.data.description == resource.data.description
+        && request.resource.data.category == resource.data.category
+        && request.resource.data.level == resource.data.level
+        && request.resource.data.language == resource.data.language
+        && request.resource.data.estimatedMinutes == resource.data.estimatedMinutes;
+    }
+
+    function validCourseRelease(data, releaseId) {
+      return data.keys().hasOnly([
+          'releaseId', 'courseId', 'title', 'summary', 'description',
+          'category', 'level', 'language', 'estimatedMinutes', 'version',
+          'draftRevision', 'publishedAt', 'publishedBy', 'auditId'
+        ])
+        && data.releaseId == releaseId
+        && releaseId.size() >= 16
+        && releaseId.size() <= 120
+        && validCourseId(data.courseId)
+        && validCourseContent(data)
+        && data.version is int
+        && data.version >= 1
+        && data.draftRevision is int
+        && data.draftRevision >= 2
+        && data.publishedAt == request.time
+        && data.publishedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180;
+    }
+
+    function releaseMatchesPublishedDraft(data, releaseId) {
+      let draft = getAfter(/databases/$(database)/documents/courseDrafts/$(data.courseId)).data;
+      return draft.status == 'published'
+        && draft.latestReleaseId == releaseId
+        && draft.latestReleaseNumber == data.version
+        && draft.revision == data.draftRevision
+        && draft.lastAuditId == data.auditId
+        && draft.title == data.title
+        && draft.summary == data.summary
+        && draft.description == data.description
+        && draft.category == data.category
+        && draft.level == data.level
+        && draft.language == data.language
+        && draft.estimatedMinutes == data.estimatedMinutes;
+    }
+
+    function auditLinksToCourseOperation(data, eventId) {
+      let draft = getAfter(/databases/$(database)/documents/courseDrafts/$(data.entityId)).data;
+      return (
+          data.entityType == 'courseDraft'
+          && data.action in ['course.draft.created', 'course.draft.updated']
+          && draft.lastAuditId == eventId
+          && draft.revision == data.revision
+          && draft.latestReleaseId == data.releaseId
+          && draft.updatedBy == request.auth.uid
+        )
+        || (
+          data.entityType == 'courseRelease'
+          && data.action == 'course.release.published'
+          && draft.status == 'published'
+          && draft.lastAuditId == eventId
+          && draft.revision == data.revision
+          && draft.latestReleaseId == data.releaseId
+          && draft.updatedBy == request.auth.uid
+          && getAfter(/databases/$(database)/documents/courseReleases/$(data.releaseId)).data.auditId == eventId
+          && getAfter(/databases/$(database)/documents/courseReleases/$(data.releaseId)).data.courseId == data.entityId
+          && getAfter(/databases/$(database)/documents/courseReleases/$(data.releaseId)).data.publishedBy == request.auth.uid
+        );
+    }
+
     match /users/{uid} {
       allow create: if owns(uid) && validProfile(request.resource.data);
       allow get: if owns(uid) || admin();
@@ -136,16 +304,93 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Phase 9 reserves private operational paths. Content writes remain locked
-    // until their schemas and state transitions ship with Phase 10 tests.
+    // Drafts remain private. Every accepted change requires a linked immutable
+    // audit event written in the same atomic operation.
     match /courseDrafts/{courseId} {
       allow get, list: if admin();
-      allow create, update, delete: if false;
+      allow create: if admin()
+        && validCourseDraft(request.resource.data, courseId)
+        && request.resource.data.status == 'draft'
+        && request.resource.data.revision == 1
+        && request.resource.data.latestReleaseNumber == 0
+        && request.resource.data.latestReleaseId == ''
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid
+        && linkedAuditIsValid(
+          request.resource.data.lastAuditId,
+          'course.draft.created',
+          'courseDraft',
+          courseId,
+          1,
+          ''
+        );
+      allow update: if admin()
+        && validCourseDraft(request.resource.data, courseId)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.revision == resource.data.revision + 1
+        && (
+          (
+            request.resource.data.status in ['draft', 'ready']
+            && (request.resource.data.status != resource.data.status
+              || !sameCourseContent())
+            && request.resource.data.latestReleaseNumber == resource.data.latestReleaseNumber
+            && request.resource.data.latestReleaseId == resource.data.latestReleaseId
+            && linkedAuditIsValid(
+              request.resource.data.lastAuditId,
+              'course.draft.updated',
+              'courseDraft',
+              courseId,
+              request.resource.data.revision,
+              request.resource.data.latestReleaseId
+            )
+          )
+          ||
+          (
+            resource.data.status == 'ready'
+            && request.resource.data.status == 'published'
+            && sameCourseContent()
+            && request.resource.data.latestReleaseNumber == resource.data.latestReleaseNumber + 1
+            && request.resource.data.latestReleaseId != ''
+            && request.resource.data.latestReleaseId != resource.data.latestReleaseId
+            && linkedAuditIsValid(
+              request.resource.data.lastAuditId,
+              'course.release.published',
+              'courseRelease',
+              courseId,
+              request.resource.data.revision,
+              request.resource.data.latestReleaseId
+            )
+            && getAfter(/databases/$(database)/documents/courseReleases/$(request.resource.data.latestReleaseId)).data.courseId == courseId
+            && getAfter(/databases/$(database)/documents/courseReleases/$(request.resource.data.latestReleaseId)).data.version == request.resource.data.latestReleaseNumber
+            && getAfter(/databases/$(database)/documents/courseReleases/$(request.resource.data.latestReleaseId)).data.draftRevision == request.resource.data.revision
+            && getAfter(/databases/$(database)/documents/courseReleases/$(request.resource.data.latestReleaseId)).data.auditId == request.resource.data.lastAuditId
+          )
+        );
+      allow delete: if false;
 
       match /{document=**} {
         allow read: if admin();
         allow write: if false;
       }
+    }
+
+    // Published releases are immutable snapshots. Phase 11 will connect the
+    // student catalog after migration and compatibility tests.
+    match /courseReleases/{releaseId} {
+      allow get, list: if verified();
+      allow create: if admin()
+        && validCourseRelease(request.resource.data, releaseId)
+        && linkedAuditIsValid(
+          request.resource.data.auditId,
+          'course.release.published',
+          'courseRelease',
+          request.resource.data.courseId,
+          request.resource.data.draftRevision,
+          releaseId
+        )
+        && releaseMatchesPublishedDraft(request.resource.data, releaseId);
+      allow update, delete: if false;
     }
 
     match /reviewAssignments/{assignmentId} {
@@ -155,8 +400,12 @@ service cloud.firestore {
 
     match /adminAudit/{eventId} {
       allow get, list: if admin();
-      allow create, update, delete: if false;
+      allow create: if admin()
+        && validAuditEvent(request.resource.data, eventId)
+        && auditLinksToCourseOperation(request.resource.data, eventId);
+      allow update, delete: if false;
     }
+
     match /courses/{courseId} {
       allow read: if verified();
       allow write: if false;

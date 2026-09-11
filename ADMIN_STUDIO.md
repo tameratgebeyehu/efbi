@@ -2,18 +2,21 @@
 
 The EFBI Admin Studio is a separate, local-only application for trusted operators. It is not a route in the student website and must never be deployed to Firebase Hosting, GitHub Pages, or another public host.
 
-## Current Phase 9 boundary
+## Current Phase 10 boundary
 
-Phase 9 establishes identity and authorization only:
+Phase 10 adds the first validated operation: course draft and release management.
 
 - the server binds to `127.0.0.1` on port `5174`;
 - the interface blocks non-local hostnames;
 - Firebase Authentication uses session persistence, so closing the browser ends the saved session;
 - access requires a verified email and an `admin: true` Firebase custom claim;
-- Courses, Reviews, Certificates, and Audit Log are visible but intentionally locked;
-- Firestore course-draft, review-assignment, and admin-audit writes are denied for every browser identity.
+- Courses can be created, edited, previewed, marked ready, and published;
+- every accepted course change and publication writes a linked audit event in the same atomic batch;
+- published releases are immutable snapshots;
+- Reviews, Certificates, and the Audit Log interface remain intentionally locked;
+- learner submissions, files, lessons, questions, certificates, and public enrollment remain outside this phase.
 
-This boundary prevents an unfinished editor from changing academy data.
+The local interface reduces exposure, while Firebase claims and Firestore rules provide the actual authorization boundary.
 
 ## Start the studio
 
@@ -49,7 +52,7 @@ npm run manage:roles -- set --email "owner@example.com" --role admin --value tru
 
 6. Sign out and sign in again so Firebase issues a fresh ID token.
 
-No role has been granted as part of Phase 9. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
+No role has been granted as part of Phases 9 or 10. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
 
 ## Remove access
 
@@ -61,11 +64,24 @@ Then revoke the user's refresh tokens in Firebase Console if access must end imm
 
 ## Role meanings
 
-- `admin`: may read private course drafts, reviewer assignments, and the admin audit; future write operations still require schema-specific rules.
+- `admin`: may manage validated course drafts and releases, and may read reviewer assignments and the admin audit.
 - `reviewer`: may read review assignments only. It cannot read course drafts or the admin audit.
 - `support`: reserved for future limited support work. It currently receives no private operational reads.
 
 A route name, hidden button, or local interface is not authorization. Firebase Authentication claims and Firestore rules remain the real security boundary.
+
+## Course workflow
+
+1. Open **Courses** and choose **New course**, or select an existing draft.
+2. Use a lowercase slug such as `digital-literacy`; it becomes the durable course ID.
+3. Complete every required field and save the draft.
+4. Review the safe preview, then choose **Mark ready for review**.
+5. Confirm the exact preview and choose **Publish release**.
+6. Publication creates an immutable release and advances the draft's release number in one atomic operation.
+
+The browser keeps a best-effort recovery copy of unsaved course text. After a power cut, the studio offers **Restore** or **Discard**. Recovery is refused when the server revision changed in the meantime. It is not a backup and never overrides Firestore.
+
+Firestore remains the source of truth. Do not edit `courseDrafts`, `courseReleases`, or `adminAudit` manually in the Firebase Console except during a documented recovery investigation.
 
 ## Security rules
 
@@ -81,6 +97,6 @@ A route name, hidden button, or local interface is not authorization. Firebase A
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 10 gate
+## Phase 11 gate
 
-Phase 10 can add a course editor only after defining a versioned draft schema, immutable published releases, validation limits, preview behavior, audit events, and emulator tests. Public enrollment, project submissions, file uploads, and certificate issuance remain outside this phase.
+Phase 11 may add structured lesson and practice-question management only after defining immutable lesson identity, ordering rules, safe content rendering, draft/release relationships, migrations for the current pilot, and emulator tests. Public enrollment, project submissions, file uploads, reviewed assessments, and certificate issuance remain outside that phase.

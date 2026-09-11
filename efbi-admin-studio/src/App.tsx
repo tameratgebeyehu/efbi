@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { User } from 'firebase/auth'
 import { firebaseConfigured, getAdminFirebase } from './firebase'
+import CourseManager from './CourseManager'
 
 type AccessState = 'loading' | 'signed-out' | 'denied' | 'admin' | 'error'
 
@@ -47,8 +48,9 @@ function SignIn({ onError }: { onError: (message: string) => void }) {
 }
 
 function Dashboard({ user, signOut }: { user: User; signOut: () => Promise<void> }) {
+  const [section, setSection] = useState<'overview' | 'courses'>('overview')
   const areas = [
-    { number: '01', title: 'Courses', detail: 'Draft and publishing tools arrive in Phase 10.', status: 'Foundation ready' },
+    { number: '01', title: 'Courses', detail: 'Create, review, preview, and publish versioned course records.', status: 'Available' },
     { number: '02', title: 'Lessons & questions', detail: 'Structured lesson and practice editors arrive in Phase 11.', status: 'Locked' },
     { number: '03', title: 'Submissions', detail: 'Text and evidence-link review arrives after course migration.', status: 'Locked' },
     { number: '04', title: 'Certificates', detail: 'Issuance stays disabled until reviewed assessment is proven.', status: 'Locked' },
@@ -58,18 +60,26 @@ function Dashboard({ user, signOut }: { user: User; signOut: () => Promise<void>
     <div className="studio">
       <aside className="sidebar">
         <div className="brand brand--light"><img src="/efbi-icon.png" alt="" /><span>EFBI</span><small>ADMIN STUDIO</small></div>
-        <nav aria-label="Admin sections"><button className="active">Overview</button><button disabled>Courses</button><button disabled>Reviews</button><button disabled>Certificates</button><button disabled>Audit log</button></nav>
+        <nav aria-label="Admin sections">
+          <button className={section === 'overview' ? 'active' : ''} onClick={() => setSection('overview')}>Overview</button>
+          <button className={section === 'courses' ? 'active' : ''} onClick={() => setSection('courses')}>Courses</button>
+          <button disabled>Reviews</button>
+          <button disabled>Certificates</button>
+          <button disabled>Audit log</button>
+        </nav>
         <div className="operator"><small>Verified operator</small><strong>{user.email}</strong><button onClick={() => void signOut()}>Sign out</button></div>
       </aside>
       <main className="workspace">
-        <header><div><p className="eyebrow">Phase 9 foundation</p><h1>Good morning, builder.</h1><p>The studio is local, the identity is verified, and content writes remain locked.</p></div><span className="security-badge">Admin claim verified</span></header>
+        {section === 'courses' ? <CourseManager user={user} /> : <>
+        <header><div><p className="eyebrow">Phase 10 workspace</p><h1>Good morning, builder.</h1><p>Course publishing is available through validated, audited, and immutable release steps.</p></div><span className="security-badge">Admin claim verified</span></header>
         <section className="safety-grid" aria-label="Security status">
           <article><small>Network</small><strong>Localhost only</strong><p>Not published with the student website.</p></article>
           <article><small>Session</small><strong>Browser session</strong><p>No shared admin password or permanent browser role.</p></article>
-          <article><small>Backend</small><strong>Writes locked</strong><p>Phase 10 must add schema validation and rule tests first.</p></article>
+          <article><small>Publishing</small><strong>Atomic releases</strong><p>Draft, release, and audit succeed or fail together.</p></article>
         </section>
-        <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Control areas</p><h2>Built in secure stages</h2></div><p>Unavailable actions are visibly locked instead of pretending to work.</p></div><div className="area-grid">{areas.map((area) => <article key={area.number}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>{area.status}</small></article>)}</div></section>
-        <section className="next-step"><div><p className="eyebrow">Next checkpoint</p><h2>Course drafts and immutable releases</h2><p>Phase 10 will add validated course creation, preview, and publishing without exposing an admin route publicly.</p></div><button disabled>Course editor locked</button></section>
+        <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Control areas</p><h2>Built in secure stages</h2></div><p>Only tested workflows are enabled. Later operations remain visibly locked.</p></div><div className="area-grid">{areas.map((area) => <article key={area.number}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>{area.status}</small></article>)}</div></section>
+        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Courses are controlled records</h2><p>A course begins as a private draft, becomes review ready, and publishes as an immutable release. Lessons remain the next separate security boundary.</p></div><span className="next-step__badge">Phase 10 active</span></section>
+        </>}
       </main>
     </div>
   )

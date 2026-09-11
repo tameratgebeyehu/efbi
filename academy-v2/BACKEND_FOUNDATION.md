@@ -15,7 +15,9 @@ This phase replaces the legacy public Apps Script endpoint with Firebase Authent
 - Certificate issuance requires an administrator custom claim. No browser user can grant that claim.
 - Administrative access lives in a separate localhost-only application, never at a public `/admin` route.
 - A verified Firebase email and server-issued custom claim are required; hiding a route is never treated as authorization.
-- Phase 9 reserves private course-draft, review-assignment, and audit paths while denying every browser write until Phase 10 schemas and tests exist.
+- Course changes use strict field lists, length limits, allowed values, server timestamps, immutable ownership metadata, and one-step revision changes.
+- A course change and its audit event must succeed in one atomic batch; publication also creates an immutable release snapshot in that batch.
+- Review assignments remain read-only in browser code until their own workflow and tests are implemented.
 - Project submissions remain denied until their workflow and rules are separately designed and tested.
 - App Check should be monitored before enforcement is enabled. It limits abuse but does not replace Authentication or Firestore rules.
 
@@ -49,16 +51,55 @@ certificates/{credentialId}
   updatedAt
 
 courseDrafts/{courseId}
-  # admin read; all browser writes denied in Phase 9
+  courseId
+  title
+  summary
+  description
+  category
+  level
+  language
+  estimatedMinutes
+  status                 # draft | ready | published
+  revision
+  latestReleaseNumber
+  latestReleaseId
+  createdAt
+  createdBy
+  updatedAt
+  updatedBy
+  lastAuditId
+
+courseReleases/{releaseId}
+  releaseId
+  courseId
+  releaseNumber
+  revision
+  title
+  summary
+  description
+  category
+  level
+  language
+  estimatedMinutes
+  publishedAt
+  publishedBy
+  sourceAuditId
 
 reviewAssignments/{assignmentId}
-  # admin/reviewer read; all browser writes denied in Phase 9
+  # admin/reviewer read; all browser writes still denied
 
 adminAudit/{eventId}
-  # admin read; all browser writes denied in Phase 9
+  eventId
+  action                 # approved course action
+  targetType             # courseDraft | courseRelease
+  targetId
+  courseId
+  revision
+  actorId
+  createdAt
 ```
 
-Course descriptions remain in the version-controlled website. Protected lesson records may later use `courses/{courseId}`, but the current rules do not permit browser writes.
+The student app still uses its version-controlled pilot curriculum. Phase 10 release records are not public catalog records and are not yet connected to student learning routes.
 
 ## Development environment
 

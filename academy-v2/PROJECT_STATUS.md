@@ -1,6 +1,6 @@
 # EFBI Academy v2 — Project Status
 
-Last updated: 2026-09-11
+Last updated: 2026-09-12
 
 ## Current state
 
@@ -20,7 +20,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Production build and lint checks passing.
 - Frontend copy and layouts refined across all public pages.
 - Firebase web SDK, secure account forms, email-verification gate, and protected learning route added.
-- Deny-by-default Firestore rules added and covered by eighteen emulator authorization tests.
+- Deny-by-default Firestore rules added and now covered by 27 emulator authorization tests.
 - Backend data model, privacy boundaries, and Firebase Console checklist documented in BACKEND_FOUNDATION.md.
 - Ten routes tested at 390px, 768px, and 1440px with no horizontal overflow or browser runtime errors.
 - Development Firebase project `efbi-academy-dev-doha` connected.
@@ -63,9 +63,10 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Public student enrollment; development authentication is connected but not production-ready.
 - Contact form submissions.
 - Published course video playback; no EFBI YouTube lesson ID has been supplied yet.
-- Assessments and project submissions.
+- Lesson and practice-question editing in the Admin Studio.
+- Reviewed assessments and project submissions.
 - Certificate issuance and public verification records.
-- Administrative writes; the Phase 9 local shell is available but all operational actions are locked.
+- Review, submission, certificate, and audit-log operations in the Admin Studio.
 - Production deployment or custom-domain migration.
 
 ## Phase 3 status
@@ -182,17 +183,36 @@ The private administration foundation is implemented and verified:
 
 See `../ADMIN_STUDIO.md` and `../LEGACY_SYSTEM_RETIRED.md` for operating and containment rules.
 
+## Phase 10 status
+
+The secure course-management foundation is implemented and verified:
+
+1. The local Admin Studio can create, edit, preview, mark ready, and publish course-level records.
+2. Course fields have strict schemas, length limits, allowed values, slug validation, server timestamps, immutable creation metadata, and exact one-step revisions.
+3. Every accepted course change requires a linked immutable audit event in the same atomic Firestore batch.
+4. Publication requires a ready draft and atomically creates the next immutable release snapshot without changing course content during the publish action.
+5. No-op updates, revision skipping, actor forgery, unknown fields, orphan audits, partial publications, release mutation, and browser deletion are denied.
+6. A best-effort browser recovery copy protects unsaved course text after a power interruption and refuses restoration when its server base revision is stale.
+7. Twenty-seven Firestore emulator authorization tests pass.
+8. Student and Admin Studio builds and lint checks pass. The studio remains bound to `127.0.0.1:5174`.
+9. The tested Firestore rules were deployed only to the Doha development project.
+10. The student app still uses the version-controlled pilot curriculum; Phase 10 releases do not silently change learner routes or progress meaning.
+11. No administrator role, course data, learner data, public Admin Studio, Hosting release, upload path, or new certificate workflow was created in this phase.
+12. App Check remains in monitoring-only mode.
+13. Automated browser image inspection remained unavailable because the trusted Windows automation process was blocked by local ACLs; builds, HTTP availability, responsive CSS, and security tests were still verified.
+
+See `../ADMIN_STUDIO.md`, `COURSE_MANAGEMENT.md`, and `COURSE_VERSIONING.md` for operation and integrity rules.
+
 ## Next implementation phase
 
-Phase 10 should implement the course-management foundation in development without opening public enrollment:
+Phase 11 should implement structured lesson and practice-question management without opening public enrollment:
 
-1. Define and test a strict course-draft schema with length limits, allowed status values, and immutable ownership metadata.
-2. Add Admin Studio create/edit/preview controls only after those rules pass emulator tests.
-3. Publish immutable course releases; major revisions receive a new course ID under COURSE_VERSIONING.md.
-4. Keep lesson questions structured and browser-only until the later assessment phase defines scored server evidence.
-5. Record every administrative transition in a validated audit event without exposing the audit collection to learners.
-6. Test the complete workflow with synthetic administrator and learner accounts in Doha development, then delete them.
-7. Keep project submissions, uploads, certificate issuance, public enrollment, and production deployment disabled.
+1. Define immutable lesson IDs, ordering, allowed content blocks, and draft/release relationships.
+2. Add safe lesson and practice-question editors only after their Firestore schemas and emulator tests pass.
+3. Keep practice answers browser-only; do not turn them into certificate evidence.
+4. Plan an explicit migration from the version-controlled AI Foundations pilot to release records without changing existing progress meaning.
+5. Preserve low-bandwidth written lessons and click-to-load privacy-aware video behavior.
+6. Keep reviewed assessments, submissions, uploads, certificate issuance, public enrollment, and production deployment disabled.
 
 ## Recovery commands
 

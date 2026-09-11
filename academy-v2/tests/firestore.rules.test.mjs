@@ -8,11 +8,14 @@ import {
 } from '@firebase/rules-unit-testing'
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
   serverTimestamp,
   setDoc,
+  updateDoc,
+  writeBatch,
 } from 'firebase/firestore'
 
 let environment
@@ -37,9 +40,41 @@ beforeEach(async () => {
       public: true,
       updatedAt: new Date('2026-09-08T00:00:00Z'),
     })
+    const draftContent = {
+      title: 'AI Foundations — Second Edition',
+      summary: 'A practical introduction to useful and responsible artificial intelligence.',
+      description: 'Learners explore core AI ideas and turn one local need into a small, testable solution.',
+      category: 'artificial-intelligence',
+      level: 'beginner',
+      language: 'English',
+      estimatedMinutes: 240,
+    }
     await setDoc(doc(context.firestore(), 'courseDrafts', 'ai-foundations-v2'), {
-      title: 'Private course draft',
+      courseId: 'ai-foundations-v2',
+      ...draftContent,
       status: 'draft',
+      revision: 1,
+      latestReleaseNumber: 0,
+      latestReleaseId: '',
+      createdAt: new Date('2026-09-11T00:00:00Z'),
+      createdBy: 'admin-user',
+      updatedAt: new Date('2026-09-11T00:00:00Z'),
+      updatedBy: 'admin-user',
+      lastAuditId: 'audit-seed-draft-0001',
+    })
+    await setDoc(doc(context.firestore(), 'courseDrafts', 'ready-course'), {
+      courseId: 'ready-course',
+      ...draftContent,
+      title: 'Ready Course for Publishing',
+      status: 'ready',
+      revision: 2,
+      latestReleaseNumber: 0,
+      latestReleaseId: '',
+      createdAt: new Date('2026-09-11T00:00:00Z'),
+      createdBy: 'admin-user',
+      updatedAt: new Date('2026-09-11T01:00:00Z'),
+      updatedBy: 'admin-user',
+      lastAuditId: 'audit-seed-ready-0001',
     })
     await setDoc(doc(context.firestore(), 'reviewAssignments', 'review-001'), {
       reviewerUid: 'reviewer-user',
@@ -59,6 +94,62 @@ after(async () => {
 
 function verifiedUser(uid, claims = {}) {
   return environment.authenticatedContext(uid, { email_verified: true, ...claims }).firestore()
+}
+
+function courseContent(overrides = {}) {
+  return {
+    title: 'Building Useful AI Projects',
+    summary: 'A focused pathway from a clear community need to a responsible AI prototype.',
+    description: 'Learners define one specific problem, examine the people affected, and test a small solution with care.',
+    category: 'artificial-intelligence',
+    level: 'beginner',
+    language: 'English',
+    estimatedMinutes: 180,
+    ...overrides,
+  }
+}
+
+function auditEvent({ eventId, action, entityType, entityId, actorUid = 'admin-user', revision, releaseId = '' }) {
+  return {
+    eventId,
+    action,
+    entityType,
+    entityId,
+    actorUid,
+    revision,
+    releaseId,
+    createdAt: serverTimestamp(),
+  }
+}
+
+function draftRecord({ courseId, auditId, actorUid = 'admin-user', ...overrides }) {
+  return {
+    courseId,
+    ...courseContent(),
+    status: 'draft',
+    revision: 1,
+    latestReleaseNumber: 0,
+    latestReleaseId: '',
+    createdAt: serverTimestamp(),
+    createdBy: actorUid,
+    updatedAt: serverTimestamp(),
+    updatedBy: actorUid,
+    lastAuditId: auditId,
+    ...overrides,
+  }
+}
+
+function addDraftCreation(batch, db, courseId, overrides = {}) {
+  const auditId = `audit-create-${courseId}-0001`
+  batch.set(doc(db, 'courseDrafts', courseId), draftRecord({ courseId, auditId, ...overrides }))
+  batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+    eventId: auditId,
+    action: 'course.draft.created',
+    entityType: 'courseDraft',
+    entityId: courseId,
+    revision: 1,
+  }))
+  return auditId
 }
 
 function progressRecord() {
@@ -286,11 +377,11 @@ test('a reviewer can read assignments but not course drafts or the admin audit',
   await assertFails(getDoc(doc(db, 'adminAudit', 'event-001')))
 })
 
-test('all browser identities are denied writes to reserved Phase 9 collections', async () => {
+test('non-administrative browser identities cannot write operational collections', async () => {
   const identities = [
     verifiedUser('alice'),
-    verifiedUser('admin-user', { admin: true }),
     verifiedUser('reviewer-user', { reviewer: true }),
+    verifiedUser('support-user', { support: true }),
   ]
   for (const db of identities) {
     await assertFails(setDoc(doc(db, 'courseDrafts', 'new-draft'), {
@@ -307,6 +398,240 @@ test('all browser identities are denied writes to reserved Phase 9 collections',
       createdAt: serverTimestamp(),
     }))
   }
+})
+
+test('an administrator creates a validated draft and linked audit atomically', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const batch = writeBatch(db)
+  const courseId = 'community-ai-lab'
+  const auditId = addDraftCreation(batch, db, courseId)
+  await assertSucceeds(batch.commit())
+
+  const draft = await getDoc(doc(db, 'courseDrafts', courseId))
+  const audit = await getDoc(doc(db, 'adminAudit', auditId))
+  assert.equal(draft.data().revision, 1)
+  assert.equal(draft.data().status, 'draft')
+  assert.equal(audit.data().action, 'course.draft.created')
+})
+
+test('draft creation rejects missing audits, invalid slugs, extra fields, and forged actors', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  await assertFails(setDoc(doc(db, 'courseDrafts', 'missing-audit'), draftRecord({
+    courseId: 'missing-audit',
+    auditId: 'audit-missing-link-0001',
+  })))
+
+  for (const [courseId, overrides] of [
+    ['Invalid Course ID', {}],
+    ['extra-field-course', { unexpected: true }],
+    ['forged-actor-course', { createdBy: 'different-admin', updatedBy: 'different-admin' }],
+    ['short-summary-course', { summary: 'Too short' }],
+  ]) {
+    const batch = writeBatch(db)
+    addDraftCreation(batch, db, courseId, overrides)
+    await assertFails(batch.commit())
+  }
+})
+
+test('an administrator updates a draft with one revision and an immutable audit event', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const reference = doc(db, 'courseDrafts', 'ai-foundations-v2')
+  const current = (await getDoc(reference)).data()
+  const auditId = 'audit-update-ai-foundations-v2-0002'
+  const batch = writeBatch(db)
+  batch.update(reference, {
+    ...current,
+    title: 'AI Foundations — Reviewed Edition',
+    status: 'ready',
+    revision: 2,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'admin-user',
+    lastAuditId: auditId,
+  })
+  batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+    eventId: auditId,
+    action: 'course.draft.updated',
+    entityType: 'courseDraft',
+    entityId: 'ai-foundations-v2',
+    revision: 2,
+  }))
+  await assertSucceeds(batch.commit())
+  assert.equal((await getDoc(reference)).data().status, 'ready')
+})
+
+test('a no-op draft update cannot create a meaningless revision or audit event', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const reference = doc(db, 'courseDrafts', 'ai-foundations-v2')
+  const current = (await getDoc(reference)).data()
+  const auditId = 'audit-noop-ai-foundations-v2-0002'
+  const batch = writeBatch(db)
+  batch.update(reference, {
+    ...current,
+    revision: 2,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'admin-user',
+    lastAuditId: auditId,
+  })
+  batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+    eventId: auditId,
+    action: 'course.draft.updated',
+    entityType: 'courseDraft',
+    entityId: 'ai-foundations-v2',
+    revision: 2,
+  }))
+  await assertFails(batch.commit())
+})
+
+test('draft updates reject skipped revisions, changed ownership, and deletion', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const reference = doc(db, 'courseDrafts', 'ai-foundations-v2')
+  const current = (await getDoc(reference)).data()
+
+  for (const [auditId, changes] of [
+    ['audit-skipped-revision-0003', { revision: 3 }],
+    ['audit-changed-owner-0002', { revision: 2, createdBy: 'another-admin' }],
+  ]) {
+    const batch = writeBatch(db)
+    batch.update(reference, {
+      ...current,
+      ...changes,
+      updatedAt: serverTimestamp(),
+      updatedBy: 'admin-user',
+      lastAuditId: auditId,
+    })
+    batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+      eventId: auditId,
+      action: 'course.draft.updated',
+      entityType: 'courseDraft',
+      entityId: 'ai-foundations-v2',
+      revision: changes.revision,
+    }))
+    await assertFails(batch.commit())
+  }
+  await assertFails(deleteDoc(reference))
+})
+
+test('a review-ready draft publishes as one immutable release and audit event', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const draftReference = doc(db, 'courseDrafts', 'ready-course')
+  const current = (await getDoc(draftReference)).data()
+  const releaseId = 'release-ready-course-v0001-abc12345'
+  const auditId = 'audit-publish-ready-course-v0001'
+  const nextRevision = current.revision + 1
+  const batch = writeBatch(db)
+  batch.update(draftReference, {
+    ...current,
+    status: 'published',
+    revision: nextRevision,
+    latestReleaseNumber: 1,
+    latestReleaseId: releaseId,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'admin-user',
+    lastAuditId: auditId,
+  })
+  batch.set(doc(db, 'courseReleases', releaseId), {
+    releaseId,
+    courseId: 'ready-course',
+    title: current.title,
+    summary: current.summary,
+    description: current.description,
+    category: current.category,
+    level: current.level,
+    language: current.language,
+    estimatedMinutes: current.estimatedMinutes,
+    version: 1,
+    draftRevision: nextRevision,
+    publishedAt: serverTimestamp(),
+    publishedBy: 'admin-user',
+    auditId,
+  })
+  batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+    eventId: auditId,
+    action: 'course.release.published',
+    entityType: 'courseRelease',
+    entityId: 'ready-course',
+    revision: nextRevision,
+    releaseId,
+  }))
+  await assertSucceeds(batch.commit())
+
+  const learner = verifiedUser('alice')
+  const releaseReference = doc(learner, 'courseReleases', releaseId)
+  assert.equal((await assertSucceeds(getDoc(releaseReference))).data().version, 1)
+  const visitor = environment.unauthenticatedContext().firestore()
+  await assertFails(getDoc(doc(visitor, 'courseReleases', releaseId)))
+  await assertFails(updateDoc(doc(db, 'courseReleases', releaseId), { title: 'Changed later' }))
+  await assertFails(deleteDoc(doc(db, 'courseReleases', releaseId)))
+})
+
+test('publishing rejects unreviewed, changed, incomplete, or unlinked releases', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+
+  async function attempt(courseId, { changeTitle = false, includeRelease = true } = {}) {
+    const draftReference = doc(db, 'courseDrafts', courseId)
+    const current = (await getDoc(draftReference)).data()
+    const releaseId = `release-${courseId}-v0001-abc12345`
+    const auditId = `audit-publish-${courseId}-v0001`
+    const nextRevision = current.revision + 1
+    const nextTitle = changeTitle ? `${current.title} changed during publish` : current.title
+    const batch = writeBatch(db)
+    batch.update(draftReference, {
+      ...current,
+      title: nextTitle,
+      status: 'published',
+      revision: nextRevision,
+      latestReleaseNumber: 1,
+      latestReleaseId: releaseId,
+      updatedAt: serverTimestamp(),
+      updatedBy: 'admin-user',
+      lastAuditId: auditId,
+    })
+    if (includeRelease) {
+      batch.set(doc(db, 'courseReleases', releaseId), {
+        releaseId,
+        courseId,
+        ...courseContent({ title: nextTitle }),
+        version: 1,
+        draftRevision: nextRevision,
+        publishedAt: serverTimestamp(),
+        publishedBy: 'admin-user',
+        auditId,
+      })
+    }
+    batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+      eventId: auditId,
+      action: 'course.release.published',
+      entityType: 'courseRelease',
+      entityId: courseId,
+      revision: nextRevision,
+      releaseId,
+    }))
+    return assertFails(batch.commit())
+  }
+
+  await attempt('ai-foundations-v2')
+  await attempt('ready-course', { changeTitle: true })
+  await attempt('ready-course', { includeRelease: false })
+})
+
+test('audit events are administrator-readable and immutable', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const reference = doc(db, 'adminAudit', 'event-001')
+  await assertSucceeds(getDoc(reference))
+  await assertFails(updateDoc(reference, { action: 'course.draft.updated' }))
+  await assertFails(deleteDoc(reference))
+})
+
+test('an administrator cannot create an orphan or invented audit event', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const eventId = 'audit-orphan-course-event-0001'
+  await assertFails(setDoc(doc(db, 'adminAudit', eventId), auditEvent({
+    eventId,
+    action: 'course.draft.updated',
+    entityType: 'courseDraft',
+    entityId: 'missing-course',
+    revision: 2,
+  })))
 })
 
 test('learners cannot issue certificates', async () => {

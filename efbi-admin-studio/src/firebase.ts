@@ -1,5 +1,6 @@
 import type { FirebaseApp } from 'firebase/app'
 import type { Auth } from 'firebase/auth'
+import type { Firestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY?.trim(),
@@ -18,11 +19,14 @@ export const firebaseConfigured = [
 ].every(Boolean)
 
 type AuthSdk = typeof import('firebase/auth')
+type FirestoreSdk = typeof import('firebase/firestore')
 
 export type AdminFirebase = {
   app: FirebaseApp
   auth: Auth
   authSdk: AuthSdk
+  db: Firestore
+  firestoreSdk: FirestoreSdk
 }
 
 let servicesPromise: Promise<AdminFirebase | null> | null = null
@@ -65,7 +69,9 @@ export function getAdminFirebase() {
     const authSdk = await import('firebase/auth')
     const auth = authSdk.getAuth(app)
     await authSdk.setPersistence(auth, authSdk.browserSessionPersistence)
-    return { app, auth, authSdk }
+    const firestoreSdk = await import('firebase/firestore')
+    const db = firestoreSdk.getFirestore(app)
+    return { app, auth, authSdk, db, firestoreSdk }
   })()
 
   return servicesPromise
