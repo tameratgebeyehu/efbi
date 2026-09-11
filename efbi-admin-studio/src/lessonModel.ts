@@ -1,6 +1,6 @@
 import { validCourseId } from './courseModel'
 
-export const lessonStatusOptions = ['draft', 'ready'] as const
+export const lessonStatusOptions = ['draft', 'ready', 'published'] as const
 export type LessonStatus = typeof lessonStatusOptions[number]
 
 export type PracticeQuestion = {
@@ -33,11 +33,22 @@ export type LessonContent = Omit<LessonFormValues, 'order' | 'durationMinutes'> 
 export type LessonDraft = LessonContent & {
   status: LessonStatus
   revision: number
+  latestReleaseNumber: number
+  latestReleaseId: string
   createdAt: unknown
   createdBy: string
   updatedAt: unknown
   updatedBy: string
   lastAuditId: string
+}
+
+export type LessonRelease = LessonContent & {
+  releaseId: string
+  version: number
+  draftRevision: number
+  publishedAt: unknown
+  publishedBy: string
+  auditId: string
 }
 
 export const emptyQuestion: PracticeQuestion = {

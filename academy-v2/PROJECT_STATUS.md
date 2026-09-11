@@ -20,7 +20,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Production build and lint checks passing.
 - Frontend copy and layouts refined across all public pages.
 - Firebase web SDK, secure account forms, email-verification gate, and protected learning route added.
-- Deny-by-default Firestore rules added and now covered by 33 emulator authorization tests.
+- Deny-by-default Firestore rules added and now covered by 35 emulator authorization tests.
 - Backend data model, privacy boundaries, and Firebase Console checklist documented in BACKEND_FOUNDATION.md.
 - Ten routes tested at 390px, 768px, and 1440px with no horizontal overflow or browser runtime errors.
 - Development Firebase project `efbi-academy-dev-doha` connected.
@@ -52,6 +52,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Development-only owner role utility added with exact confirmation, verified-email checks, and no service-account key.
 - Private course-draft, review-assignment, and audit paths reserved with all browser writes locked.
 - Legacy Apps Script browser loading and default credentials removed; its handlers now return a retired response.
+- Course publishing, lesson draft editing, and immutable lesson release publishing are available only in the localhost Admin Studio with linked audit records.
 
 ## Firebase environments
 
@@ -223,14 +224,33 @@ The private lesson-management foundation is implemented and verified:
 14. App Check remains in monitoring-only mode.
 
 See `LESSON_MANAGEMENT.md`, `COURSE_MANAGEMENT.md`, and `../ADMIN_STUDIO.md` for operation and integrity rules.
+## Phase 12 status
+
+Immutable lesson release publishing is implemented and verified:
+
+1. Review-ready lesson drafts can be published from the localhost Admin Studio.
+2. Each lesson publication creates exactly one immutable `lessonReleases/{releaseId}` snapshot.
+3. Publishing advances the lesson draft by one revision and stores the latest release number and release ID.
+4. The lesson draft, release snapshot, and `lesson.release.published` audit event must be written together in one atomic batch.
+5. Firestore rules reject unready lessons, changed content during publish, skipped release numbers, missing release records, missing audit records, direct release updates, and release deletion.
+6. Verified learners may read lesson release snapshots, but the student app does not consume them yet.
+7. Thirty-five Firestore emulator authorization tests pass.
+8. Student and Admin Studio builds and lint checks pass.
+9. The tested Firestore rules were deployed only to the Doha development project.
+10. The student app still uses the version-controlled AI Foundations curriculum; Phase 12 does not change saved progress meaning.
+11. No administrator role, learner data, public Admin Studio, Hosting release, upload path, public enrollment, reviewed assessment, or certificate workflow was created in this phase.
+12. App Check remains in monitoring-only mode.
+
+See `LESSON_MANAGEMENT.md`, `COURSE_MANAGEMENT.md`, and `../ADMIN_STUDIO.md` for operation and integrity rules.
+
 ## Next implementation phase
 
-Phase 12 should define lesson release snapshots and the student catalog migration without opening public enrollment:
+Phase 13 should migrate the student catalog to backend release records without opening public enrollment:
 
-1. Add immutable lesson release records only after their schemas and emulator tests pass.
-2. Publish course releases and lesson releases together without partial state.
-3. Migrate the current AI Foundations student route from version-controlled data to release records without changing existing progress meaning.
-4. Preserve low-bandwidth written lessons and click-to-load privacy-aware video behavior.
+1. Read only tested immutable course and lesson releases from the student app.
+2. Preserve the current AI Foundations route, lesson order, progress percentages, and resume behavior.
+3. Add safe fallback behavior if a release is unavailable or incomplete.
+4. Keep low-bandwidth written lessons and click-to-load privacy-aware video behavior.
 5. Keep practice answers browser-only; do not turn them into certificate evidence.
 6. Keep reviewed assessments, submissions, uploads, certificate issuance, public enrollment, and production deployment disabled.
 

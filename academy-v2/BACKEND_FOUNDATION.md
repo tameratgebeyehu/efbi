@@ -97,13 +97,34 @@ lessonDrafts/{lessonId}
   question1
   question2
   question3
-  status                 # draft | ready
+  status                 # draft | ready | published
   revision
+  latestReleaseNumber
+  latestReleaseId
   createdAt
   createdBy
   updatedAt
   updatedBy
   lastAuditId
+
+lessonReleases/{releaseId}
+  releaseId
+  lessonId
+  courseId
+  order
+  title
+  summary
+  durationMinutes
+  videoYoutubeId
+  bodyMarkdown
+  question1
+  question2
+  question3
+  version
+  draftRevision
+  publishedAt
+  publishedBy
+  auditId
 
 reviewAssignments/{assignmentId}
   # admin/reviewer read; all browser writes still denied
@@ -111,7 +132,7 @@ reviewAssignments/{assignmentId}
 adminAudit/{eventId}
   eventId
   action                 # approved course or lesson action
-  entityType             # courseDraft | courseRelease | lessonDraft
+  entityType             # courseDraft | courseRelease | lessonDraft | lessonRelease
   entityId
   actorUid
   revision
@@ -119,7 +140,7 @@ adminAudit/{eventId}
   createdAt
 ```
 
-The student app still uses its version-controlled pilot curriculum. Course releases and lesson drafts are not public catalog records and are not yet connected to student learning routes.
+The student app still uses its version-controlled pilot curriculum. Course releases and lesson releases are tested backend publication records, but they are not yet connected to student learning routes.
 
 ## Development environment
 

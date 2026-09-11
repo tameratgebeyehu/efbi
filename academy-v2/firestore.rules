@@ -248,6 +248,8 @@ service cloud.firestore {
           'question3',
           'status',
           'revision',
+          'latestReleaseNumber',
+          'latestReleaseId',
           'createdAt',
           'createdBy',
           'updatedAt',
@@ -256,9 +258,38 @@ service cloud.firestore {
         ])
         && data.lessonId == lessonId
         && validLessonContent(data)
-        && data.status in ['draft', 'ready']
+        && data.status in ['draft', 'ready', 'published']
         && data.revision is int
         && data.revision >= 1
+        && data.latestReleaseNumber is int
+        && data.latestReleaseNumber >= 0
+        && data.latestReleaseId is string
+        && data.latestReleaseId.size() <= 120
+        && data.createdAt is timestamp
+        && data.createdBy is string
+        && data.createdBy.size() > 0
+        && data.updatedAt == request.time
+        && data.updatedBy == request.auth.uid
+        && data.lastAuditId is string
+        && data.lastAuditId.size() >= 16
+        && data.lastAuditId.size() <= 180;
+    }
+
+    function validLessonPublishDraft(data, lessonId) {
+      return data.keys().hasOnly([
+          'lessonId', 'courseId', 'order', 'title', 'summary',
+          'durationMinutes', 'videoYoutubeId', 'bodyMarkdown', 'question1',
+          'question2', 'question3', 'status', 'revision', 'latestReleaseNumber',
+          'latestReleaseId', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy',
+          'lastAuditId'
+        ])
+        && data.lessonId == lessonId
+        && data.status == 'published'
+        && data.revision is int
+        && data.latestReleaseNumber is int
+        && data.latestReleaseId is string
+        && data.latestReleaseId.size() >= 16
+        && data.latestReleaseId.size() <= 120
         && data.createdAt is timestamp
         && data.createdBy is string
         && data.createdBy.size() > 0
@@ -282,14 +313,53 @@ service cloud.firestore {
         && request.resource.data.question2 == resource.data.question2
         && request.resource.data.question3 == resource.data.question3;
     }
+    function validLessonRelease(data, releaseId) {
+      return data.keys().hasOnly([
+          'releaseId', 'lessonId', 'courseId', 'order', 'title', 'summary',
+          'durationMinutes', 'videoYoutubeId', 'bodyMarkdown', 'question1',
+          'question2', 'question3', 'version', 'draftRevision', 'publishedAt',
+          'publishedBy', 'auditId'
+        ])
+        && data.releaseId == releaseId
+        && releaseId.size() >= 16
+        && releaseId.size() <= 120
+        && data.version is int
+        && data.version >= 1
+        && data.draftRevision is int
+        && data.draftRevision >= 2
+        && data.publishedAt == request.time
+        && data.publishedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180;
+    }
+
+    function releaseMatchesPublishedLessonDraft(data, releaseId) {
+      let draft = getAfter(/databases/$(database)/documents/lessonDrafts/$(data.lessonId)).data;
+      return draft.status == 'published'
+        && draft.latestReleaseId == releaseId
+        && draft.latestReleaseNumber == data.version
+        && draft.revision == data.draftRevision
+        && draft.lastAuditId == data.auditId
+        && draft.courseId == data.courseId
+        && draft.order == data.order
+        && draft.title == data.title
+        && draft.summary == data.summary
+        && draft.durationMinutes == data.durationMinutes
+        && draft.videoYoutubeId == data.videoYoutubeId
+        && draft.bodyMarkdown == data.bodyMarkdown
+        && draft.question1 == data.question1
+        && draft.question2 == data.question2
+        && draft.question3 == data.question3;
+    }
     function validAuditEvent(data, eventId) {
       return data.keys().hasOnly([
           'eventId', 'action', 'entityType', 'entityId', 'actorUid',
           'revision', 'releaseId', 'createdAt'
         ])
         && data.eventId == eventId
-        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published', 'lesson.draft.created', 'lesson.draft.updated']
-        && data.entityType in ['courseDraft', 'courseRelease', 'lessonDraft']
+        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published', 'lesson.draft.created', 'lesson.draft.updated', 'lesson.release.published']
+        && data.entityType in ['courseDraft', 'courseRelease', 'lessonDraft', 'lessonRelease']
         && validCourseId(data.entityId)
         && data.actorUid == request.auth.uid
         && data.revision is int
@@ -389,6 +459,18 @@ service cloud.firestore {
           && lesson.revision == data.revision
           && lesson.updatedBy == request.auth.uid
           && data.releaseId == ''
+        )
+        || (
+          data.entityType == 'lessonRelease'
+          && data.action == 'lesson.release.published'
+          && lesson.status == 'published'
+          && lesson.lastAuditId == eventId
+          && lesson.revision == data.revision
+          && lesson.latestReleaseId == data.releaseId
+          && lesson.updatedBy == request.auth.uid
+          && getAfter(/databases/$(database)/documents/lessonReleases/$(data.releaseId)).data.auditId == eventId
+          && getAfter(/databases/$(database)/documents/lessonReleases/$(data.releaseId)).data.lessonId == data.entityId
+          && getAfter(/databases/$(database)/documents/lessonReleases/$(data.releaseId)).data.publishedBy == request.auth.uid
         );
     }
 
@@ -503,7 +585,7 @@ service cloud.firestore {
       }
     }
 
-    // Published releases are immutable snapshots. Phase 11 will connect the
+    // Published releases are immutable snapshots. The student catalog will use them
     // student catalog after migration and compatibility tests.
     match /courseReleases/{releaseId} {
       allow get, list: if verified();
@@ -521,14 +603,16 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Lesson drafts are private authoring records. Phase 11 keeps them out of
-    // the student catalog until migration and progress compatibility are tested.
+    // Lesson drafts are private authoring records. Published lesson snapshots are
+    // still kept out of the student route until migration is tested.
     match /lessonDrafts/{lessonId} {
       allow get, list: if admin();
       allow create: if admin()
         && validLessonDraft(request.resource.data, lessonId)
         && request.resource.data.status == 'draft'
         && request.resource.data.revision == 1
+        && request.resource.data.latestReleaseNumber == 0
+        && request.resource.data.latestReleaseId == ''
         && request.resource.data.createdAt == request.time
         && request.resource.data.createdBy == request.auth.uid
         && linkedAuditIsValid(
@@ -540,12 +624,14 @@ service cloud.firestore {
           ''
         );
       allow update: if admin()
-        && validLessonDraft(request.resource.data, lessonId)
+        && request.resource.data.status in ['draft', 'ready']
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.createdBy == resource.data.createdBy
         && request.resource.data.revision == resource.data.revision + 1
-        && request.resource.data.status in ['draft', 'ready']
+        && validLessonDraft(request.resource.data, lessonId)
         && (request.resource.data.status != resource.data.status || !sameLessonContent())
+        && request.resource.data.latestReleaseNumber == resource.data.latestReleaseNumber
+        && request.resource.data.latestReleaseId == resource.data.latestReleaseId
         && linkedAuditIsValid(
           request.resource.data.lastAuditId,
           'lesson.draft.updated',
@@ -554,7 +640,42 @@ service cloud.firestore {
           request.resource.data.revision,
           ''
         );
+      allow update: if admin()
+        && resource.data.status == 'ready'
+        && request.resource.data.status == 'published'
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.revision == resource.data.revision + 1
+        && validLessonPublishDraft(request.resource.data, lessonId)
+        && sameLessonContent()
+        && request.resource.data.latestReleaseNumber == resource.data.latestReleaseNumber + 1
+        && request.resource.data.latestReleaseId != resource.data.latestReleaseId
+        && linkedAuditIsValid(
+          request.resource.data.lastAuditId,
+          'lesson.release.published',
+          'lessonRelease',
+          lessonId,
+          request.resource.data.revision,
+          request.resource.data.latestReleaseId
+        );
       allow delete: if false;
+    }
+    // Published lesson releases are immutable snapshots. The student route will
+    // use them only after the catalog migration has its own compatibility tests.
+    match /lessonReleases/{releaseId} {
+      allow get, list: if verified();
+      allow create: if admin()
+        && validLessonRelease(request.resource.data, releaseId)
+        && linkedAuditIsValid(
+          request.resource.data.auditId,
+          'lesson.release.published',
+          'lessonRelease',
+          request.resource.data.lessonId,
+          request.resource.data.draftRevision,
+          releaseId
+        )
+        && releaseMatchesPublishedLessonDraft(request.resource.data, releaseId);
+      allow update, delete: if false;
     }
     match /reviewAssignments/{assignmentId} {
       allow get, list: if admin() || reviewer();

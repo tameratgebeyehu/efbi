@@ -188,6 +188,8 @@ function lessonRecord({ lessonId, auditId, actorUid = 'admin-user', ...overrides
     question3: disabledQuestion(),
     status: 'draft',
     revision: 1,
+    latestReleaseNumber: 0,
+    latestReleaseId: '',
     createdAt: serverTimestamp(),
     createdBy: actorUid,
     updatedAt: serverTimestamp(),
@@ -800,6 +802,166 @@ test('lesson updates reject no-ops, skipped revisions, changed ownership, and de
   await assertFails(deleteDoc(reference))
 })
 
+test('a review-ready lesson publishes as one immutable release and audit event', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const createBatch = writeBatch(db)
+  addLessonCreation(createBatch, db, 'publishable-lesson')
+  await assertSucceeds(createBatch.commit())
+
+  const reference = doc(db, 'lessonDrafts', 'publishable-lesson')
+  const currentDraft = (await getDoc(reference)).data()
+  const readyAuditId = 'audit-ready-publishable-lesson-0002'
+  const readyBatch = writeBatch(db)
+  readyBatch.update(reference, {
+    ...currentDraft,
+    status: 'ready',
+    revision: 2,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'admin-user',
+    lastAuditId: readyAuditId,
+  })
+  readyBatch.set(doc(db, 'adminAudit', readyAuditId), auditEvent({
+    eventId: readyAuditId,
+    action: 'lesson.draft.updated',
+    entityType: 'lessonDraft',
+    entityId: 'publishable-lesson',
+    revision: 2,
+  }))
+  await assertSucceeds(readyBatch.commit())
+
+  const readyDraft = (await getDoc(reference)).data()
+  const releaseId = 'release-publishable-lesson-v0001'
+  const publishAuditId = 'audit-publishable-lesson-v0001'
+  const publishRevision = readyDraft.revision + 1
+  const publishBatch = writeBatch(db)
+  publishBatch.update(reference, {
+    ...readyDraft,
+    status: 'published',
+    revision: publishRevision,
+    latestReleaseNumber: 1,
+    latestReleaseId: releaseId,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'admin-user',
+    lastAuditId: publishAuditId,
+  })
+  publishBatch.set(doc(db, 'lessonReleases', releaseId), {
+    releaseId,
+    lessonId: 'publishable-lesson',
+    courseId: readyDraft.courseId,
+    order: readyDraft.order,
+    title: readyDraft.title,
+    summary: readyDraft.summary,
+    durationMinutes: readyDraft.durationMinutes,
+    videoYoutubeId: readyDraft.videoYoutubeId,
+    bodyMarkdown: readyDraft.bodyMarkdown,
+    question1: readyDraft.question1,
+    question2: readyDraft.question2,
+    question3: readyDraft.question3,
+    version: 1,
+    draftRevision: publishRevision,
+    publishedAt: serverTimestamp(),
+    publishedBy: 'admin-user',
+    auditId: publishAuditId,
+  })
+  publishBatch.set(doc(db, 'adminAudit', publishAuditId), auditEvent({
+    eventId: publishAuditId,
+    action: 'lesson.release.published',
+    entityType: 'lessonRelease',
+    entityId: 'publishable-lesson',
+    revision: publishRevision,
+    releaseId,
+  }))
+  await assertSucceeds(publishBatch.commit())
+
+  const learner = verifiedUser('alice')
+  assert.equal((await assertSucceeds(getDoc(doc(learner, 'lessonReleases', releaseId)))).data().version, 1)
+  await assertFails(getDoc(doc(environment.unauthenticatedContext().firestore(), 'lessonReleases', releaseId)))
+  await assertFails(updateDoc(doc(db, 'lessonReleases', releaseId), { title: 'Changed later' }))
+  await assertFails(deleteDoc(doc(db, 'lessonReleases', releaseId)))
+})
+
+test('lesson publishing rejects unready, changed, incomplete, or unlinked releases', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const createBatch = writeBatch(db)
+  addLessonCreation(createBatch, db, 'blocked-publish-lesson')
+  await assertSucceeds(createBatch.commit())
+
+  async function attempt({ makeReady = false, changeTitle = false, includeRelease = true } = {}) {
+    const reference = doc(db, 'lessonDrafts', 'blocked-publish-lesson')
+    if (makeReady) {
+      const initial = (await getDoc(reference)).data()
+      const readyAuditId = 'audit-ready-blocked-publish-lesson-0002'
+      const readyBatch = writeBatch(db)
+      readyBatch.update(reference, {
+        ...initial,
+        status: 'ready',
+        revision: 2,
+        updatedAt: serverTimestamp(),
+        updatedBy: 'admin-user',
+        lastAuditId: readyAuditId,
+      })
+      readyBatch.set(doc(db, 'adminAudit', readyAuditId), auditEvent({
+        eventId: readyAuditId,
+        action: 'lesson.draft.updated',
+        entityType: 'lessonDraft',
+        entityId: 'blocked-publish-lesson',
+        revision: 2,
+      }))
+      await assertSucceeds(readyBatch.commit())
+    }
+    const current = (await getDoc(reference)).data()
+    const releaseId = `release-blocked-publish-${current.revision}`
+    const auditId = `audit-blocked-publish-${current.revision}`
+    const nextRevision = current.revision + 1
+    const nextTitle = changeTitle ? `${current.title} changed` : current.title
+    const batch = writeBatch(db)
+    batch.update(reference, {
+      ...current,
+      title: nextTitle,
+      status: 'published',
+      revision: nextRevision,
+      latestReleaseNumber: current.latestReleaseNumber + 1,
+      latestReleaseId: releaseId,
+      updatedAt: serverTimestamp(),
+      updatedBy: 'admin-user',
+      lastAuditId: auditId,
+    })
+    if (includeRelease) {
+      batch.set(doc(db, 'lessonReleases', releaseId), {
+        releaseId,
+        lessonId: 'blocked-publish-lesson',
+        courseId: current.courseId,
+        order: current.order,
+        title: nextTitle,
+        summary: current.summary,
+        durationMinutes: current.durationMinutes,
+        videoYoutubeId: current.videoYoutubeId,
+        bodyMarkdown: current.bodyMarkdown,
+        question1: current.question1,
+        question2: current.question2,
+        question3: current.question3,
+        version: current.latestReleaseNumber + 1,
+        draftRevision: nextRevision,
+        publishedAt: serverTimestamp(),
+        publishedBy: 'admin-user',
+        auditId,
+      })
+    }
+    batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+      eventId: auditId,
+      action: 'lesson.release.published',
+      entityType: 'lessonRelease',
+      entityId: 'blocked-publish-lesson',
+      revision: nextRevision,
+      releaseId,
+    }))
+    return assertFails(batch.commit())
+  }
+
+  await attempt()
+  await attempt({ makeReady: true, changeTitle: true })
+  await attempt({ includeRelease: false })
+})
 test('non-administrators cannot create lesson drafts or lesson audit events', async () => {
   for (const db of [verifiedUser('alice'), verifiedUser('reviewer-user', { reviewer: true })]) {
     const batch = writeBatch(db)

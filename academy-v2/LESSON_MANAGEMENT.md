@@ -1,14 +1,15 @@
 # EFBI lesson management
 
-Phase 11 adds private lesson draft editing inside the local Admin Studio. It prepares course content for a future catalog migration without changing the current student learning route.
+Phase 12 adds private lesson draft editing and immutable lesson release publishing inside the localhost Admin Studio. It prepares backend-managed lesson content without changing the current student learning route.
 
 ## Current boundary
 
-- Administrators can create, edit, preview, and mark lesson drafts ready.
+- Administrators can create, edit, preview, mark ready, and publish lesson drafts.
 - Lesson drafts are stored in `lessonDrafts/{lessonId}` and are private to administrators.
-- Each accepted save requires a linked immutable `adminAudit` event in the same Firestore batch.
-- Learners, reviewers, support accounts, and unauthenticated visitors cannot read or write lesson drafts.
-- No lesson draft is published to learners in this phase.
+- Published lesson snapshots are stored in `lessonReleases/{releaseId}` and cannot be changed or deleted.
+- Each accepted save or publication requires a linked immutable `adminAudit` event in the same Firestore batch.
+- Verified learners may read lesson releases, but the student app does not consume backend lesson releases yet.
+- Reviewers, support accounts, unauthenticated visitors, and learners cannot write lesson drafts or releases.
 - The current AI Foundations learner route still uses the version-controlled `src/data.ts` curriculum.
 
 ## Lesson fields
@@ -22,8 +23,8 @@ Phase 11 adds private lesson draft editing inside the local Admin Studio. It pre
 - `videoYoutubeId`: empty or an exact 11-character YouTube ID.
 - `bodyMarkdown`: written lesson text, 100-12,000 characters.
 - `question1`, `question2`, `question3`: fixed practice-question slots.
-- `status`: `draft` or `ready`.
-- `revision`, ownership, timestamps, and `lastAuditId`: managed by the Admin Studio and protected by rules.
+- `status`: `draft`, `ready`, or `published`.
+- `revision`, `latestReleaseNumber`, `latestReleaseId`, ownership, timestamps, and `lastAuditId`: managed by the Admin Studio and protected by rules.
 
 ## Practice questions
 
@@ -38,13 +39,15 @@ The student app must keep these checks browser-only. They are not assessment evi
 
 ## Publishing and migration
 
-Phase 11 does not create public lesson releases. The next phase should define immutable lesson release records, ordering rules, rollback behavior, and a migration plan from the current four hard-coded AI Foundations lessons. Existing learner progress must keep the same meaning after migration.
+A lesson can publish only after it is marked `ready` and the administrator confirms the exact preview. Publishing is one atomic Firestore batch: the lesson draft moves to `published`, the release number increases by one, a new immutable `lessonReleases` snapshot is created, and a `lesson.release.published` audit event is created.
+
+Phase 12 does not migrate the public student route. Phase 13 must prove release reading, ordering, progress compatibility, fallback behavior, and rollback safety before learners consume backend lesson releases. Existing learner progress must keep the same meaning after migration.
 
 ## Verification
 
-Phase 11 is verified when:
+Phase 12 is verified when:
 
-1. all 33 Firestore emulator authorization tests pass;
+1. all 35 Firestore emulator authorization tests pass;
 2. the student and Admin Studio builds pass;
 3. both applications lint cleanly;
 4. tested Firestore rules deploy only to `efbi-academy-dev-doha`;
