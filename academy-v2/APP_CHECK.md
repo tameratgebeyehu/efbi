@@ -50,9 +50,16 @@ On 2026-09-11, Firebase Console access was attempted twice through the approved 
 
 Authentication and Firestore enforcement remain off. The live Phase 7 REST security test also did not attach an App Check token, so its synthetic requests may appear as unverified traffic. Do not enable enforcement until the Console shows that normal hosted browser flows are verified and a rollback owner is ready.
 
+## Phase 8 monitoring review
+
+On 2026-09-11, Firebase Console access was attempted again through the approved Windows computer-control runtime. Initialization failed twice with the same `apply deny-read ACLs` sandbox error, including after a clean runtime reset. No reliable verified-versus-unverified request metrics were available.
+
+Authentication and Firestore enforcement remain off. The live Phase 8 REST test did not attach an App Check token, so its synthetic traffic may appear as unverified. Enforcement requires a later manual Console review of normal hosted browser traffic and a named rollback owner.
+
 ## Authentication email note
 
 The development project display name is EFBI Academy Development Doha, so Firebase default verification and reset subjects still identify EFBI. A direct template-branding update was rejected by Identity Toolkit with EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED. Keep the safe default templates for development and retry branding through the Firebase console when the production domain and action URL are configured.
+
 ## Cost and availability
 
 The default one-hour token lifetime limits re-attestation frequency. Review the Firebase and reCAPTCHA Enterprise quotas before public enrollment. Do not attach billing or upgrade the Firebase plan without an explicit project decision.

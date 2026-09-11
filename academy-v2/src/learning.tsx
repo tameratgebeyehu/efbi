@@ -8,7 +8,7 @@ import './learning.css'
 
 const courseId = 'ai-foundations'
 const coursePath = '/learn/ai-foundations'
-const publishedLessons = curriculum.slice(0, 3)
+const publishedLessons = curriculum.slice(0, 4)
 const publishedLessonIds = publishedLessons.map((lesson) => lesson.slug)
 const lowBandwidthPreference = 'efbi-low-bandwidth'
 const initialProgress: CourseProgress = { completedLessonIds: [], lastLessonId: '', percent: 0 }
@@ -16,6 +16,7 @@ const lessonTakeaways: Record<string, string> = {
   'understanding-ai': 'AI can help you work, but you are responsible for checking the result and protecting private information.',
   'prompting-with-purpose': 'A useful prompt is clear and specific. A useful learner still checks the answer.',
   'responsible-use': 'Protect people, verify important claims, and keep a responsible person in every high-impact decision.',
+  'build-an-ethiopian-solution': 'Start small, test with people safely, and show honest evidence of what you built and learned.',
 }
 
 function readLowBandwidthPreference() {
@@ -39,6 +40,7 @@ function getYouTubeVideoId(lessonSlug: string) {
     'understanding-ai': import.meta.env.VITE_AI_LESSON_01_YOUTUBE_ID,
     'prompting-with-purpose': import.meta.env.VITE_AI_LESSON_02_YOUTUBE_ID,
     'responsible-use': import.meta.env.VITE_AI_LESSON_03_YOUTUBE_ID,
+    'build-an-ethiopian-solution': import.meta.env.VITE_AI_LESSON_04_YOUTUBE_ID,
   }
   const value = videoIds[lessonSlug]?.trim() ?? ''
   return /^[A-Za-z0-9_-]{11}$/.test(value) ? value : ''
@@ -315,8 +317,10 @@ export function LearningPage() {
           <div className="lesson-next">
             {nextPublishedLesson ? (
               <><div><p className="eyebrow-label">Up next</p><h2>{nextPublishedLesson.title}</h2><p>{lessonComplete ? 'Continue when you are ready.' : 'Complete this lesson first.'}</p></div>{lessonComplete ? <Link className="button button--primary" to={`${coursePath}/${nextPublishedLesson.slug}`}>Open Lesson {lessonIndex + 2} <Icon name="arrow" /></Link> : <button className="button button--outline" type="button" disabled>Complete Lesson {lessonIndex + 1} first</button>}</>
-            ) : (
+            ) : upcomingLesson ? (
               <><div><p className="eyebrow-label">Coming next</p><h2>{upcomingLesson.title}</h2><p>The next lesson is being prepared.</p></div><button className="button button--outline" type="button" disabled>Coming soon</button></>
+            ) : (
+              <><div><p className="eyebrow-label">{lessonComplete ? 'Learning complete' : 'Final lesson'}</p><h2>{lessonComplete ? 'You completed all four lessons.' : 'Finish your project lesson.'}</h2><p>{lessonComplete ? 'Your 100% lesson progress is saved. The reviewed assessment and project submission are not open yet.' : 'Mark this lesson complete after you finish the project steps and reflection.'}</p></div><Link className="button button--outline" to="/certification">Certification requirements</Link></>
             )}
           </div>
         </main>

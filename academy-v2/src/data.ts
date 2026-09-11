@@ -356,11 +356,85 @@ export const curriculum: CourseLesson[] = [
     number: '04',
     slug: 'build-an-ethiopian-solution',
     title: 'Build an Ethiopian solution',
-    detail: 'Turn a local challenge into a small, documented project you can share.',
-    duration: 'Project',
-    objectives: [],
-    sections: [],
-    knowledgeCheck: [],
+    detail: 'Choose one local problem, build a small first solution, test it safely, and explain what you learned.',
+    duration: '45–90 min',
+    objectives: [
+      'Turn a real local challenge into a focused problem statement.',
+      'Build and test the smallest useful version of an idea.',
+      'Document evidence, limitations, and any meaningful AI assistance honestly.',
+    ],
+    sections: [
+      {
+        heading: 'Start with a real problem',
+        paragraphs: [
+          'Look for a repeated difficulty in your school or community. You might notice that students miss club announcements, a library cannot see which books learners need, or a study group struggles to organize revision materials.',
+          'Talk with people who experience the problem, but ask permission before taking notes or photographs. Do not collect names, phone numbers, grades, health details, or other private information unless the project truly needs them and you have a safe plan.',
+        ],
+      },
+      {
+        heading: 'Make the first goal small',
+        paragraphs: [
+          'Write one sentence that names the people, the problem, and the improvement you want. For example: “Help members of one school science club find this week’s meeting topic without asking the organizer.”',
+          'Choose a result you can observe. Five classmates finding the correct topic in under a minute is clearer than saying that the project will improve education everywhere.',
+        ],
+      },
+      {
+        heading: 'Build the smallest useful version',
+        paragraphs: [
+          'Your first version can be a paper sketch, a spreadsheet, a simple web page, or a clickable prototype. Build only what you need to test the main idea.',
+          'AI may help you brainstorm, rewrite instructions, or explain code. Check every result, remove private information from prompts, and keep notes about what the tool contributed.',
+        ],
+      },
+      {
+        heading: 'Test safely and improve',
+        paragraphs: [
+          'Ask a few intended users to try the prototype. Tell them what you are testing, let them choose whether to participate, and use sample information instead of real personal data.',
+          'Watch where people become confused. Record patterns rather than private details, choose one useful improvement, and test again.',
+        ],
+      },
+      {
+        heading: 'Show honest evidence',
+        paragraphs: [
+          'Document the problem, intended users, first version, feedback, change, and remaining limitation. A small project with clear evidence is stronger than a large claim you cannot support.',
+          'Explain what you built yourself, what help you received, and how you used AI. This reflection will prepare you for EFBI’s future reviewed assessment and project submission; finishing this lesson alone does not issue a certificate.',
+        ],
+      },
+    ],
+    knowledgeCheck: [
+      {
+        id: 'focused-local-problem',
+        prompt: 'Which is the strongest first project goal?',
+        options: [
+          'Use AI to solve every education problem in Ethiopia.',
+          'Help one school science club share its weekly meeting topic clearly.',
+          'Build a large app before speaking with any learner.',
+        ],
+        correctOption: 1,
+        explanation: 'It names a specific group and a small problem that can be tested.',
+      },
+      {
+        id: 'safe-project-test',
+        prompt: 'What is the safest way to test an early student-information prototype?',
+        options: [
+          'Use sample records and ask participants for consent.',
+          'Copy real student records so the test feels realistic.',
+          'Collect every detail now in case it becomes useful later.',
+        ],
+        correctOption: 0,
+        explanation: 'Sample data and informed participation reduce unnecessary privacy risk.',
+      },
+      {
+        id: 'honest-project-evidence',
+        prompt: 'What belongs in an honest project summary?',
+        options: [
+          'Only the final screenshot and a claim that everyone liked it.',
+          'The problem, prototype, feedback, changes, limitations, and meaningful AI help.',
+          'A list of features you hope to build someday presented as completed work.',
+        ],
+        correctOption: 1,
+        explanation: 'Clear evidence and honest limits show how the project actually developed.',
+      },
+    ],
   },
 ]
 

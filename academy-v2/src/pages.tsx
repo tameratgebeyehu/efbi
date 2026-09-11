@@ -185,9 +185,9 @@ export function CourseDetailPage() {
         <div>
           <SectionHeading eyebrow="Course outline" title="A clear path from idea to project" description="Each lesson ends with one practical step." />
           <ol className="curriculum-list">{curriculum.map((item) => <li key={item.number}><span>{item.number}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div><Icon name="chevron" /></li>)}</ol>
-          <div className="video-note"><Icon name="play" /><div><strong>The first three lessons are ready</strong><p>Verified learners can read all three lessons, check their understanding, and save 75% progress. Video slots activate when EFBI publishes each recording.</p></div></div>
+          <div className="video-note"><Icon name="play" /><div><strong>All four lessons are ready</strong><p>Verified learners can complete the pilot learning path and save 100% progress. Video slots activate when EFBI publishes each recording.</p></div></div>
         </div>
-        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>Three lessons are open in the development academy.</p><div className="progress-label"><span>Preparation</span><strong>In progress</strong></div><div className="progress-track"><i /></div><CourseAccessButton /></aside>
+        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>The four-lesson pilot is complete in the development academy.</p><div className="progress-label"><span>Learning path</span><strong>Complete</strong></div><div className="progress-track"><i /></div><CourseAccessButton /></aside>
       </section>
     </>
   )

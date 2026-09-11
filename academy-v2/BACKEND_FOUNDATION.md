@@ -33,7 +33,7 @@ users/{uid}/progress/{courseId}
   createdAt
   updatedAt
 
-Current Phase 7 validation permits only the ordered states for Lessons 1, 2, and 3 at 25%, 50%, and 75%. Every update must add exactly one lesson and 25 percentage points. Expand the rule allowlist only when another lesson is published.
+Current Phase 8 validation permits only the ordered four-lesson states at 25%, 50%, 75%, and 100%. Every update must add exactly one lesson and 25 percentage points. A 100% record is course progress only; final-assessment review and certificate issuance remain separate and denied.
 
 certificates/{credentialId}
   credentialId

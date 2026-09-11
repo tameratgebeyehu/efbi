@@ -33,7 +33,7 @@ service cloud.firestore {
     }
 
     function validProgress(data, courseId) {
-      let publishedLessonIds = ['understanding-ai', 'prompting-with-purpose', 'responsible-use'];
+      let publishedLessonIds = ['understanding-ai', 'prompting-with-purpose', 'responsible-use', 'build-an-ethiopian-solution'];
       let validFirstLesson = data.completedLessonIds == ['understanding-ai']
         && data.lastLessonId == 'understanding-ai'
         && data.percent == 25;
@@ -43,6 +43,9 @@ service cloud.firestore {
       let validThirdLesson = data.completedLessonIds == ['understanding-ai', 'prompting-with-purpose', 'responsible-use']
         && data.lastLessonId == 'responsible-use'
         && data.percent == 75;
+      let validFourthLesson = data.completedLessonIds == ['understanding-ai', 'prompting-with-purpose', 'responsible-use', 'build-an-ethiopian-solution']
+        && data.lastLessonId == 'build-an-ethiopian-solution'
+        && data.percent == 100;
       return data.keys().hasOnly([
           'courseId',
           'completedLessonIds',
@@ -55,11 +58,11 @@ service cloud.firestore {
         && data.courseId == courseId
         && data.completedLessonIds is list
         && data.completedLessonIds.size() >= 1
-        && data.completedLessonIds.size() <= 3
+        && data.completedLessonIds.size() <= 4
         && data.completedLessonIds.toSet().size() == data.completedLessonIds.size()
         && data.completedLessonIds.toSet().difference(publishedLessonIds.toSet()).size() == 0
         && data.lastLessonId in data.completedLessonIds
-        && (validFirstLesson || validSecondLesson || validThirdLesson)
+        && (validFirstLesson || validSecondLesson || validThirdLesson || validFourthLesson)
         && data.createdAt is timestamp
         && data.updatedAt == request.time;
     }

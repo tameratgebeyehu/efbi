@@ -11,8 +11,7 @@ A learner's saved completion must keep the same meaning after EFBI edits a cours
 1. `understanding-ai`
 2. `prompting-with-purpose`
 3. `responsible-use`
-
-Lesson 4 is not part of saved completion until its content, rules, and tests ship together.
+4. `build-an-ethiopian-solution`
 
 ## Changes allowed without a new identifier
 
