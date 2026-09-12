@@ -1,15 +1,15 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from './auth-context'
-import { curriculum, type CourseLesson, type KnowledgeCheckQuestion } from './data'
+import type { CourseLesson, KnowledgeCheckQuestion } from './data'
 import { Icon } from './icons'
+import { getFallbackCatalog, loadAiFoundationsCatalog, type CourseCatalog } from './lib/catalog'
 import { completeLesson, readCourseProgress, type CourseProgress } from './lib/progress'
 import './learning.css'
 
 const courseId = 'ai-foundations'
 const coursePath = '/learn/ai-foundations'
-const publishedLessons = curriculum.slice(0, 4)
-const publishedLessonIds = publishedLessons.map((lesson) => lesson.slug)
+const fallbackCatalog = getFallbackCatalog()
 const lowBandwidthPreference = 'efbi-low-bandwidth'
 const initialProgress: CourseProgress = { completedLessonIds: [], lastLessonId: '', percent: 0 }
 const lessonTakeaways: Record<string, string> = {
@@ -57,7 +57,7 @@ function progressErrorMessage(error: unknown) {
 function LessonVideo({ lesson }: { lesson: CourseLesson }) {
   const [lowBandwidth, setLowBandwidth] = useState(readLowBandwidthPreference)
   const [videoLoaded, setVideoLoaded] = useState(false)
-  const videoId = getYouTubeVideoId(lesson.slug)
+  const videoId = lesson.videoYoutubeId ?? getYouTubeVideoId(lesson.slug)
 
   function updateLowBandwidth(enabled: boolean) {
     saveLowBandwidthPreference(enabled)
@@ -156,6 +156,10 @@ function KnowledgeCheck({ questions }: { questions: KnowledgeCheckQuestion[] }) 
 export function LearningPage() {
   const { lessonSlug } = useParams()
   const { user } = useAuth()
+  const [catalog, setCatalog] = useState<CourseCatalog>(fallbackCatalog)
+  const [catalogState, setCatalogState] = useState<'loading' | 'ready'>('loading')
+  const publishedLessons = catalog.lessons
+  const publishedLessonIds = useMemo(() => publishedLessons.map((item) => item.slug), [publishedLessons])
   const requestedLesson = publishedLessons.find((lesson) => lesson.slug === lessonSlug)
   const lesson = requestedLesson ?? publishedLessons[0]
   const lessonIndex = publishedLessons.findIndex((item) => item.slug === lesson.slug)
@@ -170,8 +174,25 @@ export function LearningPage() {
   useEffect(() => {
     if (!user) return undefined
     let active = true
+    void loadAiFoundationsCatalog()
+      .then((nextCatalog) => {
+        if (!active) return
+        setCatalog(nextCatalog)
+        setCatalogState('ready')
+      })
+      .catch(() => {
+        if (!active) return
+        setCatalog(fallbackCatalog)
+        setCatalogState('ready')
+      })
+    return () => { active = false }
+  }, [user])
 
-    void readCourseProgress({ uid: user.uid, courseId, allowedLessonIds: publishedLessonIds, totalLessonCount: curriculum.length })
+  useEffect(() => {
+    if (!user) return undefined
+    let active = true
+
+    void readCourseProgress({ uid: user.uid, courseId, allowedLessonIds: publishedLessonIds, totalLessonCount: publishedLessons.length })
       .then((savedProgress) => {
         if (!active) return
         setProgress(savedProgress)
@@ -184,7 +205,7 @@ export function LearningPage() {
       })
 
     return () => { active = false }
-  }, [user])
+  }, [user, publishedLessonIds, publishedLessons.length])
 
   async function markLessonComplete() {
     if (!user || lessonComplete || progressState === 'saving') return
@@ -197,7 +218,7 @@ export function LearningPage() {
         courseId,
         lessonId: lesson.slug,
         allowedLessonIds: publishedLessonIds,
-        totalLessonCount: curriculum.length,
+        totalLessonCount: publishedLessons.length,
       })
       setProgress(savedProgress)
       setProgressState('ready')
@@ -211,7 +232,7 @@ export function LearningPage() {
     if (!user) return
     setProgressError('')
     setProgressState('loading')
-    void readCourseProgress({ uid: user.uid, courseId, allowedLessonIds: publishedLessonIds, totalLessonCount: curriculum.length })
+    void readCourseProgress({ uid: user.uid, courseId, allowedLessonIds: publishedLessonIds, totalLessonCount: publishedLessons.length })
       .then((savedProgress) => {
         setProgress(savedProgress)
         setProgressState('ready')
@@ -234,26 +255,26 @@ export function LearningPage() {
   }
 
   const completedCount = progress.completedLessonIds.length
-  const upcomingLesson = curriculum[publishedLessons.length]
 
   return (
     <section className="learning-page">
       <div className="learning-topbar">
         <div className="shell learning-topbar-inner">
           <Link to="/courses/ai-foundations">← Course outline</Link>
-          <span>Lesson {lessonIndex + 1} of {curriculum.length}</span>
+          <span>Lesson {lessonIndex + 1} of {publishedLessons.length}</span>
         </div>
       </div>
 
       <div className="shell learning-header">
         <div>
-          <p className="eyebrow-label">AI Foundations for Ethiopia</p>
+          <p className="eyebrow-label">{catalog.courseTitle}</p>
           <h1>{lesson.title}</h1>
           <p>{lesson.detail}</p>
+          <p className="catalog-source">{catalogState === 'loading' ? 'Checking EFBI lesson releases…' : catalog.statusMessage}</p>
         </div>
         <div className="learning-progress" aria-label={`Course progress: ${progress.percent} percent`}>
           <strong>{progressState === 'loading' ? '—' : `${progress.percent}%`}</strong>
-          <span>{progressState === 'loading' ? 'Checking saved progress' : `${completedCount} of ${curriculum.length} lessons complete`}</span>
+          <span>{progressState === 'loading' ? 'Checking saved progress' : `${completedCount} of ${publishedLessons.length} lessons complete`}</span>
           <div className="learning-progress-track" aria-hidden="true"><i style={{ width: `${progress.percent}%` }} /></div>
         </div>
       </div>
@@ -317,8 +338,6 @@ export function LearningPage() {
           <div className="lesson-next">
             {nextPublishedLesson ? (
               <><div><p className="eyebrow-label">Up next</p><h2>{nextPublishedLesson.title}</h2><p>{lessonComplete ? 'Continue when you are ready.' : 'Complete this lesson first.'}</p></div>{lessonComplete ? <Link className="button button--primary" to={`${coursePath}/${nextPublishedLesson.slug}`}>Open Lesson {lessonIndex + 2} <Icon name="arrow" /></Link> : <button className="button button--outline" type="button" disabled>Complete Lesson {lessonIndex + 1} first</button>}</>
-            ) : upcomingLesson ? (
-              <><div><p className="eyebrow-label">Coming next</p><h2>{upcomingLesson.title}</h2><p>The next lesson is being prepared.</p></div><button className="button button--outline" type="button" disabled>Coming soon</button></>
             ) : (
               <><div><p className="eyebrow-label">{lessonComplete ? 'Learning complete' : 'Final lesson'}</p><h2>{lessonComplete ? 'You completed all four lessons.' : 'Finish your project lesson.'}</h2><p>{lessonComplete ? 'Your 100% lesson progress is saved. The reviewed assessment and project submission are not open yet.' : 'Mark this lesson complete after you finish the project steps and reflection.'}</p></div><Link className="button button--outline" to="/certification">Certification requirements</Link></>
             )}
@@ -326,11 +345,11 @@ export function LearningPage() {
         </main>
 
         <aside className="lesson-sidebar" aria-label="Course lessons">
-          <div className="lesson-sidebar-heading"><p className="eyebrow-label">Course outline</p><h2>Four practical lessons</h2></div>
+          <div className="lesson-sidebar-heading"><p className="eyebrow-label">Course outline</p><h2>{publishedLessons.length} practical lessons</h2></div>
           <ol>
-            {curriculum.map((item, index) => {
+            {publishedLessons.map((item, index) => {
               const published = index < publishedLessons.length
-              const unlocked = index === 0 || progress.completedLessonIds.includes(curriculum[index - 1].slug)
+              const unlocked = index === 0 || progress.completedLessonIds.includes(publishedLessons[index - 1].slug)
               const completed = progress.completedLessonIds.includes(item.slug)
               const current = item.slug === lesson.slug
               return (

@@ -53,6 +53,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Private course-draft, review-assignment, and audit paths reserved with all browser writes locked.
 - Legacy Apps Script browser loading and default credentials removed; its handlers now return a retired response.
 - Course publishing, lesson draft editing, and immutable lesson release publishing are available only in the localhost Admin Studio with linked audit records.
+- Protected AI Foundations lessons can load compatible immutable backend releases with a safe fallback to the version-controlled curriculum.
 
 ## Firebase environments
 
@@ -233,7 +234,7 @@ Immutable lesson release publishing is implemented and verified:
 3. Publishing advances the lesson draft by one revision and stores the latest release number and release ID.
 4. The lesson draft, release snapshot, and `lesson.release.published` audit event must be written together in one atomic batch.
 5. Firestore rules reject unready lessons, changed content during publish, skipped release numbers, missing release records, missing audit records, direct release updates, and release deletion.
-6. Verified learners may read lesson release snapshots, but the student app does not consume them yet.
+6. Verified learners may read lesson release snapshots; Phase 12 stopped before student-route consumption.
 7. Thirty-five Firestore emulator authorization tests pass.
 8. Student and Admin Studio builds and lint checks pass.
 9. The tested Firestore rules were deployed only to the Doha development project.
@@ -243,16 +244,33 @@ Immutable lesson release publishing is implemented and verified:
 
 See `LESSON_MANAGEMENT.md`, `COURSE_MANAGEMENT.md`, and `../ADMIN_STUDIO.md` for operation and integrity rules.
 
+## Phase 13 status
+
+Protected backend release loading is implemented and verified:
+
+1. The verified AI Foundations learning route now tries to load immutable `courseReleases` and `lessonReleases` from Firestore.
+2. The migration accepts only the existing four lesson slugs, in the existing order, so saved progress keeps the same meaning.
+3. If a course release, lesson release, question, video ID, or written lesson is missing or incompatible, the learner stays on the safe version-controlled curriculum.
+4. Backend lesson video IDs can be used when valid, while the low-bandwidth and click-to-load YouTube privacy gate remains unchanged.
+5. Practice questions remain browser-only and do not create certificate evidence.
+6. Public Courses and Course Detail pages still use the built-in outline because release collections require a verified learner account.
+7. Thirty-five Firestore emulator authorization tests pass.
+8. Student build and lint checks pass.
+9. No Firestore rule deployment was required in this phase because the existing Phase 12 release-read rules already support verified learners.
+10. No administrator role, learner data, public Admin Studio, Hosting release, upload path, public enrollment, reviewed assessment, or certificate workflow was created in this phase.
+11. App Check remains in monitoring-only mode.
+
+See `LEARNING_CONTENT.md`, `LESSON_MANAGEMENT.md`, `COURSE_VERSIONING.md`, and `BACKEND_FOUNDATION.md` for content and release boundaries.
+
 ## Next implementation phase
 
-Phase 13 should migrate the student catalog to backend release records without opening public enrollment:
+Phase 14 should add an administrator-facing audit/history view without opening learner submissions or certificates:
 
-1. Read only tested immutable course and lesson releases from the student app.
-2. Preserve the current AI Foundations route, lesson order, progress percentages, and resume behavior.
-3. Add safe fallback behavior if a release is unavailable or incomplete.
-4. Keep low-bandwidth written lessons and click-to-load privacy-aware video behavior.
-5. Keep practice answers browser-only; do not turn them into certificate evidence.
-6. Keep reviewed assessments, submissions, uploads, certificate issuance, public enrollment, and production deployment disabled.
+1. Show immutable audit events in the localhost Admin Studio.
+2. Filter by course, lesson, action, actor, and release ID.
+3. Keep audit records read-only and deny browser edits or deletion.
+4. Preserve the student-app boundary; no `/admin` route or public operational data.
+5. Keep submissions, uploads, certificate issuance, public enrollment, and production deployment disabled.
 
 ## Recovery commands
 

@@ -61,3 +61,9 @@ EFBI is a free academy. Authentication protects learner accounts, progress, and 
 An unlisted YouTube video is not truly private or website-only. A determined viewer can discover or share its video ID, and YouTube controls the embedded player. If EFBI later needs strict video access control, it will need a video service with signed, expiring playback URLs; that usually requires a paid backend or paid video hosting.
 
 Never put Firebase secrets, App Check debug tokens, service-account files, student exports, or private learner data in a video environment variable or in the repository.
+
+## Phase 13 backend release boundary
+
+The protected AI Foundations learning route can now try immutable backend releases after a verified learner signs in. The route accepts only the existing four lesson slugs in the existing order, so progress records keep their meaning. If release data is missing, incomplete, or incompatible, the page keeps using the version-controlled curriculum instead of blocking learning.
+
+Public course pages still use the built-in outline because release records are readable only to verified learners. Practice questions remain browser-only review checks and are not certificate evidence.

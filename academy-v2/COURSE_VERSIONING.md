@@ -40,9 +40,7 @@ For a major course revision, create a new ID such as `ai-foundations-v2`. Do not
 7. Update curriculum data, routes, Firestore rules, tests, and documentation before exposing a new completion action.
 8. Record the release decision and Git commit in PROJECT_STATUS.md.
 
-A Phase 10 publication is an atomic Firestore batch: it advances the draft by exactly one revision, creates the next immutable `courseReleases` snapshot, and creates a linked immutable `adminAudit` event. A partial publication is rejected.
-
-The published release currently records course-level metadata only. It does not publish lessons or change the student catalog; that migration belongs to Phase 11.
+A Phase 10 course publication is an atomic Firestore batch: it advances the draft by exactly one revision, creates the next immutable `courseReleases` snapshot, and creates a linked immutable `adminAudit` event. A partial publication is rejected.`r`n`r`nA Phase 12 lesson publication uses the same safety rule: it advances the lesson draft by exactly one revision, creates the next immutable `lessonReleases` snapshot, and creates a linked immutable `adminAudit` event.`r`n`r`nPhase 13 lets the protected AI Foundations route read compatible release snapshots, but only when they preserve the existing four lesson slugs and order. Incompatible or incomplete backend releases fall back to the version-controlled curriculum, so saved progress is not reinterpreted silently.
 
 ## Certificate boundary
 

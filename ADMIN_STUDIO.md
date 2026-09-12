@@ -2,9 +2,9 @@
 
 The EFBI Admin Studio is a separate, local-only application for trusted operators. It is not a route in the student website and must never be deployed to Firebase Hosting, GitHub Pages, or another public host.
 
-## Current Phase 12 boundary
+## Current Phase 13 boundary
 
-Phase 12 keeps course publishing available and adds immutable lesson releases for administrator-managed lesson drafts. Practice questions remain browser-only learning checks, not assessment evidence.
+Phase 13 keeps course and lesson publishing available in the localhost Admin Studio, while the protected AI Foundations route can read compatible release snapshots. Practice questions remain browser-only learning checks, not assessment evidence.
 
 - the server binds to `127.0.0.1` on port `5174`;
 - the interface blocks non-local hostnames;
@@ -52,7 +52,7 @@ npm run manage:roles -- set --email "owner@example.com" --role admin --value tru
 
 6. Sign out and sign in again so Firebase issues a fresh ID token.
 
-No role has been granted as part of Phases 9, 10, 11, or 12. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
+No role has been granted as part of Phases 9, 10, 11, 12, or 13. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
 
 ## Remove access
 
@@ -106,6 +106,6 @@ Lesson drafts stay private to administrators. They are not connected to the stud
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 13 gate
+## Phase 14 gate
 
-Phase 13 may migrate the student catalog to backend course and lesson releases only after emulator tests prove release consumption, ordering, progress compatibility, fallback behavior, and rollback safety. Public enrollment, project submissions, file uploads, reviewed assessments, and certificate issuance remain outside that phase.
+Phase 14 may add an administrator-facing audit/history view only if it remains read-only, local-only, and covered by existing immutable audit rules. Public enrollment, project submissions, file uploads, reviewed assessments, and certificate issuance remain outside that phase.

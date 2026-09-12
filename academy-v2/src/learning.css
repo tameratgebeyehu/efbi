@@ -129,3 +129,4 @@
   .lesson-next { align-items: flex-start; flex-direction: column; }
   .lesson-next .button { width: 100%; }
 }
+.catalog-source { max-width: 620px; margin-top: 12px; color: #486154; font-size: .84rem; font-weight: 750; }

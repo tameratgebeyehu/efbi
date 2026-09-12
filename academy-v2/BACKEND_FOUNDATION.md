@@ -140,7 +140,7 @@ adminAudit/{eventId}
   createdAt
 ```
 
-The student app still uses its version-controlled pilot curriculum. Course releases and lesson releases are tested backend publication records, but they are not yet connected to student learning routes.
+The public course pages still use the version-controlled pilot outline. The protected AI Foundations learning route can read compatible course and lesson releases after sign-in, but falls back to the version-controlled curriculum if release data is missing or incompatible.
 
 ## Development environment
 

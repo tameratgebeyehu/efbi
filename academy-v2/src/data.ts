@@ -150,6 +150,7 @@ export type CourseLesson = {
   title: string
   detail: string
   duration: string
+  videoYoutubeId?: string
   objectives: string[]
   sections: Array<{ heading: string; paragraphs: string[] }>
   knowledgeCheck: KnowledgeCheckQuestion[]

@@ -8,9 +8,9 @@ Phase 12 adds private lesson draft editing and immutable lesson release publishi
 - Lesson drafts are stored in `lessonDrafts/{lessonId}` and are private to administrators.
 - Published lesson snapshots are stored in `lessonReleases/{releaseId}` and cannot be changed or deleted.
 - Each accepted save or publication requires a linked immutable `adminAudit` event in the same Firestore batch.
-- Verified learners may read lesson releases, but the student app does not consume backend lesson releases yet.
+- Verified learners may read lesson releases, and the protected AI Foundations route can consume compatible releases with a safe fallback.
 - Reviewers, support accounts, unauthenticated visitors, and learners cannot write lesson drafts or releases.
-- The current AI Foundations learner route still uses the version-controlled `src/data.ts` curriculum.
+- The public course outline still uses the version-controlled `src/data.ts` curriculum. The protected learning route falls back to that same data if backend releases are missing or incompatible.
 
 ## Lesson fields
 
@@ -41,7 +41,7 @@ The student app must keep these checks browser-only. They are not assessment evi
 
 A lesson can publish only after it is marked `ready` and the administrator confirms the exact preview. Publishing is one atomic Firestore batch: the lesson draft moves to `published`, the release number increases by one, a new immutable `lessonReleases` snapshot is created, and a `lesson.release.published` audit event is created.
 
-Phase 12 does not migrate the public student route. Phase 13 must prove release reading, ordering, progress compatibility, fallback behavior, and rollback safety before learners consume backend lesson releases. Existing learner progress must keep the same meaning after migration.
+Phase 13 connects only the protected learning route. It accepts backend releases only when they preserve the current four lesson slugs and order. Existing learner progress keeps the same meaning, and incomplete backend releases fall back to the version-controlled curriculum.
 
 ## Verification
 
