@@ -393,18 +393,18 @@ Owner decision intake is recorded; implementation and external review remain in 
 
 1. Tamerat Gebeyehu, CEO and Founder, is recorded as the accountable EFBI owner.
 2. `efbi.academy@gmail.com` is recorded as the privacy and deletion contact.
-3. EFBI intends to serve learners under 16 and learners aged 16 or older.
-4. The official proclamation's under-16 boundary and guardian-authorization requirements are documented in `PRIVACY_DECISIONS.md`.
+3. EFBI is currently an unregistered educational initiative and intends to serve learners aged 12 and older across scholarships, applications, technology, AI, and other practical subjects.
+4. The minimum age is 12. The official proclamation's under-16 boundary and guardian-authorization requirements for ages 12–15 are documented in `PRIVACY_DECISIONS.md`.
 5. A plain-language learner notice exists as `PRIVACY_NOTICE_DRAFT.md`, clearly marked unapproved and not for publication.
 6. `PRIVACY_REVIEW_WORKSHEET.md` maps all eleven gates to owner, technical, and external-review actions and required evidence.
 7. `DPIA_DRAFT.md` documents the current data flow, necessity assessment, eleven initial risks, existing safeguards, required mitigations, and a high launch-blocking residual-risk conclusion.
-8. Ordinary under-16 self-registration and all public enrollment remain blocked.
+8. Ordinary self-registration for ages 12–15 and all public enrollment remain blocked.
 
 ## Remaining Phase 21 work
 
 Phase 21 should close the remaining owner-supplied and external-review gates before any launch work:
 
-1. Confirm the recorded accountable owner (Tamerat Gebeyehu, CEO and Founder), privacy contact (efbi.academy@gmail.com), under-16 and 16+ audience decision, final legal controller capacity, and a named safeguarding contact.
+1. Confirm the final legal-controller wording for the unregistered initiative and decide whether Tamerat will serve as the first safeguarding contact; choose a trusted backup before accounts open for ages 12–15.
 2. Obtain real Ethiopian privacy/legal and safeguarding review and complete the approval record without inventing sign-off.
 3. Produce the final learner privacy notice and age-appropriate consent flow from those approved decisions.
 4. Manually review App Check metrics for Firestore and Authentication, name a rollback owner, and test development Firestore enforcement only if the evidence supports it.

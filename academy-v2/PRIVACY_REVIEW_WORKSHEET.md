@@ -10,11 +10,10 @@ Already supplied:
 
 - Accountable owner: Tamerat Gebeyehu, CEO and Founder
 - Initiative: EFBI Academy
+- Current legal status: unregistered educational initiative operated by Tamerat Gebeyehu
 
 Owner must still supply:
 
-- whether EFBI is registered; if so, its exact legal name, registration type, and business address;
-- if it is not registered, a truthful statement that Tamerat operates the initiative personally;
 - a reliable physical or postal contact address if required for the final notice;
 - who acts as data-protection contact and who covers absences.
 
@@ -51,11 +50,11 @@ Evidence to keep: one approved processing inventory mapping data, purpose, perso
 
 Already supplied:
 
-- EFBI intends to serve learners under 16 and learners aged 16 or older.
+- EFBI intends to serve learners aged 12–15 and learners aged 16 or older.
+- The minimum enrollment age is 12.
 
 Owner must still decide:
 
-- the minimum practical enrollment age;
 - who may act as parent, guardian, or tutor;
 - how EFBI will make reasonable checks without collecting excessive identity documents;
 - how authorization is withdrawn and what happens to the learner account;
@@ -125,11 +124,10 @@ Evidence to keep: versioned DPIA, risk decisions, reviewer comments, owner accep
 
 ## What Tamerat needs to do next
 
-1. State whether EFBI is currently a registered legal organization or an unregistered initiative.
-2. Choose the minimum learner age.
-3. Name the safeguarding contact and a backup person.
-4. Identify a privacy/legal reviewer familiar with Ethiopian data protection and a child-safeguarding reviewer.
-5. Give both reviewers the evidence package listed in `PREPRODUCTION_PRIVACY_GATE.md` and ask for written findings, required changes, name, role, date, and conditions—not only “approved.”
+1. Decide whether Tamerat will be the first safeguarding contact for the pilot. This simply means receiving and responding to serious learner-safety reports.
+2. Before accounts open for ages 12–15, choose one trusted adult as backup when the first contact is unavailable.
+3. Continue development now; finding reviewers is a later pre-launch task, not something that must stop the current build.
+4. Near launch, give reviewers the evidence package in `PREPRODUCTION_PRIVACY_GATE.md` and request written findings and required changes.
 
 Everything else can be drafted and tested before those reviews, but public enrollment must remain off until blocking findings are closed.
 

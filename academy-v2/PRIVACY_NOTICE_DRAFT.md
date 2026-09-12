@@ -6,7 +6,7 @@ This plain-language draft records what the current EFBI Academy development syst
 
 ## Who is responsible
 
-EFBI Academy is led by **Tamerat Gebeyehu, CEO and Founder**. Questions about personal information or deletion requests can be sent to **efbi.academy@gmail.com**.
+EFBI Academy is currently an unregistered, free educational initiative led by **Tamerat Gebeyehu, CEO and Founder**. Questions about personal information or deletion requests can be sent to **efbi.academy@gmail.com**.
 
 The review must confirm the final legal name and capacity of the person or organization acting as data controller.
 
@@ -31,7 +31,7 @@ The final notice must list the reviewed lawful basis for each purpose before thi
 
 ## Learners under 16
 
-EFBI intends to support learners under 16 and learners aged 16 or older. Ordinary self-registration will not be available to someone under 16. A parent, guardian, or tutor must complete the reviewed authorization process before EFBI creates the learner account.
+EFBI intends to support learners aged 12 and older. Learners aged 16 or older may eventually self-register after the privacy launch gate is approved. A learner aged 12–15 must use the reviewed parent, guardian, or tutor authorization process before EFBI creates the account. Children under 12 are outside the intended enrollment audience.
 
 EFBI will not use a minor's information for marketing, profiling, or combining advertising profiles. The final process must explain how EFBI verifies age and guardian authorization, how authorization can be withdrawn, and how a child or guardian can ask for help.
 

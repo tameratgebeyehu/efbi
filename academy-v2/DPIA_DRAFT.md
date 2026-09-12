@@ -6,16 +6,17 @@ Version: `efbi-dpia-draft-v1`
 Prepared: 2026-09-12
 Accountable owner: Tamerat Gebeyehu, CEO and Founder
 Privacy contact: efbi.academy@gmail.com
+Legal status: unregistered educational initiative operated by Tamerat Gebeyehu
 
 ## Scope and purpose
 
-This assessment covers the planned EFBI Academy learner website, Firebase Authentication, Cloud Firestore, the localhost-only Admin Studio, YouTube lesson embeds, project evidence links, reviews, certificate verification, audit records, and deletion workflow.
+This assessment covers the planned EFBI Academy learner website and its broad free curriculum, Firebase Authentication, Cloud Firestore, the localhost-only Admin Studio, YouTube lesson embeds, project evidence links, reviews, certificate verification, audit records, and deletion workflow.
 
-It does not approve public enrollment, production deployment, file uploads, paid automation, or ordinary self-registration for learners under 16.
+It does not approve public enrollment, production deployment, file uploads, paid automation, or ordinary self-registration for learners aged 12–15.
 
 ## People and information
 
-People include prospective learners, learners under 16, learners aged 16 or older, parents/guardians/tutors, reviewers, administrators, and people verifying a certificate.
+People include prospective learners, learners aged 12–15, learners aged 16 or older, parents/guardians/tutors, reviewers, administrators, and people verifying a certificate.
 
 Current or planned information includes account name and email; age band and guardian authorization evidence after approval; progress; project text and HTTPS evidence links; review results and private concern notes; public certificate name and status; role, security, consent, audit, retention, and deletion records.
 
@@ -46,10 +47,10 @@ The reviewer must confirm each conclusion and the lawful basis; this draft does 
 
 ## Preliminary risk register
 
-### Risk 1 — under-16 account created without valid authorization
+### Risk 1 — account for a learner aged 12–15 created without valid authorization
 
 Potential harm: unlawful processing, loss of control, unsafe contact, or disclosure affecting a child.
-Current control: public enrollment is off; planned ordinary under-16 self-registration is blocked.
+Current control: public enrollment is off; children under 12 are outside the intended audience; planned ordinary self-registration for ages 12–15 is blocked.
 Required action: approve reasonable age and guardian checks, versioned authorization evidence, withdrawal, and safeguarding escalation.
 Residual status: high and launch-blocking.
 
@@ -79,7 +80,7 @@ Residual status: medium.
 Potential harm: unwanted discoverability, especially for a child.
 Current control: separate public-name choice; exact credential-ID lookup; minimized public fields; projects, scores, email, UID, and reviewer details remain private.
 Required action: approve withdrawal/correction handling, under-16 authorization, retention, and clear preview before publication.
-Residual status: high for under-16 learners; medium for others.
+Residual status: high for learners aged 12–15; medium for others.
 
 ### Risk 6 — administrator or reviewer account compromise
 
@@ -125,7 +126,7 @@ Residual status: medium-high.
 
 ## Overall preliminary conclusion
 
-The current development controls materially reduce risk, but residual risk remains **high and launch-blocking** because EFBI plans to serve learners under 16, uses providers that may process data outside Ethiopia, has not approved the guardian-verification method, and has not named safeguarding/incident backups or completed external review.
+The current development controls materially reduce risk, but residual risk remains **high and launch-blocking** because EFBI plans to create accounts for learners aged 12–15, uses providers that may process data outside Ethiopia, has not approved the guardian-verification method, and has not named safeguarding/incident backups or completed external review.
 
 This is an honest development conclusion, not a failure. The system should remain closed to public enrollment while the required actions are completed.
 
