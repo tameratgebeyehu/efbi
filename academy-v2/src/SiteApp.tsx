@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './Layout'
-import { AccountPage, AuthProvider, JoinPage, RequireVerifiedUser, SignInPage } from './auth'
+import { AccountPage, AuthProvider, JoinPage, OwnerSetupPage, RequireVerifiedUser, SignInPage } from './auth'
 import { LearningPage } from './learning'
 import { SubmissionPage } from './submission'
 import { VerifyPage } from './verification'
@@ -36,6 +36,7 @@ export default function SiteApp() {
           <Route path="contact" element={<ContactPage />} />
           <Route path="join" element={<JoinPage />} />
           <Route path="signin" element={<SignInPage />} />
+          <Route path="owner-setup" element={<OwnerSetupPage />} />
           <Route path="account" element={<AccountPage />} />
           <Route path="learn/ai-foundations" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />
           <Route path="learn/ai-foundations/:lessonSlug" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />

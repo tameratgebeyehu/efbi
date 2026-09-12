@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Icon } from './icons'
 import { AccountActions } from './auth'
+import { publicPreview } from './site-mode'
 import './refinement.css'
 
 const navigation = [
@@ -36,6 +37,7 @@ export function Layout() {
     <div className="site-shell">
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <div className="national-accent" aria-hidden="true"><span /><span /><span /></div>
+      {publicPreview && <div className="preview-banner"><span><Icon name="shield" /> Read-only academy preview</span><p>Explore the new EFBI website. Student enrollment and sign-in remain closed.</p></div>}
 
       <header className="site-header">
         <div className="header-inner">

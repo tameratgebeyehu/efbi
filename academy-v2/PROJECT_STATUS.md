@@ -411,9 +411,30 @@ Phase 21 should close the remaining owner-supplied and external-review gates bef
 5. Run browser accessibility and responsive QA for every learner privacy state and administrator queue state.
 6. Keep automatic retention, billing, file uploads, public enrollment, production deployment, and the Admin Studio off public Hosting until separately approved.
 
+## Phase 22 status
+
+The technical safe-preview boundary is complete; owner account activation is still pending:
+
+1. Public builds now default to read-only preview mode.
+2. The preview visibly closes join, sign-in, account, and protected learning routes.
+3. The preview build uses an isolated environment directory and contains none of the local Firebase project or App Check values.
+4. Local testing has a dedicated owner-only setup route for `efbi.academy@gmail.com`; it creates no learner profile and opens no enrollment.
+5. Learner profile creation now requires a public enrollment setting that fails closed when missing.
+6. Only a verified administrator can change the server enrollment setting.
+7. Admin Studio has a separate Enrollment workspace with typed confirmation before opening.
+8. Learner and Admin Studio lint and preview/production builds pass.
+9. Seventy-three Firestore authorization and lifecycle tests pass.
+10. The Phase 22 development preview responds successfully on all primary routes.
+11. The real owner Authentication account, email verification, admin role grant, and Admin Studio sign-in still require the owner’s private password action.
+12. No custom-domain change or public enrollment was performed.
+
+See `SAFE_PREVIEW.md` and `LAUNCH_ROADMAP.md`.
+
+
 ## Recovery commands
 
 From this directory:
+
 
 ```powershell
 git status

@@ -8,6 +8,7 @@ import LessonManager from './LessonManager'
 import AuditLog from './AuditLog'
 import ReviewManager, { type StudioRole } from './ReviewManager'
 import RetentionManager from './RetentionManager'
+import EnrollmentManager from './EnrollmentManager'
 
 type AccessState = 'loading' | 'signed-out' | 'denied' | 'admin' | 'reviewer' | 'error'
 
@@ -53,13 +54,14 @@ function SignIn({ onError }: { onError: (message: string) => void }) {
 }
 
 function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; signOut: () => Promise<void> }) {
-  const [section, setSection] = useState<'overview' | 'courses' | 'lessons' | 'reviews' | 'certificates' | 'audit' | 'retention'>(role === 'reviewer' ? 'reviews' : 'overview')
+  const [section, setSection] = useState<'overview' | 'enrollment' | 'courses' | 'lessons' | 'reviews' | 'certificates' | 'audit' | 'retention'>(role === 'reviewer' ? 'reviews' : 'overview')
   const areas = [
     { number: '01', title: 'Courses', detail: 'Create, review, preview, and publish versioned course records.', status: 'Available' },
     { number: '02', title: 'Lessons & questions', detail: 'Draft lessons and browser-only practice checks with audited saves.', status: 'Available' },
     { number: '03', title: 'Reviews & assignments', detail: 'Assign immutable submissions and give reviewers narrow read access.', status: 'Available' },
     { number: '04', title: 'Certificates', detail: 'Issue, revoke, or replace a credential through atomic audited actions.', status: 'Available' },
     { number: '05', title: 'Audit history', detail: 'Read the immutable history of course and lesson operations.', status: 'Available' },
+    { number: '07', title: 'Enrollment', detail: 'Keep learner profile creation closed until the public launch gates are approved.', status: 'Closed by default' },
     { number: '06', title: 'Privacy & retention', detail: 'Process deletion requests with documented holds and protected credential evidence.', status: 'Available' },
   ]
 
@@ -69,6 +71,7 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
         <div className="brand brand--light"><img src="/efbi-icon.png" alt="" /><span>EFBI</span><small>ADMIN STUDIO</small></div>
         <nav aria-label="Studio sections">
           {role === 'admin' && <button className={section === 'overview' ? 'active' : ''} onClick={() => setSection('overview')}>Overview</button>}
+          {role === 'admin' && <button className={section === 'enrollment' ? 'active' : ''} onClick={() => setSection('enrollment')}>Enrollment</button>}
           {role === 'admin' && <button className={section === 'courses' ? 'active' : ''} onClick={() => setSection('courses')}>Courses</button>}
           {role === 'admin' && <button className={section === 'lessons' ? 'active' : ''} onClick={() => setSection('lessons')}>Lessons</button>}
           <button className={section === 'reviews' ? 'active' : ''} onClick={() => setSection('reviews')}>Reviews</button>
@@ -79,15 +82,15 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
         <div className="operator"><small>{role === 'admin' ? 'Verified administrator' : 'Verified reviewer'}</small><strong>{user.email}</strong><button onClick={() => void signOut()}>Sign out</button></div>
       </aside>
       <main className="workspace">
-        {section === 'courses' && role === 'admin' ? <CourseManager user={user} /> : section === 'lessons' && role === 'admin' ? <LessonManager user={user} /> : section === 'reviews' ? <ReviewManager user={user} role={role} /> : section === 'certificates' && role === 'admin' ? <CertificateManager user={user} /> : section === 'audit' && role === 'admin' ? <AuditLog /> : section === 'retention' && role === 'admin' ? <RetentionManager user={user} /> : <>
-        <header><div><p className="eyebrow">Phase 20 workspace</p><h1>Good morning, builder.</h1><p>Course, review, certificate, and learner privacy operations are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
+        {section === 'enrollment' && role === 'admin' ? <EnrollmentManager user={user} /> : section === 'courses' && role === 'admin' ? <CourseManager user={user} /> : section === 'lessons' && role === 'admin' ? <LessonManager user={user} /> : section === 'reviews' ? <ReviewManager user={user} role={role} /> : section === 'certificates' && role === 'admin' ? <CertificateManager user={user} /> : section === 'audit' && role === 'admin' ? <AuditLog /> : section === 'retention' && role === 'admin' ? <RetentionManager user={user} /> : <>
+        <header><div><p className="eyebrow">Phase 22 workspace</p><h1>Good morning, builder.</h1><p>Content, review, privacy, and launch controls are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
         <section className="safety-grid" aria-label="Security status">
           <article><small>Network</small><strong>Localhost only</strong><p>Not published with the student website.</p></article>
           <article><small>Session</small><strong>Browser session</strong><p>No shared admin password or permanent browser role.</p></article>
           <article><small>Privacy</small><strong>Controlled deletion</strong><p>Learner requests are restricted, reviewed, and permanently recorded.</p></article>
         </section>
         <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Control areas</p><h2>Built in secure stages</h2></div><p>Only tested workflows are enabled. Later operations remain visibly locked.</p></div><div className="area-grid">{areas.map((area) => <article key={area.number}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>{area.status}</small></article>)}</div></section>
-        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Privacy requests now have an operations queue</h2><p>Internal targets, hold reviews, and Authentication cleanup are visible without weakening certificate evidence.</p></div><span className="next-step__badge">Phase 20 active</span></section>
+        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Public preview, private administration</h2><p>The preview can go online without account configuration while enrollment remains protected by a separate server switch.</p></div><span className="next-step__badge">Phase 22 active</span></section>
         </>}
       </main>
     </div>

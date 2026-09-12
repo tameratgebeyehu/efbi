@@ -5,10 +5,13 @@ import { DeletionRequestPanel } from './deletion-request'
 import { Icon } from './icons'
 import { firebaseConfigured, getFirebaseFirestore, getFirebaseServices } from './lib/firebase'
 import { AuthContext, useAuth, type AuthContextValue } from './auth-context'
+import { accountAccessEnabled, learnerEnrollmentEnabled, ownerSetupEnabled, publicPreview } from './site-mode'
 import './auth.css'
 
+const ownerEmail = 'efbi.academy@gmail.com'
 
 async function requireFirebase() {
+  if (!accountAccessEnabled) throw new Error('Student accounts are closed on this preview.')
   const services = await getFirebaseServices()
   if (!services) {
     throw new Error('Student accounts are not connected yet.')
@@ -16,15 +19,25 @@ async function requireFirebase() {
   return services
 }
 
+async function requireOpenEnrollment() {
+  if (!learnerEnrollmentEnabled) throw new Error('Enrollment is closed.')
+  const services = await getFirebaseFirestore()
+  if (!services) throw new Error('Enrollment could not be checked safely.')
+  const snapshot = await services.firestoreSdk.getDoc(services.firestoreSdk.doc(services.db, 'publicSettings', 'enrollment'))
+  if (!snapshot.exists() || snapshot.data().open !== true) {
+    throw new Error('Enrollment is closed. Please check again later.')
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(firebaseConfigured)
+  const [loading, setLoading] = useState(accountAccessEnabled && firebaseConfigured)
 
   useEffect(() => {
     let active = true
     let unsubscribe = () => {}
 
-    if (!firebaseConfigured) return undefined
+    if (!accountAccessEnabled || !firebaseConfigured) return undefined
 
     void getFirebaseServices()
       .then((services) => {
@@ -49,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     loading,
     async signUp(name, email, password) {
+      await requireOpenEnrollment()
       const { auth, authSdk } = await requireFirebase()
       const credential = await authSdk.createUserWithEmailAndPassword(auth, email.trim(), password)
       const displayName = name.trim()
@@ -123,6 +137,19 @@ function AccessFrame({ children }: { children: ReactNode }) {
   )
 }
 
+function ClosedAccess({ kind }: { kind: 'join' | 'signin' | 'account' }) {
+  const heading = kind === 'join' ? 'Enrollment is closed for now.' : kind === 'signin' ? 'Student sign-in is not available in this preview.' : 'Student accounts are not available in this preview.'
+  return (
+    <AccessFrame>
+      <p className="eyebrow-label">{publicPreview ? 'Read-only preview' : 'Private testing'}</p>
+      <h1>{heading}</h1>
+      <p>You can explore EFBI’s programs, courses, certificates, and public pages without creating an account.</p>
+      <div className="account-message account-message--setup"><Icon name="shield" /><div><strong>No student data is collected here.</strong><p>EFBI will announce when the reviewed enrollment process is ready.</p></div></div>
+      <div className="access-actions"><Link className="button button--primary" to="/courses">Explore courses</Link><Link className="button button--outline" to="/contact">Contact EFBI</Link></div>
+    </AccessFrame>
+  )
+}
+
 export function JoinPage() {
   const { user, signUp } = useAuth()
   const navigate = useNavigate()
@@ -133,6 +160,7 @@ export function JoinPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  if (!learnerEnrollmentEnabled) return <ClosedAccess kind="join" />
   if (user && !submitting) return <Navigate to="/account" replace />
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -182,6 +210,7 @@ export function SignInPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  if (!accountAccessEnabled) return <ClosedAccess kind="signin" />
   if (user) return <Navigate to={safeReturnTo(searchParams.get('returnTo'))} replace />
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -231,10 +260,48 @@ export function SignInPage() {
   )
 }
 
+export function OwnerSetupPage() {
+  const { user, resendVerification, signOut } = useAuth()
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [status, setStatus] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  if (!ownerSetupEnabled) return <Navigate to="/" replace />
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    setStatus('')
+    if (password.length < 12) return setError('Use a unique password with at least 12 characters.')
+    if (password !== confirmPassword) return setError('The passwords do not match.')
+    setSubmitting(true)
+    try {
+      const { auth, authSdk } = await requireFirebase()
+      const credential = await authSdk.createUserWithEmailAndPassword(auth, ownerEmail, password)
+      await authSdk.updateProfile(credential.user, { displayName: 'Tamerat Gebeyehu' })
+      await authSdk.sendEmailVerification(credential.user)
+      setPassword('')
+      setConfirmPassword('')
+      setStatus('Owner sign-in created. Open Gmail and use the verification link.')
+    } catch (cause) {
+      setError(friendlyAuthError(cause))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (user) return <AccessFrame><p className="eyebrow-label">Local owner setup</p><h1>{user.emailVerified ? 'Owner email verified.' : 'Check your Gmail.'}</h1><p>{user.email}</p><div className={user.emailVerified ? 'account-message account-message--success' : 'account-message account-message--warning'}><Icon name={user.emailVerified ? 'check' : 'mail'} /><div><strong>{user.emailVerified ? 'Ready for administrator permission' : 'Verification required'}</strong><p>{user.emailVerified ? 'Tell Codex the owner account is verified so the server-issued admin role can be granted.' : 'Use the link sent to Gmail, then reload this page.'}</p></div></div><div className="access-actions">{!user.emailVerified && <button className="button button--primary" onClick={() => void resendVerification()}>Send verification again</button>}<button className="button button--outline" onClick={() => void signOut()}>Sign out</button></div></AccessFrame>
+
+  return <AccessFrame><p className="eyebrow-label">Local owner setup</p><h1>Create the EFBI owner sign-in.</h1><p>This page works only on your computer. It creates the sign-in for <strong>{ownerEmail}</strong> without opening student enrollment.</p><form className="account-form" onSubmit={submit}><label>New EFBI password<input type="password" autoComplete="new-password" minLength={12} value={password} onChange={(event) => setPassword(event.target.value)} required /><small>Use at least 12 characters and do not reuse your Gmail password.</small></label><label>Confirm password<input type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required /></label>{error && <p className="form-status form-status--error" role="alert">{error}</p>}{status && <p className="form-status form-status--success" role="status">{status}</p>}<button className="button button--primary" disabled={submitting}>{submitting ? 'Creating owner sign-in…' : 'Create owner sign-in'}</button></form></AccessFrame>
+}
+
 export function AccountPage() {
   const { user, loading, resendVerification, signOut } = useAuth()
   const [status, setStatus] = useState('')
 
+  if (!accountAccessEnabled) return <ClosedAccess kind="account" />
   if (!firebaseConfigured) return <AccessFrame><p className="eyebrow-label">Student account</p><h1>Account setup is almost ready.</h1><SetupMessage /><Link className="button button--outline" to="/courses">Back to courses</Link></AccessFrame>
   if (loading) return <AccessFrame><p className="eyebrow-label">Student account</p><h1>Loading your account…</h1></AccessFrame>
   if (!user) return <Navigate to="/signin" replace />
@@ -262,6 +329,7 @@ export function AccountPage() {
 export function RequireVerifiedUser({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
   const location = useLocation()
+  if (!accountAccessEnabled) return <Navigate to="/signin" replace />
   if (!firebaseConfigured) return <Navigate to="/signin" replace />
   if (loading) return <AccessFrame><p className="eyebrow-label">Student access</p><h1>Checking your account…</h1></AccessFrame>
   if (!user) return <Navigate to={`/signin?returnTo=${encodeURIComponent(location.pathname)}`} replace />
@@ -271,6 +339,7 @@ export function RequireVerifiedUser({ children }: { children: ReactNode }) {
 
 export function CourseAccessButton() {
   const { user } = useAuth()
+  if (!learnerEnrollmentEnabled) return <Link className="button button--primary" to="/join">Enrollment updates</Link>
   const destination = user?.emailVerified ? '/learn/ai-foundations' : user ? '/account' : '/signin?returnTo=%2Flearn%2Fai-foundations'
   return <Link className="button button--primary" to={destination}>{user?.emailVerified ? 'Continue course' : 'Start course'}</Link>
 }
@@ -278,6 +347,7 @@ export function CourseAccessButton() {
 export function AccountActions({ mobile = false, onNavigate }: { mobile?: boolean; onNavigate?: () => void }) {
   const { user, loading, signOut } = useAuth()
   const className = mobile ? 'mobile-nav-actions' : 'account-actions'
+  if (!accountAccessEnabled) return <div className={className}><Link className="button button--ghost button--compact" to="/courses" onClick={onNavigate}>Preview courses</Link></div>
   if (loading) return <div className={className} aria-hidden="true" />
   if (!user) return <div className={className}><Link className="button button--ghost" to="/signin" onClick={onNavigate}>Sign in</Link><Link className="button button--primary button--compact" to="/join" onClick={onNavigate}>Join Academy</Link></div>
   return <div className={className}><Link className="signin-link" to="/account" onClick={onNavigate}>{user.emailVerified ? 'My account' : 'Verify email'}</Link><button className="button button--outline button--compact" type="button" onClick={() => { onNavigate?.(); void signOut() }}>Sign out</button></div>

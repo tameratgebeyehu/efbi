@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --configLoader native",
     "build": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json && vite build --configLoader native",
+    "build:preview": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json && vite build --mode public-preview --configLoader native",
     "lint": "oxlint",
     "preview": "vite preview --configLoader native",
     "emulators": "firebase emulators:start --only auth,firestore --project demo-efbi",

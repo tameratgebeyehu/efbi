@@ -26,6 +26,19 @@ service cloud.firestore {
         && request.auth.token.reviewer == true;
     }
 
+    function enrollmentOpen() {
+      return exists(/databases/$(database)/documents/publicSettings/enrollment)
+        && get(/databases/$(database)/documents/publicSettings/enrollment).data.open == true;
+    }
+
+    function validEnrollmentSettings(data) {
+      return data.keys().hasOnly(['open', 'minAge', 'updatedAt', 'updatedBy'])
+        && data.open is bool
+        && data.minAge == 12
+        && data.updatedAt == request.time
+        && data.updatedBy == request.auth.uid;
+    }
+
     function validDisplayName(name) {
       return name is string && name.size() >= 2 && name.size() <= 80;
     }
@@ -1300,8 +1313,15 @@ service cloud.firestore {
         && retentionAuditLinked(request.resource.data, eventId);
       allow update, delete: if false;
     }
+    match /publicSettings/{settingId} {
+      allow get: if settingId == 'enrollment';
+      allow list: if false;
+      allow create, update: if settingId == 'enrollment' && admin() && validEnrollmentSettings(request.resource.data);
+      allow delete: if false;
+    }
+
     match /users/{uid} {
-      allow create: if owns(uid) && learnerWritesAllowed(uid) && validProfile(request.resource.data);
+      allow create: if owns(uid) && enrollmentOpen() && learnerWritesAllowed(uid) && validProfile(request.resource.data);
       allow get: if owns(uid) || admin();
       allow list: if admin();
       allow update: if owns(uid)

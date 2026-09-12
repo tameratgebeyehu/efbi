@@ -5,6 +5,7 @@ import { blogPosts, buildPillars, curriculum, methodology, programs, values } fr
 import { Icon } from './icons'
 import { CourseAccessButton } from './auth'
 
+import { learnerEnrollmentEnabled } from './site-mode'
 export function HomePage() {
   return (
     <>
@@ -16,7 +17,7 @@ export function HomePage() {
             <p className="hero-lede">Free, practical courses that help young Ethiopians build useful skills and turn ideas into real projects.</p>
             <div className="button-row">
               <Link className="button button--primary" to="/programs">Explore programs <Icon name="arrow" /></Link>
-              <Link className="button button--outline" to="/join">Join Academy</Link>
+              <Link className="button button--outline" to={learnerEnrollmentEnabled ? '/join' : '/courses'}>{learnerEnrollmentEnabled ? 'Join Academy' : 'Preview courses'}</Link>
             </div>
             <div className="hero-trust-row">
               <span><Icon name="check" /> Free to learn</span>

@@ -43,6 +43,12 @@ beforeEach(async () => {
       public: true,
       updatedAt: new Date('2026-09-08T00:00:00Z'),
     })
+    await setDoc(doc(context.firestore(), 'publicSettings', 'enrollment'), {
+      open: true,
+      minAge: 12,
+      updatedAt: new Date('2026-09-12T00:00:00Z'),
+      updatedBy: 'system-seed',
+    })
     const draftContent = {
       title: 'AI Foundations — Second Edition',
       summary: 'A practical introduction to useful and responsible artificial intelligence.',
@@ -263,6 +269,29 @@ test('an unauthenticated visitor cannot read learner data', async () => {
   await assertFails(getDoc(doc(db, 'users', 'alice')))
   await assertFails(getDoc(doc(db, 'users', 'alice', 'progress', 'ai-foundations')))
 })
+test('enrollment settings are public, admin-controlled, and fail closed', async () => {
+  const publicDb = environment.unauthenticatedContext().firestore()
+  await assertSucceeds(getDoc(doc(publicDb, 'publicSettings', 'enrollment')))
+  await assertFails(getDocs(collection(publicDb, 'publicSettings')))
+
+  const learner = verifiedUser('alice')
+  await assertFails(updateDoc(doc(learner, 'publicSettings', 'enrollment'), {
+    open: false,
+    minAge: 12,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'alice',
+  }))
+
+  const admin = verifiedUser('admin-user', { admin: true })
+  await assertSucceeds(updateDoc(doc(admin, 'publicSettings', 'enrollment'), {
+    open: false,
+    minAge: 12,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'admin-user',
+  }))
+  await assertFails(setDoc(doc(learner, 'users', 'alice'), { displayName: 'Alice Learner', status: 'active', createdAt: serverTimestamp(), updatedAt: serverTimestamp() }))
+})
+
 
 test('a learner can create a minimal profile for their own uid', async () => {
   const db = environment.authenticatedContext('alice', { email_verified: false }).firestore()

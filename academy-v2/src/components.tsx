@@ -75,8 +75,8 @@ export function RebuildNotice({ compact = false }: { compact?: boolean }) {
     <div className={compact ? 'rebuild-notice rebuild-notice--compact' : 'rebuild-notice'} role="status">
       <span className="pulse" aria-hidden="true" />
       <div>
-        <strong>Student access is being rebuilt</strong>
-        <p>We’ll reopen when accounts and progress tracking are fully tested.</p>
+        <strong>Read-only academy preview</strong>
+        <p>Explore the courses while student enrollment remains closed.</p>
       </div>
     </div>
   )
