@@ -1381,3 +1381,210 @@ test('an approved review does not grant certificate-writing authority', async ()
     }))
   }
 })
+
+
+function revisionDraft(overrides = {}) {
+  return submissionDraft({
+    submissionId: 'ai-foundations-project-revision-1',
+    originalSubmissionId: 'ai-foundations-project',
+    revisionNumber: 1,
+    basedOnReviewId: 'alice--ai-foundations-project',
+    originalSubmittedAt: new Date('2026-09-12T00:10:00Z'),
+    basedOnReviewReviewedAt: new Date('2026-09-12T00:20:00Z'),
+    ...overrides,
+  })
+}
+
+function finalRevision(createdAt, overrides = {}) {
+  return revisionDraft({
+    createdAt,
+    consentVersion: 'efbi-project-revision-consent-v1',
+    consentAcceptedAt: serverTimestamp(),
+    status: 'submitted',
+    updatedAt: serverTimestamp(),
+    submittedAt: serverTimestamp(),
+    ...overrides,
+  })
+}
+
+async function seedRevisionRequested(uid = 'alice') {
+  await seedSubmittedProject(uid, 'reviewer-user')
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    const assignmentId = uid + '--ai-foundations-project'
+    const submittedAt = new Date('2026-09-12T00:10:00Z')
+    const reviewedAt = new Date('2026-09-12T00:20:00Z')
+    const scores = rubricScores({ safetyResponsibility: 0 })
+    const shared = {
+      assignmentId,
+      learnerUid: uid,
+      submissionId: 'ai-foundations-project',
+      rubricVersion: 1,
+      courseVersion: 1,
+      assessmentVersion: 1,
+      submissionSubmittedAt: submittedAt,
+      scores,
+      totalScore: 8,
+      decision: 'revision_requested',
+      publicFeedback: 'Please revise the project to explain how personal information is protected and how unsafe answers will be handled.',
+      reviewedAt,
+    }
+    await setDoc(doc(db, 'reviewResults', assignmentId), {
+      ...shared,
+      reviewerUid: 'reviewer-user',
+      concern: 'safeguarding',
+      privateNote: 'The project needs a clearer privacy and safeguarding boundary.',
+    })
+    await setDoc(doc(db, 'users', uid, 'reviewResults', assignmentId), shared)
+  })
+}
+
+function privateRevisionReviewResult(submissionSubmittedAt, overrides = {}) {
+  return {
+    assignmentId: 'alice--ai-foundations-project-revision-1',
+    learnerUid: 'alice',
+    submissionId: 'ai-foundations-project-revision-1',
+    reviewerUid: 'revision-reviewer',
+    rubricVersion: 1,
+    courseVersion: 1,
+    assessmentVersion: 1,
+    submissionSubmittedAt,
+    scores: rubricScores(),
+    totalScore: 10,
+    decision: 'approved',
+    publicFeedback: 'Your revision now explains the privacy boundary, shows appropriate evidence, and responds clearly to the first review.',
+    concern: 'none',
+    privateNote: 'Compared the revision with the preserved original and first review.',
+    reviewedAt: serverTimestamp(),
+    ...overrides,
+  }
+}
+
+function publicRevisionReviewResult(submissionSubmittedAt, overrides = {}) {
+  const privateResult = privateRevisionReviewResult(submissionSubmittedAt, overrides)
+  const { reviewerUid, concern, privateNote, ...safeResult } = privateResult
+  void reviewerUid; void concern; void privateNote
+  return safeResult
+}
+
+async function seedSubmittedRevision(uid = 'alice') {
+  await seedRevisionRequested(uid)
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', uid, 'submissions', 'ai-foundations-project-revision-1'), {
+      ...revisionDraft({ basedOnReviewId: uid + '--ai-foundations-project' }),
+      createdAt: new Date('2026-09-12T00:30:00Z'),
+      updatedAt: new Date('2026-09-12T00:40:00Z'),
+      consentVersion: 'efbi-project-revision-consent-v1',
+      consentAcceptedAt: new Date('2026-09-12T00:40:00Z'),
+      status: 'submitted',
+      submittedAt: new Date('2026-09-12T00:40:00Z'),
+    })
+  })
+}
+
+test('a learner cannot open a revision before a revision-request result exists', async () => {
+  await seedSubmittedProject('alice')
+  const learner = verifiedUser('alice')
+  await assertFails(setDoc(doc(learner, 'users', 'alice', 'submissions', 'ai-foundations-project-revision-1'), revisionDraft()))
+})
+
+test('a revision-request result unlocks one private revision draft', async () => {
+  await seedRevisionRequested()
+  const learner = verifiedUser('alice')
+  const reference = doc(learner, 'users', 'alice', 'submissions', 'ai-foundations-project-revision-1')
+  await assertSucceeds(setDoc(reference, revisionDraft()))
+  const saved = await assertSucceeds(getDoc(reference))
+  await assertSucceeds(setDoc(reference, revisionDraft({
+    createdAt: saved.data().createdAt,
+    solutionSummary: 'A revised question-and-answer guide with a clear privacy boundary, reviewed sources, and safe escalation to a teacher.',
+  })))
+  await assertFails(getDoc(doc(verifiedUser('bob'), 'users', 'alice', 'submissions', 'ai-foundations-project-revision-1')))
+})
+
+test('revision provenance, identifier, and schema cannot be forged', async () => {
+  await seedRevisionRequested()
+  const learner = verifiedUser('alice')
+  const path = (...segments) => doc(learner, ...segments)
+  await assertFails(setDoc(path('users', 'alice', 'submissions', 'ai-foundations-project-revision-1'), revisionDraft({ originalSubmissionId: 'another-project' })))
+  await assertFails(setDoc(path('users', 'alice', 'submissions', 'ai-foundations-project-revision-1'), revisionDraft({ basedOnReviewId: 'alice--forged-review' })))
+  await assertFails(setDoc(path('users', 'alice', 'submissions', 'ai-foundations-project-revision-1'), revisionDraft({ revisionNumber: 2 })))
+  await assertFails(setDoc(path('users', 'alice', 'submissions', 'ai-foundations-project-revision-1'), revisionDraft({ courseVersion: 2 })))
+  await assertFails(setDoc(path('users', 'alice', 'submissions', 'ai-foundations-project-revision-1'), revisionDraft({ originalSubmittedAt: new Date('2026-09-12T00:11:00Z') })))
+  await assertFails(setDoc(path('users', 'alice', 'submissions', 'ai-foundations-project-revision-1'), revisionDraft({ basedOnReviewReviewedAt: new Date('2026-09-12T00:21:00Z') })))
+  await assertFails(setDoc(path('users', 'alice', 'submissions', 'ai-foundations-project-revision-1'), revisionDraft({ unexpectedField: true })))
+  await assertFails(setDoc(path('users', 'alice', 'submissions', 'ai-foundations-project-revision-2'), revisionDraft({ submissionId: 'ai-foundations-project-revision-2', revisionNumber: 2 })))
+})
+
+test('the one revision requires new consent and becomes immutable', async () => {
+  await seedRevisionRequested()
+  const learner = verifiedUser('alice')
+  const reference = doc(learner, 'users', 'alice', 'submissions', 'ai-foundations-project-revision-1')
+  await assertSucceeds(setDoc(reference, revisionDraft()))
+  const draft = await getDoc(reference)
+  await assertFails(setDoc(reference, revisionDraft({ createdAt: draft.data().createdAt, status: 'submitted' })))
+  await assertFails(setDoc(reference, finalRevision(draft.data().createdAt, { consentVersion: 'efbi-project-consent-v1' })))
+  await assertSucceeds(setDoc(reference, finalRevision(draft.data().createdAt)))
+  const submitted = await getDoc(reference)
+  await assertFails(setDoc(reference, finalRevision(submitted.data().createdAt, { projectTitle: 'Changed after revision submission' })))
+  await assertFails(deleteDoc(reference))
+})
+
+test('administrators see only a submitted revision and can assign it separately', async () => {
+  await seedRevisionRequested()
+  const learner = verifiedUser('alice')
+  const admin = verifiedUser('admin-user', { admin: true })
+  const revisionReference = doc(learner, 'users', 'alice', 'submissions', 'ai-foundations-project-revision-1')
+  await assertSucceeds(setDoc(revisionReference, revisionDraft()))
+  await assertFails(getDoc(doc(admin, 'users', 'alice', 'submissions', 'ai-foundations-project-revision-1')))
+  await assertFails(setDoc(doc(admin, 'reviewAssignments', 'alice--ai-foundations-project-revision-1'), {
+    assignmentId: 'alice--ai-foundations-project-revision-1', learnerUid: 'alice', submissionId: 'ai-foundations-project-revision-1',
+    reviewerUid: 'revision-reviewer', status: 'assigned', assignedAt: serverTimestamp(), assignedBy: 'admin-user',
+  }))
+  const draft = await getDoc(revisionReference)
+  await assertSucceeds(setDoc(revisionReference, finalRevision(draft.data().createdAt)))
+  await assertSucceeds(getDoc(doc(admin, 'users', 'alice', 'submissions', 'ai-foundations-project-revision-1')))
+  await assertSucceeds(setDoc(doc(admin, 'reviewAssignments', 'alice--ai-foundations-project-revision-1'), {
+    assignmentId: 'alice--ai-foundations-project-revision-1', learnerUid: 'alice', submissionId: 'ai-foundations-project-revision-1',
+    reviewerUid: 'revision-reviewer', status: 'assigned', assignedAt: serverTimestamp(), assignedBy: 'admin-user',
+  }))
+})
+
+test('the assigned revision reviewer alone can read and review Version 2', async () => {
+  await seedSubmittedRevision()
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'reviewAssignments', 'alice--ai-foundations-project-revision-1'), {
+      assignmentId: 'alice--ai-foundations-project-revision-1', learnerUid: 'alice', submissionId: 'ai-foundations-project-revision-1',
+      reviewerUid: 'revision-reviewer', status: 'assigned', assignedAt: new Date('2026-09-12T00:45:00Z'), assignedBy: 'admin-user',
+    })
+  })
+  const reviewer = verifiedUser('revision-reviewer', { reviewer: true })
+  const other = verifiedUser('other-reviewer', { reviewer: true })
+  const revisionReference = doc(reviewer, 'users', 'alice', 'submissions', 'ai-foundations-project-revision-1')
+  await assertSucceeds(getDoc(revisionReference))
+  await assertFails(getDoc(doc(other, 'users', 'alice', 'submissions', 'ai-foundations-project-revision-1')))
+  const submittedAt = (await getDoc(revisionReference)).data().submittedAt
+  const batch = writeBatch(reviewer)
+  batch.set(doc(reviewer, 'reviewResults', 'alice--ai-foundations-project-revision-1'), privateRevisionReviewResult(submittedAt))
+  batch.set(doc(reviewer, 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project-revision-1'), publicRevisionReviewResult(submittedAt))
+  await assertSucceeds(batch.commit())
+  const safeResult = await assertSucceeds(getDoc(doc(verifiedUser('alice'), 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project-revision-1')))
+  assert.equal(safeResult.data().decision, 'approved')
+  assert.equal('privateNote' in safeResult.data(), false)
+  assert.equal('reviewerUid' in safeResult.data(), false)
+})
+
+test('a second requested result never unlocks a third submission version', async () => {
+  await seedSubmittedRevision()
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project-revision-1'), {
+      ...publicRevisionReviewResult(new Date('2026-09-12T00:40:00Z'), {
+        decision: 'revision_requested', scores: rubricScores({ safetyResponsibility: 0 }), totalScore: 8,
+      }),
+      reviewedAt: new Date('2026-09-12T00:50:00Z'),
+    })
+  })
+  const learner = verifiedUser('alice')
+  await assertFails(setDoc(doc(learner, 'users', 'alice', 'submissions', 'ai-foundations-project-revision-2'), revisionDraft({
+    submissionId: 'ai-foundations-project-revision-2', revisionNumber: 2,
+  })))
+})

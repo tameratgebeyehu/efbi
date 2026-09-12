@@ -2,9 +2,9 @@
 
 The EFBI Admin Studio is a separate, local-only application for trusted operators. It is not a route in the student website and must never be deployed to Firebase Hosting, GitHub Pages, or another public host.
 
-## Current Phase 16 boundary
+## Current Phase 17 boundary
 
-Phase 16 adds fixed-rubric reviewer scoring and a separate learner-safe result to the localhost Studio. Practice questions remain browser-only learning checks, and certificate issuance is still disabled.
+Phase 17 adds one controlled learner revision after a permanent revision request. The revision is a separate submitted version with its own assignment and review; certificate issuance remains disabled.
 
 - the server binds to `127.0.0.1` on port `5174`;
 - the interface blocks non-local hostnames;
@@ -18,7 +18,7 @@ Phase 16 adds fixed-rubric reviewer scoring and a separate learner-safe result t
 - Administrators can read submitted projects, never private drafts, and create one immutable reviewer assignment;
 - Reviewers can read only their own assignments and linked submitted projects;
 - an assigned reviewer can publish one immutable calculated result with learner feedback and isolated private notes;
-- revision responses, appeals, files, certificates, and public enrollment remain outside this phase.
+- exactly one revision is allowed after a revision request; additional revisions, appeals, files, certificates, and public enrollment remain outside this phase.
 
 The local interface reduces exposure, while Firebase claims and Firestore rules provide the actual authorization boundary.
 
@@ -56,7 +56,7 @@ npm run manage:roles -- set --email "owner@example.com" --role admin --value tru
 
 6. Sign out and sign in again so Firebase issues a fresh ID token.
 
-No role has been granted as part of Phases 9 through 16. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
+No role has been granted as part of Phases 9 through 17. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
 
 ## Remove access
 
@@ -120,8 +120,11 @@ Lesson drafts stay private to administrators. They are not connected to the stud
 7. Score all five rubric criteria from 0 to 2. The Studio calculates approval or revision requested; reviewers cannot override it.
 8. Write learner feedback without private or safeguarding information. Put internal concerns only in the private fields.
 9. Confirm the permanent result and publish it. The learner receives only the safe result copy.
+10. If the result requests changes, the learner may save and submit one separate revision. Version 1 and its review stay unchanged.
+11. Return as an administrator and assign the submitted revision separately. A draft revision never appears in the Studio.
+12. The assigned reviewer reviews the exact revision and publishes its separate permanent result.
 
-Revision responses, appeals, file uploads, and certificate issuance remain disabled.
+No third version is allowed. Appeals, file uploads, and certificate issuance remain disabled.
 
 ## Audit History workflow
 
@@ -144,6 +147,6 @@ Revision responses, appeals, file uploads, and certificate issuance remain disab
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 17 gate
+## Phase 18 gate
 
-Phase 17 may add one controlled learner revision only by preserving the original submission and result, creating a separate versioned revision, binding a second review to that exact revision, and testing the one-revision limit. Appeals, file uploads, certificate issuance, public enrollment, and production deployment remain outside that phase.
+Phase 18 may add administrator-controlled certificate eligibility and issuance only after an approved final review. It must create immutable issuance audit evidence, keep verification fields public-safe, define revocation and replacement, and pass role-boundary tests. Appeals, file uploads, public enrollment, and production deployment remain outside that phase.

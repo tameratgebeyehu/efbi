@@ -24,8 +24,8 @@ npm run lint
 
 Do not deploy this directory. Do not expose its development port to the internet. Do not add an `/admin` route to the student app. Do not place service-account credentials or role-management logic in browser code.
 
-Phase 16 adds fixed-rubric review to the role-separated project workflow. An assigned reviewer can publish one immutable result; learners receive a separate safe copy without reviewer identity, concern categories, or private notes. Revision responses, appeals, certificates, file uploads, and public catalog release browsing remain locked.
+Phase 17 adds one controlled, separate revision after a permanent revision request. Original and revised versions keep separate assignments and immutable reviews; learners still receive only safe result copies. Additional revisions, appeals, certificates, file uploads, and public catalog release browsing remain locked.
 
 Unsaved course and lesson text have best-effort browser recovery copies for power-loss recovery. Firestore is still authoritative, and recovery is blocked if the saved server revision changed.
 
-See `../ADMIN_STUDIO.md` for administrator and reviewer provisioning, revocation, workflow, and the Phase 17 gate.
+See `../ADMIN_STUDIO.md` for administrator and reviewer provisioning, revocation, workflow, and the Phase 18 gate.

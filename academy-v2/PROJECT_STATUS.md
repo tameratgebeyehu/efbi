@@ -20,7 +20,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Production build and lint checks passing.
 - Frontend copy and layouts refined across all public pages.
 - Firebase web SDK, secure account forms, email-verification gate, and protected learning route added.
-- Deny-by-default Firestore rules added and now covered by 50 emulator authorization tests.
+- Deny-by-default Firestore rules added and now covered by 57 emulator authorization tests.
 - Backend data model, privacy boundaries, and Firebase Console checklist documented in BACKEND_FOUNDATION.md.
 - Ten routes tested at 390px, 768px, and 1440px with no horizontal overflow or browser runtime errors.
 - Development Firebase project `efbi-academy-dev-doha` connected.
@@ -57,6 +57,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - The localhost Admin Studio can inspect the newest 250 immutable content audit events with read-only filters.
 - Completed learners can save a private AI Foundations project draft and submit an immutable text-and-HTTPS-link record with versioned consent.
 - Administrators can assign submitted projects; assigned reviewers can publish one immutable rubric result; learners receive a separate public-safe result without private review fields.
+- One separate revision is available only after a revision request; Version 1 and both review histories remain immutable.
 
 ## Firebase environments
 
@@ -68,7 +69,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Public student enrollment; development authentication is connected but not production-ready.
 - Contact form submissions.
 - Published course video playback; no EFBI YouTube lesson ID has been supplied yet.
-- Learner revision responses and appeals.
+- Appeals and additional learner revisions beyond the one controlled response.
 - Certificate issuance and new public verification records.
 - File uploads and production review operations.
 - Production deployment or custom-domain migration.
@@ -310,16 +311,33 @@ Implementation is complete in the development environment:
 11. Fifty Firestore emulator authorization tests pass.
 12. Revision responses, appeals, file uploads, certificate issuance, public enrollment, and production deployment remain disabled.
 
+## Phase 17 status
+
+Implementation is complete in the development codebase:
+
+1. A Version 1 `revision_requested` result unlocks exactly one separate revision draft.
+2. The revision is stored as `ai-foundations-project-revision-1` with fixed origin, revision number, and first-review binding.
+3. Version 1 and its review remain immutable and visible in the learner's version history.
+4. The revision requires fresh consent, becomes immutable on submission, and cannot be deleted.
+5. Administrators see only a submitted revision and assign it separately from Version 1.
+6. The assigned reviewer publishes a new atomic private and learner-safe result bound to the exact revision timestamp.
+7. A second revision request does not unlock a third project version.
+8. Learners never receive reviewer identity, concern category, or private notes from either review.
+9. Student and Admin Studio builds and lint checks pass.
+10. Fifty-seven Firestore emulator authorization tests pass.
+11. The tested Phase 17 Firestore rules were deployed only to `efbi-academy-dev-doha`.
+12. Appeals, certificates, file uploads, public enrollment, and production deployment remain disabled.
+
 ## Next implementation phase
 
-Phase 17 may add one controlled revision response only after its full security model is approved:
+Phase 18 may add secure certificate eligibility and administrator-controlled issuance:
 
-1. Preserve the original submission and first result as immutable evidence.
-2. Allow exactly one new versioned learner revision after a revision request.
-3. Bind the revision to the original submission, result, learner, and trusted timestamps.
-4. Bind the second review to the exact revision and existing assigned reviewer.
-5. Keep private notes isolated and keep appeals and certificates disabled.
-6. Keep public enrollment and production deployment disabled until retention and deletion automation is complete.
+1. Derive eligibility from the final valid approved review only.
+2. Require deliberate administrator confirmation and prevent reviewer or learner issuance.
+3. Create an immutable certificate and issuance audit record atomically.
+4. Keep public verification fields separate from private operational evidence.
+5. Define revocation and replacement without rewriting history.
+6. Keep appeals, uploads, public enrollment, and production deployment disabled until their own gates pass.
 
 ## Recovery commands
 

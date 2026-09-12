@@ -1,10 +1,12 @@
 import { getFirebaseFirestore } from './firebase'
 
 export const submissionId = 'ai-foundations-project'
+export const revisionSubmissionId = 'ai-foundations-project-revision-1'
 export const courseId = 'ai-foundations'
 export const courseVersion = 1
 export const assessmentVersion = 1
 export const consentVersion = 'efbi-project-consent-v1'
+export const revisionConsentVersion = 'efbi-project-revision-consent-v1'
 
 export type SubmissionStatus = 'draft' | 'submitted'
 
@@ -49,6 +51,11 @@ export type ProjectSubmission = SubmissionForm & {
   createdAt: unknown
   updatedAt: unknown
   submittedAt: unknown
+  revisionNumber: number
+  originalSubmissionId: string
+  basedOnReviewId: string
+  originalSubmittedAt: unknown
+  basedOnReviewReviewedAt: unknown
 }
 
 export const emptySubmissionForm: SubmissionForm = {
@@ -89,6 +96,11 @@ function asSubmission(data: Record<string, unknown>): ProjectSubmission {
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
     submittedAt: data.submittedAt,
+    revisionNumber: typeof data.revisionNumber === 'number' ? data.revisionNumber : 0,
+    originalSubmissionId: safeString(data.originalSubmissionId),
+    basedOnReviewId: safeString(data.basedOnReviewId),
+    originalSubmittedAt: data.originalSubmittedAt,
+    basedOnReviewReviewedAt: data.basedOnReviewReviewedAt,
   }
 }
 
@@ -148,16 +160,16 @@ async function requireFirestore() {
   return services
 }
 
-export async function readSubmission(uid: string) {
+export async function readSubmission(uid: string, recordId = submissionId) {
   const services = await requireFirestore()
-  const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'submissions', submissionId)
+  const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'submissions', recordId)
   const snapshot = await services.firestoreSdk.getDoc(reference)
   return snapshot.exists() ? asSubmission(snapshot.data()) : null
 }
 
-export async function readLearnerReviewResult(uid: string): Promise<LearnerReviewResult | null> {
+export async function readLearnerReviewResult(uid: string, recordId = submissionId): Promise<LearnerReviewResult | null> {
   const services = await requireFirestore()
-  const assignmentId = `${uid}--${submissionId}`
+  const assignmentId = `${uid}--${recordId}`
   const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'reviewResults', assignmentId)
   const snapshot = await services.firestoreSdk.getDoc(reference)
   if (!snapshot.exists()) return null
@@ -229,4 +241,47 @@ export async function submitProject(uid: string, form: SubmissionForm, existing:
     submittedAt: services.firestoreSdk.serverTimestamp(),
   })
   return readSubmission(uid)
+}
+
+function revisionRecord(uid: string, form: SubmissionForm, existing: ProjectSubmission | null, original: ProjectSubmission, originalReview: LearnerReviewResult, services: Awaited<ReturnType<typeof requireFirestore>>, submitted: boolean) {
+  const normalized = normalizeSubmissionForm(form)
+  return {
+    submissionId: revisionSubmissionId,
+    originalSubmissionId: submissionId,
+    revisionNumber: 1,
+    basedOnReviewId: `${uid}--${submissionId}`,
+    originalSubmittedAt: original.submittedAt,
+    basedOnReviewReviewedAt: originalReview.reviewedAt,
+    courseId,
+    courseVersion: original.courseVersion,
+    assessmentVersion: original.assessmentVersion,
+    ...normalized,
+    evidence: normalized.evidence.filter(Boolean),
+    consentVersion: submitted ? revisionConsentVersion : '',
+    consentAcceptedAt: submitted ? services.firestoreSdk.serverTimestamp() : null,
+    status: submitted ? 'submitted' : 'draft',
+    createdAt: existing?.createdAt ?? services.firestoreSdk.serverTimestamp(),
+    updatedAt: services.firestoreSdk.serverTimestamp(),
+    submittedAt: submitted ? services.firestoreSdk.serverTimestamp() : null,
+  }
+}
+
+export async function saveSubmissionRevisionDraft(uid: string, form: SubmissionForm, existing: ProjectSubmission | null, original: ProjectSubmission, originalReview: LearnerReviewResult) {
+  const errors = draftErrors(form)
+  if (errors.length) throw new Error(errors[0])
+  if (existing?.status === 'submitted') throw new Error('The submitted revision cannot be changed.')
+  const services = await requireFirestore()
+  const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'submissions', revisionSubmissionId)
+  await services.firestoreSdk.setDoc(reference, revisionRecord(uid, form, existing, original, originalReview, services, false))
+  return readSubmission(uid, revisionSubmissionId)
+}
+
+export async function submitProjectRevision(uid: string, form: SubmissionForm, existing: ProjectSubmission, original: ProjectSubmission, originalReview: LearnerReviewResult) {
+  const errors = finalErrors(form)
+  if (errors.length) throw new Error(errors[0])
+  if (existing.status !== 'draft') throw new Error('This revision has already been submitted.')
+  const services = await requireFirestore()
+  const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'submissions', revisionSubmissionId)
+  await services.firestoreSdk.setDoc(reference, revisionRecord(uid, form, existing, original, originalReview, services, true))
+  return readSubmission(uid, revisionSubmissionId)
 }

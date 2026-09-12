@@ -94,3 +94,19 @@
 .learner-result footer { display: flex; gap: 9px; align-items: center; margin-top: 16px; color: var(--muted); font-size: .72rem; }
 .learner-result footer svg { width: 17px; color: var(--green); }
 @media (max-width: 760px) { .learner-result > header { flex-direction: column; } .learner-result__scores { grid-template-columns: repeat(2, 1fr); } }
+
+
+.version-history { margin: 28px 0; border: 1px solid #cfdbd2; background: #f8fbf9; }
+.version-history > summary { display: flex; justify-content: space-between; gap: 24px; align-items: center; padding: 20px 24px; color: var(--ink); cursor: pointer; list-style-position: inside; }
+.version-history > summary span:first-child { display: inline-flex; flex-direction: column; gap: 4px; }
+.version-history > summary small { color: var(--muted); font-weight: 400; }
+.version-history > summary > span:last-child { color: var(--green); font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.version-history[open] > summary { border-bottom: 1px solid #cfdbd2; }
+.version-history .learner-result { margin: 24px; }
+.version-history .submitted-project { margin: 0 24px 24px; }
+
+@media (max-width: 620px) {
+  .version-history > summary { align-items: flex-start; flex-direction: column; padding: 18px; }
+  .version-history .learner-result { margin: 18px; }
+  .version-history .submitted-project { margin: 0 18px 18px; }
+}

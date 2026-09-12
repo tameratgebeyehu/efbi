@@ -452,7 +452,9 @@ service cloud.firestore {
     }
 
     function validSubmissionId(submissionId) {
-      return submissionId == 'ai-foundations-project';
+      return submissionId in [
+        'ai-foundations-project', 'ai-foundations-project-revision-1'
+      ];
     }
 
     function validEvidenceLink(value) {
@@ -471,13 +473,37 @@ service cloud.firestore {
         && (evidence.size() < 3 || validEvidenceLink(evidence[2]));
     }
 
-    function validSubmissionShape(data, submissionId) {
-      return data.keys().hasOnly([
+    function validSubmissionShape(data, submissionId, uid) {
+      let originalFields = [
           'submissionId', 'courseId', 'courseVersion', 'assessmentVersion',
           'projectTitle', 'problemStatement', 'intendedUsers', 'solutionSummary',
           'evidence', 'reflection', 'aiUseDisclosure', 'consentVersion',
           'consentAcceptedAt', 'status', 'createdAt', 'updatedAt', 'submittedAt'
-        ])
+        ];
+      let revisionFields = [
+          'submissionId', 'courseId', 'courseVersion', 'assessmentVersion',
+          'projectTitle', 'problemStatement', 'intendedUsers', 'solutionSummary',
+          'evidence', 'reflection', 'aiUseDisclosure', 'consentVersion',
+          'consentAcceptedAt', 'status', 'createdAt', 'updatedAt', 'submittedAt',
+          'originalSubmissionId', 'revisionNumber', 'basedOnReviewId',
+          'originalSubmittedAt', 'basedOnReviewReviewedAt'
+        ];
+      return (
+          (submissionId == 'ai-foundations-project' && data.keys().hasOnly(originalFields))
+          || (
+            submissionId == 'ai-foundations-project-revision-1'
+            && data.keys().hasOnly(revisionFields)
+            && data.originalSubmissionId == 'ai-foundations-project'
+            && data.revisionNumber == 1
+            && data.basedOnReviewId == uid + '--ai-foundations-project'
+            && data.originalSubmittedAt is timestamp
+            && data.basedOnReviewReviewedAt is timestamp
+            && data.originalSubmittedAt == get(/databases/$(database)/documents/users/$(uid)/submissions/ai-foundations-project).data.submittedAt
+            && data.basedOnReviewReviewedAt == get(/databases/$(database)/documents/users/$(uid)/reviewResults/$(uid + '--ai-foundations-project')).data.reviewedAt
+            && data.courseVersion == get(/databases/$(database)/documents/users/$(uid)/submissions/ai-foundations-project).data.courseVersion
+            && data.assessmentVersion == get(/databases/$(database)/documents/users/$(uid)/submissions/ai-foundations-project).data.assessmentVersion
+          )
+        )
         && validSubmissionId(submissionId)
         && data.submissionId == submissionId
         && data.courseId == 'ai-foundations'
@@ -501,8 +527,8 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
-    function validSubmissionDraft(data, submissionId) {
-      return validSubmissionShape(data, submissionId)
+    function validSubmissionDraft(data, submissionId, uid) {
+      return validSubmissionShape(data, submissionId, uid)
         && data.status == 'draft'
         && validEvidence(data.evidence, false)
         && data.consentVersion == ''
@@ -510,8 +536,8 @@ service cloud.firestore {
         && data.submittedAt == null;
     }
 
-    function validFinalSubmission(data, submissionId) {
-      return validSubmissionShape(data, submissionId)
+    function validFinalSubmission(data, submissionId, uid) {
+      return validSubmissionShape(data, submissionId, uid)
         && data.status == 'submitted'
         && data.projectTitle.size() >= 5
         && data.problemStatement.size() >= 40
@@ -520,7 +546,13 @@ service cloud.firestore {
         && data.reflection.size() >= 50
         && data.aiUseDisclosure.size() >= 20
         && validEvidence(data.evidence, true)
-        && data.consentVersion == 'efbi-project-consent-v1'
+        && (
+          (submissionId == 'ai-foundations-project'
+            && data.consentVersion == 'efbi-project-consent-v1')
+          ||
+          (submissionId == 'ai-foundations-project-revision-1'
+            && data.consentVersion == 'efbi-project-revision-consent-v1')
+        )
         && data.consentAcceptedAt == request.time
         && data.submittedAt == request.time;
     }
@@ -530,6 +562,15 @@ service cloud.firestore {
       return progress.courseId == 'ai-foundations'
         && progress.percent == 100
         && progress.completedLessonIds == ['understanding-ai', 'prompting-with-purpose', 'responsible-use', 'build-an-ethiopian-solution'];
+    }
+
+    function revisionIsAllowed(uid) {
+      let original = get(/databases/$(database)/documents/users/$(uid)/submissions/ai-foundations-project).data;
+      let result = get(/databases/$(database)/documents/users/$(uid)/reviewResults/$(uid + '--ai-foundations-project')).data;
+      return original.status == 'submitted'
+        && result.learnerUid == uid
+        && result.submissionId == 'ai-foundations-project'
+        && result.decision == 'revision_requested';
     }
 
     function sameSubmissionIdentity() {
@@ -742,16 +783,24 @@ service cloud.firestore {
         allow create: if owns(uid)
           && verified()
           && completedAiFoundations(uid)
-          && validSubmissionDraft(request.resource.data, submissionId)
-          && request.resource.data.createdAt == request.time;
+          && validSubmissionDraft(request.resource.data, submissionId, uid)
+          && request.resource.data.createdAt == request.time
+          && (
+            submissionId == 'ai-foundations-project'
+            || (submissionId == 'ai-foundations-project-revision-1' && revisionIsAllowed(uid))
+          );
         allow update: if owns(uid)
           && verified()
           && completedAiFoundations(uid)
           && resource.data.status == 'draft'
           && sameSubmissionIdentity()
           && (
-            validSubmissionDraft(request.resource.data, submissionId)
-            || validFinalSubmission(request.resource.data, submissionId)
+            submissionId == 'ai-foundations-project'
+            || (submissionId == 'ai-foundations-project-revision-1' && revisionIsAllowed(uid))
+          )
+          && (
+            validSubmissionDraft(request.resource.data, submissionId, uid)
+            || validFinalSubmission(request.resource.data, submissionId, uid)
           );
         allow delete: if false;
       }
