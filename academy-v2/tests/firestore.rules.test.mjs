@@ -8,11 +8,14 @@ import {
 } from '@firebase/rules-unit-testing'
 import {
   collection,
+  collectionGroup,
   deleteDoc,
   doc,
   getDoc,
   getDocs,
+  query,
   serverTimestamp,
+  where,
   setDoc,
   updateDoc,
   writeBatch,
@@ -1002,4 +1005,185 @@ test('an authenticated administrator can issue a public-safe certificate', async
     public: true,
     updatedAt: serverTimestamp(),
   }))
+})
+
+
+function submissionDraft(overrides = {}) {
+  return {
+    submissionId: 'ai-foundations-project',
+    courseId: 'ai-foundations',
+    courseVersion: 1,
+    assessmentVersion: 1,
+    projectTitle: 'Safer school information helper',
+    problemStatement: 'Students need a clearer way to find accurate school schedule information without sharing private details.',
+    intendedUsers: 'Students and teachers at one local school.',
+    solutionSummary: 'A small question-and-answer guide that uses reviewed school information and tells students when to ask a teacher.',
+    evidence: ['https://example.org/project-demo'],
+    reflection: 'I learned that a useful solution needs a narrow problem, feedback from intended users, and clear limits.',
+    aiUseDisclosure: 'I used AI to improve wording, then checked and rewrote every important statement myself.',
+    consentVersion: '',
+    consentAcceptedAt: null,
+    status: 'draft',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    submittedAt: null,
+    ...overrides,
+  }
+}
+
+function finalSubmission(createdAt, overrides = {}) {
+  return submissionDraft({
+    createdAt,
+    consentVersion: 'efbi-project-consent-v1',
+    consentAcceptedAt: serverTimestamp(),
+    status: 'submitted',
+    updatedAt: serverTimestamp(),
+    submittedAt: serverTimestamp(),
+    ...overrides,
+  })
+}
+
+async function seedCompletedProgress(uid) {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', uid, 'progress', 'ai-foundations'), {
+      courseId: 'ai-foundations',
+      completedLessonIds: ['understanding-ai', 'prompting-with-purpose', 'responsible-use', 'build-an-ethiopian-solution'],
+      lastLessonId: 'build-an-ethiopian-solution',
+      percent: 100,
+      createdAt: new Date('2026-09-12T00:00:00Z'),
+      updatedAt: new Date('2026-09-12T00:00:00Z'),
+    })
+  })
+}
+
+async function seedSubmittedProject(uid, reviewerUid = '') {
+  await seedCompletedProgress(uid)
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    await setDoc(doc(db, 'users', uid, 'submissions', 'ai-foundations-project'), {
+      ...submissionDraft(),
+      createdAt: new Date('2026-09-12T00:00:00Z'),
+      updatedAt: new Date('2026-09-12T00:10:00Z'),
+      consentVersion: 'efbi-project-consent-v1',
+      consentAcceptedAt: new Date('2026-09-12T00:10:00Z'),
+      status: 'submitted',
+      submittedAt: new Date('2026-09-12T00:10:00Z'),
+    })
+    if (reviewerUid) {
+      const assignmentId = uid + '--ai-foundations-project'
+      await setDoc(doc(db, 'reviewAssignments', assignmentId), {
+        assignmentId,
+        learnerUid: uid,
+        submissionId: 'ai-foundations-project',
+        reviewerUid,
+        status: 'assigned',
+        assignedAt: new Date('2026-09-12T00:15:00Z'),
+        assignedBy: 'admin-user',
+      })
+    }
+  })
+}
+
+test('a completed learner can create, read, and update an own project draft', async () => {
+  await seedCompletedProgress('alice')
+  const db = verifiedUser('alice')
+  const reference = doc(db, 'users', 'alice', 'submissions', 'ai-foundations-project')
+  await assertSucceeds(setDoc(reference, submissionDraft()))
+  const saved = await assertSucceeds(getDoc(reference))
+  await assertSucceeds(setDoc(reference, submissionDraft({
+    createdAt: saved.data().createdAt,
+    projectTitle: 'Improved school information helper',
+  })))
+})
+
+test('course completion is required before a learner can create a project draft', async () => {
+  const db = verifiedUser('alice')
+  await assertFails(setDoc(doc(db, 'users', 'alice', 'submissions', 'ai-foundations-project'), submissionDraft()))
+})
+
+test('submission drafts reject unsafe links, unknown fields, and cross-user reads', async () => {
+  await seedCompletedProgress('alice')
+  const alice = verifiedUser('alice')
+  const reference = doc(alice, 'users', 'alice', 'submissions', 'ai-foundations-project')
+  await assertFails(setDoc(reference, submissionDraft({ evidence: ['http://example.org/not-secure'] })))
+  await assertFails(setDoc(reference, submissionDraft({ unexpectedPrivateField: 'not allowed' })))
+  await assertSucceeds(setDoc(reference, submissionDraft()))
+  await assertFails(getDoc(doc(verifiedUser('bob'), 'users', 'alice', 'submissions', 'ai-foundations-project')))
+})
+
+test('final submission requires explicit consent and becomes immutable', async () => {
+  await seedCompletedProgress('alice')
+  const db = verifiedUser('alice')
+  const reference = doc(db, 'users', 'alice', 'submissions', 'ai-foundations-project')
+  await assertSucceeds(setDoc(reference, submissionDraft()))
+  const draft = await getDoc(reference)
+  await assertFails(setDoc(reference, submissionDraft({
+    createdAt: draft.data().createdAt,
+    status: 'submitted',
+  })))
+  await assertSucceeds(setDoc(reference, finalSubmission(draft.data().createdAt)))
+  const submitted = await getDoc(reference)
+  await assertFails(setDoc(reference, finalSubmission(submitted.data().createdAt, { projectTitle: 'Changed after submit' })))
+  await assertFails(deleteDoc(reference))
+})
+
+test('administrators see submitted work but cannot open private drafts', async () => {
+  await seedCompletedProgress('alice')
+  const alice = verifiedUser('alice')
+  const reference = doc(alice, 'users', 'alice', 'submissions', 'ai-foundations-project')
+  await assertSucceeds(setDoc(reference, submissionDraft()))
+  const draft = await getDoc(reference)
+  const admin = verifiedUser('admin-user', { admin: true })
+  await assertFails(getDoc(doc(admin, 'users', 'alice', 'submissions', 'ai-foundations-project')))
+  await assertSucceeds(setDoc(reference, finalSubmission(draft.data().createdAt)))
+  await assertSucceeds(getDoc(doc(admin, 'users', 'alice', 'submissions', 'ai-foundations-project')))
+  await assertSucceeds(getDocs(query(collectionGroup(admin, 'submissions'), where('status', '==', 'submitted'))))
+})
+
+test('an administrator can create one immutable assignment for submitted work', async () => {
+  await seedSubmittedProject('alice')
+  const admin = verifiedUser('admin-user', { admin: true })
+  const assignmentId = 'alice--ai-foundations-project'
+  const reference = doc(admin, 'reviewAssignments', assignmentId)
+  await assertSucceeds(setDoc(reference, {
+    assignmentId,
+    learnerUid: 'alice',
+    submissionId: 'ai-foundations-project',
+    reviewerUid: 'reviewer-user',
+    status: 'assigned',
+    assignedAt: serverTimestamp(),
+    assignedBy: 'admin-user',
+  }))
+  await assertFails(updateDoc(reference, { reviewerUid: 'other-reviewer' }))
+  await assertFails(deleteDoc(reference))
+})
+
+test('an assignment cannot name the learner or assigning administrator as reviewer', async () => {
+  await seedSubmittedProject('alice')
+  const admin = verifiedUser('admin-user', { admin: true })
+  for (const reviewerUid of ['alice', 'admin-user']) {
+    const assignmentId = 'alice--ai-foundations-project'
+    await assertFails(setDoc(doc(admin, 'reviewAssignments', assignmentId), {
+      assignmentId,
+      learnerUid: 'alice',
+      submissionId: 'ai-foundations-project',
+      reviewerUid,
+      status: 'assigned',
+      assignedAt: serverTimestamp(),
+      assignedBy: 'admin-user',
+    }))
+  }
+})
+
+test('a reviewer can see only their assignment and its submitted project', async () => {
+  await seedSubmittedProject('alice', 'reviewer-user')
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const other = verifiedUser('other-reviewer', { reviewer: true })
+  const assignmentId = 'alice--ai-foundations-project'
+  await assertSucceeds(getDoc(doc(reviewer, 'reviewAssignments', assignmentId)))
+  await assertFails(getDoc(doc(other, 'reviewAssignments', assignmentId)))
+  await assertSucceeds(getDocs(query(collection(reviewer, 'reviewAssignments'), where('reviewerUid', '==', 'reviewer-user'))))
+  await assertFails(getDocs(collection(reviewer, 'reviewAssignments')))
+  await assertSucceeds(getDoc(doc(reviewer, 'users', 'alice', 'submissions', 'ai-foundations-project')))
+  await assertFails(getDoc(doc(other, 'users', 'alice', 'submissions', 'ai-foundations-project')))
 })

@@ -339,7 +339,7 @@ export function LearningPage() {
             {nextPublishedLesson ? (
               <><div><p className="eyebrow-label">Up next</p><h2>{nextPublishedLesson.title}</h2><p>{lessonComplete ? 'Continue when you are ready.' : 'Complete this lesson first.'}</p></div>{lessonComplete ? <Link className="button button--primary" to={`${coursePath}/${nextPublishedLesson.slug}`}>Open Lesson {lessonIndex + 2} <Icon name="arrow" /></Link> : <button className="button button--outline" type="button" disabled>Complete Lesson {lessonIndex + 1} first</button>}</>
             ) : (
-              <><div><p className="eyebrow-label">{lessonComplete ? 'Learning complete' : 'Final lesson'}</p><h2>{lessonComplete ? 'You completed all four lessons.' : 'Finish your project lesson.'}</h2><p>{lessonComplete ? 'Your 100% lesson progress is saved. The reviewed assessment and project submission are not open yet.' : 'Mark this lesson complete after you finish the project steps and reflection.'}</p></div><Link className="button button--outline" to="/certification">Certification requirements</Link></>
+              <><div><p className="eyebrow-label">{lessonComplete ? 'Learning complete' : 'Final lesson'}</p><h2>{lessonComplete ? 'You completed all four lessons.' : 'Finish your project lesson.'}</h2><p>{lessonComplete ? 'Your 100% lesson progress is saved. You can now prepare your private project submission.' : 'Mark this lesson complete after you finish the project steps and reflection.'}</p></div>{lessonComplete ? <Link className="button button--primary" to="/submit/ai-foundations">Open project workspace</Link> : <Link className="button button--outline" to="/certification">Certification requirements</Link>}</>
             )}
           </div>
         </main>

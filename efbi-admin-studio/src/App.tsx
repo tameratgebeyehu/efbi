@@ -5,8 +5,9 @@ import { firebaseConfigured, getAdminFirebase } from './firebase'
 import CourseManager from './CourseManager'
 import LessonManager from './LessonManager'
 import AuditLog from './AuditLog'
+import ReviewManager, { type StudioRole } from './ReviewManager'
 
-type AccessState = 'loading' | 'signed-out' | 'denied' | 'admin' | 'error'
+type AccessState = 'loading' | 'signed-out' | 'denied' | 'admin' | 'reviewer' | 'error'
 
 const localHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
 
@@ -37,7 +38,7 @@ function SignIn({ onError }: { onError: (message: string) => void }) {
         <div className="brand"><img src="/efbi-icon.png" alt="" /><span>EFBI</span><small>ADMIN STUDIO</small></div>
         <p className="eyebrow">Local administration</p>
         <h1>Sign in to the private studio.</h1>
-        <p className="lede">Only a verified account with the Firebase admin claim can continue.</p>
+        <p className="lede">Only a verified account with EFBI administrator or reviewer permission can continue.</p>
         <form onSubmit={submit}>
           <label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" required /></label>
           <label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" minLength={10} required /></label>
@@ -49,12 +50,12 @@ function SignIn({ onError }: { onError: (message: string) => void }) {
   )
 }
 
-function Dashboard({ user, signOut }: { user: User; signOut: () => Promise<void> }) {
-  const [section, setSection] = useState<'overview' | 'courses' | 'lessons' | 'audit'>('overview')
+function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; signOut: () => Promise<void> }) {
+  const [section, setSection] = useState<'overview' | 'courses' | 'lessons' | 'reviews' | 'audit'>(role === 'reviewer' ? 'reviews' : 'overview')
   const areas = [
     { number: '01', title: 'Courses', detail: 'Create, review, preview, and publish versioned course records.', status: 'Available' },
     { number: '02', title: 'Lessons & questions', detail: 'Draft lessons and browser-only practice checks with audited saves.', status: 'Available' },
-    { number: '03', title: 'Submissions', detail: 'Text and evidence-link review arrives after course migration.', status: 'Locked' },
+    { number: '03', title: 'Reviews & assignments', detail: 'Assign immutable submissions and give reviewers narrow read access.', status: 'Available' },
     { number: '04', title: 'Certificates', detail: 'Issuance stays disabled until reviewed assessment is proven.', status: 'Locked' },
     { number: '05', title: 'Audit history', detail: 'Read the immutable history of course and lesson operations.', status: 'Available' },
   ]
@@ -63,26 +64,26 @@ function Dashboard({ user, signOut }: { user: User; signOut: () => Promise<void>
     <div className="studio">
       <aside className="sidebar">
         <div className="brand brand--light"><img src="/efbi-icon.png" alt="" /><span>EFBI</span><small>ADMIN STUDIO</small></div>
-        <nav aria-label="Admin sections">
-          <button className={section === 'overview' ? 'active' : ''} onClick={() => setSection('overview')}>Overview</button>
-          <button className={section === 'courses' ? 'active' : ''} onClick={() => setSection('courses')}>Courses</button>
-          <button className={section === 'lessons' ? 'active' : ''} onClick={() => setSection('lessons')}>Lessons</button>
-          <button disabled>Reviews</button>
-          <button disabled>Certificates</button>
-          <button className={section === 'audit' ? 'active' : ''} onClick={() => setSection('audit')}>Audit history</button>
+        <nav aria-label="Studio sections">
+          {role === 'admin' && <button className={section === 'overview' ? 'active' : ''} onClick={() => setSection('overview')}>Overview</button>}
+          {role === 'admin' && <button className={section === 'courses' ? 'active' : ''} onClick={() => setSection('courses')}>Courses</button>}
+          {role === 'admin' && <button className={section === 'lessons' ? 'active' : ''} onClick={() => setSection('lessons')}>Lessons</button>}
+          <button className={section === 'reviews' ? 'active' : ''} onClick={() => setSection('reviews')}>Reviews</button>
+          {role === 'admin' && <button disabled>Certificates</button>}
+          {role === 'admin' && <button className={section === 'audit' ? 'active' : ''} onClick={() => setSection('audit')}>Audit history</button>}
         </nav>
-        <div className="operator"><small>Verified operator</small><strong>{user.email}</strong><button onClick={() => void signOut()}>Sign out</button></div>
+        <div className="operator"><small>{role === 'admin' ? 'Verified administrator' : 'Verified reviewer'}</small><strong>{user.email}</strong><button onClick={() => void signOut()}>Sign out</button></div>
       </aside>
       <main className="workspace">
-        {section === 'courses' ? <CourseManager user={user} /> : section === 'lessons' ? <LessonManager user={user} /> : section === 'audit' ? <AuditLog /> : <>
-        <header><div><p className="eyebrow">Phase 14 workspace</p><h1>Good morning, builder.</h1><p>Course publishing, lesson drafting, and read-only history are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
+        {section === 'courses' && role === 'admin' ? <CourseManager user={user} /> : section === 'lessons' && role === 'admin' ? <LessonManager user={user} /> : section === 'reviews' ? <ReviewManager user={user} role={role} /> : section === 'audit' && role === 'admin' ? <AuditLog /> : <>
+        <header><div><p className="eyebrow">Phase 15 workspace</p><h1>Good morning, builder.</h1><p>Course publishing, project assignment, and narrow reviewer access are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
         <section className="safety-grid" aria-label="Security status">
           <article><small>Network</small><strong>Localhost only</strong><p>Not published with the student website.</p></article>
           <article><small>Session</small><strong>Browser session</strong><p>No shared admin password or permanent browser role.</p></article>
-          <article><small>History</small><strong>Read only</strong><p>Audit records cannot be edited or deleted.</p></article>
+          <article><small>Reviews</small><strong>Assigned only</strong><p>Reviewers see only projects assigned to their account.</p></article>
         </section>
         <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Control areas</p><h2>Built in secure stages</h2></div><p>Only tested workflows are enabled. Later operations remain visibly locked.</p></div><div className="area-grid">{areas.map((area) => <article key={area.number}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>{area.status}</small></article>)}</div></section>
-        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Every content change leaves a trail</h2><p>The local studio can now inspect immutable course and lesson history without adding any audit write or deletion control.</p></div><span className="next-step__badge">Phase 14 active</span></section>
+        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Submitted work stays controlled</h2><p>Administrators can assign final projects, while reviewers receive narrow read-only access. Scoring and certificates remain separate.</p></div><span className="next-step__badge">Phase 15 active</span></section>
         </>}
       </main>
     </div>
@@ -116,8 +117,8 @@ export default function App() {
           }
           try {
             const token = await services.authSdk.getIdTokenResult(currentUser, true)
-            const allowed = currentUser.emailVerified && token.claims.admin === true
-            setAccess(allowed ? 'admin' : 'denied')
+            const role = token.claims.admin === true ? 'admin' : token.claims.reviewer === true ? 'reviewer' : null
+            setAccess(currentUser.emailVerified && role ? role : 'denied')
           } catch {
             setAccess('error')
           }
@@ -136,7 +137,7 @@ export default function App() {
   if (!firebaseConfigured) return <main className="blocked"><h1>Firebase configuration is missing.</h1><p>The studio reads the ignored development settings from the student project.</p></main>
   if (access === 'loading') return <main className="blocked"><div className="spinner" /><h1>Checking the local session…</h1></main>
   if (access === 'signed-out') return <><SignIn onError={setMessage} />{message && <p className="toast" role="alert">{message}</p>}</>
-  if (access === 'denied') return <main className="blocked"><h1>Access denied.</h1><p>{user?.emailVerified ? 'This verified account does not have the admin claim.' : 'Verify this account’s email before requesting admin access.'}</p><button onClick={() => void signOut()}>Sign out</button></main>
+  if (access === 'denied') return <main className="blocked"><h1>Access denied.</h1><p>{user?.emailVerified ? 'This verified account does not have an EFBI operator role.' : 'Verify this account’s email before requesting admin access.'}</p><button onClick={() => void signOut()}>Sign out</button></main>
   if (access === 'error' || !user) return <main className="blocked"><h1>The studio could not verify access.</h1><p>Close it, check the local Firebase settings, and try again.</p><button onClick={() => window.location.reload()}>Retry</button></main>
-  return <Dashboard user={user} signOut={signOut} />
+  return <Dashboard user={user} role={access === 'reviewer' ? 'reviewer' : 'admin'} signOut={signOut} />
 }

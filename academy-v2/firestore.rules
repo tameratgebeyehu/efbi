@@ -474,6 +474,127 @@ service cloud.firestore {
         );
     }
 
+    function validSubmissionId(submissionId) {
+      return submissionId == 'ai-foundations-project';
+    }
+
+    function validEvidenceLink(value) {
+      return value is string
+        && value.size() >= 12
+        && value.size() <= 500
+        && value.matches('https://[A-Za-z0-9.-]+(/[A-Za-z0-9._~:/?#@&=+,%!-]*)?');
+    }
+
+    function validEvidence(evidence, required) {
+      return evidence is list
+        && evidence.size() <= 3
+        && (required == false || evidence.size() >= 1)
+        && (evidence.size() < 1 || validEvidenceLink(evidence[0]))
+        && (evidence.size() < 2 || validEvidenceLink(evidence[1]))
+        && (evidence.size() < 3 || validEvidenceLink(evidence[2]));
+    }
+
+    function validSubmissionShape(data, submissionId) {
+      return data.keys().hasOnly([
+          'submissionId', 'courseId', 'courseVersion', 'assessmentVersion',
+          'projectTitle', 'problemStatement', 'intendedUsers', 'solutionSummary',
+          'evidence', 'reflection', 'aiUseDisclosure', 'consentVersion',
+          'consentAcceptedAt', 'status', 'createdAt', 'updatedAt', 'submittedAt'
+        ])
+        && validSubmissionId(submissionId)
+        && data.submissionId == submissionId
+        && data.courseId == 'ai-foundations'
+        && data.courseVersion is int
+        && data.courseVersion >= 1
+        && data.courseVersion <= 10000
+        && data.assessmentVersion == 1
+        && data.projectTitle is string
+        && data.projectTitle.size() <= 100
+        && data.problemStatement is string
+        && data.problemStatement.size() <= 1200
+        && data.intendedUsers is string
+        && data.intendedUsers.size() <= 600
+        && data.solutionSummary is string
+        && data.solutionSummary.size() <= 2000
+        && data.reflection is string
+        && data.reflection.size() <= 2000
+        && data.aiUseDisclosure is string
+        && data.aiUseDisclosure.size() <= 1200
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function validSubmissionDraft(data, submissionId) {
+      return validSubmissionShape(data, submissionId)
+        && data.status == 'draft'
+        && validEvidence(data.evidence, false)
+        && data.consentVersion == ''
+        && data.consentAcceptedAt == null
+        && data.submittedAt == null;
+    }
+
+    function validFinalSubmission(data, submissionId) {
+      return validSubmissionShape(data, submissionId)
+        && data.status == 'submitted'
+        && data.projectTitle.size() >= 5
+        && data.problemStatement.size() >= 40
+        && data.intendedUsers.size() >= 10
+        && data.solutionSummary.size() >= 50
+        && data.reflection.size() >= 50
+        && data.aiUseDisclosure.size() >= 20
+        && validEvidence(data.evidence, true)
+        && data.consentVersion == 'efbi-project-consent-v1'
+        && data.consentAcceptedAt == request.time
+        && data.submittedAt == request.time;
+    }
+
+    function completedAiFoundations(uid) {
+      let progress = get(/databases/$(database)/documents/users/$(uid)/progress/ai-foundations).data;
+      return progress.courseId == 'ai-foundations'
+        && progress.percent == 100
+        && progress.completedLessonIds == ['understanding-ai', 'prompting-with-purpose', 'responsible-use', 'build-an-ethiopian-solution'];
+    }
+
+    function sameSubmissionIdentity() {
+      return request.resource.data.submissionId == resource.data.submissionId
+        && request.resource.data.courseId == resource.data.courseId
+        && request.resource.data.courseVersion == resource.data.courseVersion
+        && request.resource.data.assessmentVersion == resource.data.assessmentVersion
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function assignedReviewer(uid, submissionId) {
+      let assignmentId = uid + '--' + submissionId;
+      let assignment = get(/databases/$(database)/documents/reviewAssignments/$(assignmentId)).data;
+      return reviewer()
+        && assignment.learnerUid == uid
+        && assignment.submissionId == submissionId
+        && assignment.reviewerUid == request.auth.uid
+        && assignment.status == 'assigned';
+    }
+
+    function validReviewAssignment(data, assignmentId) {
+      return data.keys().hasOnly([
+          'assignmentId', 'learnerUid', 'submissionId', 'reviewerUid',
+          'status', 'assignedAt', 'assignedBy'
+        ])
+        && data.assignmentId == assignmentId
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && validSubmissionId(data.submissionId)
+        && assignmentId == data.learnerUid + '--' + data.submissionId
+        && data.reviewerUid is string
+        && data.reviewerUid.size() >= 1
+        && data.reviewerUid.size() <= 128
+        && data.reviewerUid != data.learnerUid
+        && data.reviewerUid != request.auth.uid
+        && data.status == 'assigned'
+        && data.assignedAt == request.time
+        && data.assignedBy == request.auth.uid
+        && get(/databases/$(database)/documents/users/$(data.learnerUid)/submissions/$(data.submissionId)).data.status == 'submitted';
+    }
+
     match /users/{uid} {
       allow create: if owns(uid) && validProfile(request.resource.data);
       allow get: if owns(uid) || admin();
@@ -503,8 +624,33 @@ service cloud.firestore {
       }
 
       match /submissions/{submissionId} {
-        allow read, write: if false;
+        allow get: if owns(uid)
+          || (admin() && resource.data.status == 'submitted')
+          || assignedReviewer(uid, submissionId);
+        allow list: if owns(uid)
+          || (admin() && resource.data.status == 'submitted');
+        allow create: if owns(uid)
+          && verified()
+          && completedAiFoundations(uid)
+          && validSubmissionDraft(request.resource.data, submissionId)
+          && request.resource.data.createdAt == request.time;
+        allow update: if owns(uid)
+          && verified()
+          && completedAiFoundations(uid)
+          && resource.data.status == 'draft'
+          && sameSubmissionIdentity()
+          && (
+            validSubmissionDraft(request.resource.data, submissionId)
+            || validFinalSubmission(request.resource.data, submissionId)
+          );
+        allow delete: if false;
       }
+    }
+
+    // Collection-group queries are limited to submitted work for administrators.
+    // Learner drafts remain private even from the administration interface.
+    match /{path=**}/submissions/{submissionId} {
+      allow list: if admin() && resource.data.status == 'submitted';
     }
 
     match /certificates/{credentialId} {
@@ -678,8 +824,11 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     match /reviewAssignments/{assignmentId} {
-      allow get, list: if admin() || reviewer();
-      allow create, update, delete: if false;
+      allow get, list: if admin()
+        || (reviewer() && resource.data.reviewerUid == request.auth.uid);
+      allow create: if admin()
+        && validReviewAssignment(request.resource.data, assignmentId);
+      allow update, delete: if false;
     }
 
     match /adminAudit/{eventId} {

@@ -250,7 +250,7 @@ export function AccountPage() {
       </div>
       {status && <p className="form-status form-status--success" role="status">{status}</p>}
       <div className="access-actions">
-        {verified ? <Link className="button button--primary" to="/learn/ai-foundations">Open your course</Link> : <button className="button button--primary" onClick={async () => { await resendVerification(); setStatus('A new verification email was sent.') }}>Send verification again</button>}
+        {verified ? <><Link className="button button--primary" to="/learn/ai-foundations">Open your course</Link><Link className="button button--outline" to="/submit/ai-foundations">Project workspace</Link></> : <button className="button button--primary" onClick={async () => { await resendVerification(); setStatus('A new verification email was sent.') }}>Send verification again</button>}
         <button className="button button--outline" onClick={() => void signOut()}>Sign out</button>
       </div>
     </AccessFrame>

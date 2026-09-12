@@ -2,20 +2,22 @@
 
 The EFBI Admin Studio is a separate, local-only application for trusted operators. It is not a route in the student website and must never be deployed to Firebase Hosting, GitHub Pages, or another public host.
 
-## Current Phase 14 boundary
+## Current Phase 15 boundary
 
-Phase 14 keeps course and lesson publishing available in the localhost Admin Studio, while adding read-only access to the immutable content history. Practice questions remain browser-only learning checks, not assessment evidence.
+Phase 15 adds submitted-project assignment and narrow reviewer access to the localhost Studio. Practice questions remain browser-only learning checks, and reviewer scoring or certificate decisions are not active.
 
 - the server binds to `127.0.0.1` on port `5174`;
 - the interface blocks non-local hostnames;
 - Firebase Authentication uses session persistence, so closing the browser ends the saved session;
-- access requires a verified email and an `admin: true` Firebase custom claim;
+- access requires a verified email plus an `admin: true` or `reviewer: true` Firebase custom claim;
 - Courses can be created, edited, previewed, marked ready, and published;
 - every accepted course change and publication writes a linked audit event in the same atomic batch;
 - published releases are immutable snapshots;
 - Lessons and browser-only practice questions can be drafted and published as immutable releases;
 - Audit History shows the newest 250 course and lesson events with local filters and no mutation controls;
-- Reviews, learner submissions, files, certificates, and public enrollment remain outside this phase.
+- Administrators can read submitted projects, never private drafts, and create one immutable reviewer assignment;
+- Reviewers can read only their own assignments and linked submitted projects;
+- scoring, review decisions, private notes, files, certificates, and public enrollment remain outside this phase.
 
 The local interface reduces exposure, while Firebase claims and Firestore rules provide the actual authorization boundary.
 
@@ -53,7 +55,7 @@ npm run manage:roles -- set --email "owner@example.com" --role admin --value tru
 
 6. Sign out and sign in again so Firebase issues a fresh ID token.
 
-No role has been granted as part of Phases 9 through 14. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
+No role has been granted as part of Phases 9 through 15. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
 
 ## Remove access
 
@@ -65,11 +67,24 @@ Then revoke the user's refresh tokens in Firebase Console if access must end imm
 
 ## Role meanings
 
-- `admin`: may manage validated course drafts, course releases, lesson drafts, and may read reviewer assignments and the admin audit.
-- `reviewer`: may read review assignments only. It cannot read course drafts or the admin audit.
+- `admin`: may manage validated course and lesson releases, read submitted projects, create immutable reviewer assignments, and read the content audit. It cannot read private learner drafts.
+- `reviewer`: may list only assignments addressed to its own user ID and read only the linked submitted projects. It cannot read course drafts, other assignments, or the admin audit.
 - `support`: reserved for future limited support work. It currently receives no private operational reads.
 
 A route name, hidden button, or local interface is not authorization. Firebase Authentication claims and Firestore rules remain the real security boundary.
+
+## Create a reviewer safely
+
+1. Create a separate Firebase Authentication account for the reviewer and verify its email.
+2. Inspect it with `npm run manage:roles -- inspect --email "reviewer@example.com"` and copy the returned `uid`.
+3. Grant only the reviewer role with the exact confirmation string:
+
+```powershell
+npm run manage:roles -- set --email "reviewer@example.com" --role reviewer --value true --confirm "grant:reviewer:reviewer@example.com:efbi-academy-dev-doha"
+```
+
+4. Give the administrator the reviewer UID, not the password. The reviewer must sign out and sign in again.
+5. Never give a routine reviewer the administrator role.
 
 ## Course workflow
 
@@ -93,6 +108,17 @@ Firestore remains the source of truth. Do not edit `courseDrafts`, `courseReleas
 
 Lesson drafts stay private to administrators. They are not connected to the student learning route until a later migration phase proves ordering, progress compatibility, and release behavior.
 
+## Review assignment workflow
+
+1. The learner finishes all four AI Foundations lessons, saves a private project draft, accepts the consent statement, and submits the final version.
+2. Open **Reviews** as an administrator. Only submitted work appears; private drafts remain invisible.
+3. Select a project and paste the exact UID from the inspected reviewer account.
+4. Confirm the UID before choosing **Assign reviewer**. Pilot assignments are immutable and cannot be silently reassigned or deleted.
+5. The reviewer signs in to the same localhost Studio. Only **Reviews** is available, and only that reviewer’s assigned projects load.
+6. Treat every external evidence link as untrusted. Never enter credentials or download unexpected files.
+
+Scoring, decisions, revision requests, private reviewer notes, appeals, and certificate issuance remain disabled.
+
 ## Audit History workflow
 
 1. Open **Audit history** to load the newest 250 immutable content events.
@@ -114,6 +140,6 @@ Lesson drafts stay private to administrators. They are not connected to the stud
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 15 gate
+## Phase 16 gate
 
-Phase 15 may begin the text-and-evidence-link submission workflow only after its exact learner ownership, consent, state transitions, reviewer assignment, retention behavior, and emulator tests are approved together. File uploads, certificate issuance, public enrollment, and production deployment remain outside that phase.
+Phase 16 may add reviewer scoring and a public-safe learner result only after the rubric, decision states, one-revision limit, private-note isolation, reviewer identity binding, and emulator tests ship together. File uploads, certificate issuance, public enrollment, and production deployment remain outside that phase.

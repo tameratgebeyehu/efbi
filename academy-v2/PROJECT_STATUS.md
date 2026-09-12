@@ -20,7 +20,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Production build and lint checks passing.
 - Frontend copy and layouts refined across all public pages.
 - Firebase web SDK, secure account forms, email-verification gate, and protected learning route added.
-- Deny-by-default Firestore rules added and now covered by 35 emulator authorization tests.
+- Deny-by-default Firestore rules added and now covered by 43 emulator authorization tests.
 - Backend data model, privacy boundaries, and Firebase Console checklist documented in BACKEND_FOUNDATION.md.
 - Ten routes tested at 390px, 768px, and 1440px with no horizontal overflow or browser runtime errors.
 - Development Firebase project `efbi-academy-dev-doha` connected.
@@ -55,6 +55,8 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Course publishing, lesson draft editing, and immutable lesson release publishing are available only in the localhost Admin Studio with linked audit records.
 - Protected AI Foundations lessons can load compatible immutable backend releases with a safe fallback to the version-controlled curriculum.
 - The localhost Admin Studio can inspect the newest 250 immutable content audit events with read-only filters.
+- Completed learners can save a private AI Foundations project draft and submit an immutable text-and-HTTPS-link record with versioned consent.
+- Administrators can assign submitted projects, and verified reviewers can read only their own assignments and linked final work.
 
 ## Firebase environments
 
@@ -66,7 +68,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Public student enrollment; development authentication is connected but not production-ready.
 - Contact form submissions.
 - Published course video playback; no EFBI YouTube lesson ID has been supplied yet.
-- Reviewed assessments and project submissions.
+- Reviewer scoring, decisions, revision requests, and appeals.
 - Certificate issuance and public verification records.
 - Review, submission, and certificate operations in the Admin Studio.
 - Production deployment or custom-domain migration.
@@ -275,16 +277,32 @@ Implementation is complete:
 7. The student app has no `/admin` route or private administration code.
 8. Submissions, uploads, certificate issuance, public enrollment, and production deployment remain disabled.
 
+## Phase 15 status
+
+Implementation is complete in the development environment:
+
+1. A verified learner must reach 100% AI Foundations progress before creating the one permitted project draft.
+2. Drafts contain structured text and at most three HTTPS evidence links; raw files and unknown fields are rejected.
+3. Final submission requires complete fields, at least one evidence link, two deliberate confirmations, and versioned consent with server timestamps.
+4. Submitted projects are immutable to learners and cannot be deleted from a browser account.
+5. Administrators can query submitted records but cannot read learner drafts.
+6. Administrators can create one immutable reviewer assignment for a submitted project.
+7. Reviewers can query only their own assignments and directly read only the linked final submissions.
+8. The localhost Studio exposes no course, lesson, certificate, or audit controls to reviewer-only accounts.
+9. The tested rules and submissions collection-group index were deployed only to `efbi-academy-dev-doha`.
+10. Forty-three Firestore emulator authorization tests pass.
+11. File uploads, scoring, decisions, appeals, certificate eligibility, certificate issuance, public enrollment, and production deployment remain disabled.
+
 ## Next implementation phase
 
-Phase 15 may begin the learner submission and review foundation only after the complete security gate is agreed:
+Phase 16 may add reviewer scoring and a public-safe learner result only after its full security model is approved:
 
-1. Start with text and evidence links; do not enable file uploads.
-2. Enforce learner ownership, explicit consent, immutable submission snapshots, and narrow state transitions.
-3. Allow reviewers to read only specifically assigned submissions.
-4. Keep course completion separate from assessment approval and certificate eligibility.
-5. Test cross-user isolation, reviewer limits, forbidden mutation, and retention behavior before any live development use.
-6. Keep public enrollment, certificate issuance, and production deployment disabled.
+1. Store review results separately from the immutable learner submission.
+2. Bind the result to the assigned reviewer, rubric version, exact submission, and server timestamps.
+3. Validate each rubric score, the pass threshold, safety minimum, and a single revision-request state.
+4. Keep private reviewer or safeguarding notes invisible to learners and unrelated operators.
+5. Keep certificate eligibility and issuance disabled until a separate administrator-only phase.
+6. Keep public enrollment and production deployment disabled until retention and deletion automation is complete.
 
 ## Recovery commands
 
