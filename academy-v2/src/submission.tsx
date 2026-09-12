@@ -7,10 +7,12 @@ import {
   draftErrors,
   emptySubmissionForm,
   finalErrors,
+  readLearnerReviewResult,
   readSubmission,
   readSubmissionEligibility,
   saveSubmissionDraft,
   submitProject,
+  type LearnerReviewResult,
   type ProjectSubmission,
   type SubmissionForm,
 } from './lib/submission'
@@ -37,10 +39,17 @@ function formFromSubmission(submission: ProjectSubmission): SubmissionForm {
   }
 }
 
+function LearnerReviewPanel({ result }: { result: LearnerReviewResult }) {
+  const labels: [keyof LearnerReviewResult['scores'], string][] = [['localProblem', 'Local problem'], ['usefulSolution', 'Useful solution'], ['evidence', 'Evidence'], ['safetyResponsibility', 'Safety & responsibility'], ['explanationReflection', 'Explanation & reflection']]
+  const approved = result.decision === 'approved'
+  return <section className={`learner-result learner-result--${result.decision}`}><header><div><p className="eyebrow-label">Human review complete</p><h2>{approved ? 'Your project is approved.' : 'Your reviewer requested changes.'}</h2><p>{approved ? 'Your project met the Phase 16 rubric. Certificate issuance is still a separate protected step.' : 'Read the feedback below. Your original submission stays locked while EFBI prepares the one-revision workflow.'}</p></div><strong>{result.totalScore}/10</strong></header><div className="learner-result__scores">{labels.map(([key, label]) => <span key={key}><small>{label}</small><b>{result.scores[key]}/2</b></span>)}</div><div className="learner-result__feedback"><h3>Reviewer feedback</h3><p>{result.publicFeedback}</p></div><footer><Icon name="shield" /><span>This result contains no private reviewer notes. Rubric version {result.rubricVersion}.</span></footer></section>
+}
+
 export function SubmissionPage() {
   const { user } = useAuth()
   const [state, setState] = useState<LoadState>('loading')
   const [submission, setSubmission] = useState<ProjectSubmission | null>(null)
+  const [reviewResult, setReviewResult] = useState<LearnerReviewResult | null>(null)
   const [form, setForm] = useState<SubmissionForm>({ ...emptySubmissionForm, evidence: ['', '', ''] })
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -52,13 +61,14 @@ export function SubmissionPage() {
   useEffect(() => {
     if (!user) return
     let active = true
-    void Promise.all([readSubmissionEligibility(user.uid), readSubmission(user.uid)]).then(([eligible, saved]) => {
+    void Promise.all([readSubmissionEligibility(user.uid), readSubmission(user.uid), readLearnerReviewResult(user.uid)]).then(([eligible, saved, result]) => {
       if (!active) return
       if (!eligible) {
         setState('ineligible')
         return
       }
       setSubmission(saved)
+      setReviewResult(result)
       if (saved) setForm(formFromSubmission(saved))
       setState('ready')
     }).catch(() => { if (active) setState('error') })
@@ -139,9 +149,8 @@ export function SubmissionPage() {
   if (state === 'ineligible') return <main className="submission-page"><section className="shell submission-state"><Icon name="shield" /><p className="eyebrow-label">Project locked</p><h1>Finish all four lessons first.</h1><p>Your course progress must reach 100% before EFBI accepts a project draft.</p><Link className="button button--primary" to="/learn/ai-foundations">Continue learning</Link></section></main>
 
   if (locked && submission) {
-    return <main className="submission-page"><section className="shell"><header className="submission-hero"><div><p className="eyebrow-label">Project submitted</p><h1>{submission.projectTitle}</h1><p>Submitted {submittedDate(submission.submittedAt)}. Your work is locked while EFBI assigns a reviewer.</p></div><span className="submission-status submission-status--submitted">Submitted</span></header><div className="submitted-project"><section><h2>Your project record</h2><dl><div><dt>Problem</dt><dd>{submission.problemStatement}</dd></div><div><dt>Intended users</dt><dd>{submission.intendedUsers}</dd></div><div><dt>Solution</dt><dd>{submission.solutionSummary}</dd></div><div><dt>Reflection</dt><dd>{submission.reflection}</dd></div><div><dt>AI use</dt><dd>{submission.aiUseDisclosure}</dd></div></dl></section><aside><h2>Evidence links</h2>{submission.evidence.filter(Boolean).map((link) => <a key={link} href={link} target="_blank" rel="noreferrer">Open evidence <span>↗</span></a>)}<div className="submission-lock-note"><Icon name="shield" /><p><strong>Immutable submission</strong><span>Neither you nor a reviewer can silently change this submitted record.</span></p></div></aside></div>{message && <p className="form-status form-status--success">{message}</p>}<Link className="button button--outline" to="/account">Back to account</Link></section></main>
+    return <main className="submission-page"><section className="shell"><header className="submission-hero"><div><p className="eyebrow-label">Project submitted</p><h1>{submission.projectTitle}</h1><p>Submitted {submittedDate(submission.submittedAt)}. {reviewResult ? 'Your human review is complete.' : 'Your work is locked while EFBI assigns and completes a review.'}</p></div><span className="submission-status submission-status--submitted">{reviewResult ? 'Reviewed' : 'Submitted'}</span></header>{reviewResult && <LearnerReviewPanel result={reviewResult} />}<div className="submitted-project"><section><h2>Your project record</h2><dl><div><dt>Problem</dt><dd>{submission.problemStatement}</dd></div><div><dt>Intended users</dt><dd>{submission.intendedUsers}</dd></div><div><dt>Solution</dt><dd>{submission.solutionSummary}</dd></div><div><dt>Reflection</dt><dd>{submission.reflection}</dd></div><div><dt>AI use</dt><dd>{submission.aiUseDisclosure}</dd></div></dl></section><aside><h2>Evidence links</h2>{submission.evidence.filter(Boolean).map((link) => <a key={link} href={link} target="_blank" rel="noreferrer">Open evidence <span>↗</span></a>)}<div className="submission-lock-note"><Icon name="shield" /><p><strong>Immutable submission</strong><span>Neither you nor a reviewer can silently change this submitted record.</span></p></div></aside></div>{message && <p className="form-status form-status--success">{message}</p>}<Link className="button button--outline" to="/account">Back to account</Link></section></main>
   }
-
   return (
     <main className="submission-page">
       <section className="shell">

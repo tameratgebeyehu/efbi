@@ -76,14 +76,14 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
       </aside>
       <main className="workspace">
         {section === 'courses' && role === 'admin' ? <CourseManager user={user} /> : section === 'lessons' && role === 'admin' ? <LessonManager user={user} /> : section === 'reviews' ? <ReviewManager user={user} role={role} /> : section === 'audit' && role === 'admin' ? <AuditLog /> : <>
-        <header><div><p className="eyebrow">Phase 15 workspace</p><h1>Good morning, builder.</h1><p>Course publishing, project assignment, and narrow reviewer access are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
+        <header><div><p className="eyebrow">Phase 16 workspace</p><h1>Good morning, builder.</h1><p>Course publishing, project assignment, and permanent rubric reviews are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
         <section className="safety-grid" aria-label="Security status">
           <article><small>Network</small><strong>Localhost only</strong><p>Not published with the student website.</p></article>
           <article><small>Session</small><strong>Browser session</strong><p>No shared admin password or permanent browser role.</p></article>
           <article><small>Reviews</small><strong>Assigned only</strong><p>Reviewers see only projects assigned to their account.</p></article>
         </section>
         <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Control areas</p><h2>Built in secure stages</h2></div><p>Only tested workflows are enabled. Later operations remain visibly locked.</p></div><div className="area-grid">{areas.map((area) => <article key={area.number}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>{area.status}</small></article>)}</div></section>
-        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Submitted work stays controlled</h2><p>Administrators can assign final projects, while reviewers receive narrow read-only access. Scoring and certificates remain separate.</p></div><span className="next-step__badge">Phase 15 active</span></section>
+        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Submitted work stays controlled</h2><p>Assigned reviewers can publish one permanent rubric result. Learners receive only the safe result; certificates remain separate.</p></div><span className="next-step__badge">Phase 16 active</span></section>
         </>}
       </main>
     </div>

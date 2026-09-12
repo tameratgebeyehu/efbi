@@ -73,29 +73,6 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
-    function validCertificate(data, credentialId) {
-      return data.keys().hasOnly([
-          'credentialId',
-          'learnerName',
-          'courseId',
-          'courseTitle',
-          'issuedAt',
-          'status',
-          'public',
-          'updatedAt'
-        ])
-        && data.credentialId == credentialId
-        && data.learnerName is string
-        && data.learnerName.size() >= 2
-        && data.learnerName.size() <= 80
-        && data.courseId is string
-        && data.courseTitle is string
-        && data.issuedAt is timestamp
-        && data.status in ['active', 'revoked', 'replaced']
-        && data.public == true
-        && data.updatedAt == request.time;
-    }
-
     function validCourseContent(data) {
       return data.title is string
         && data.title.size() >= 5
@@ -573,6 +550,139 @@ service cloud.firestore {
         && assignment.status == 'assigned';
     }
 
+    function validRubricScore(value) {
+      return value is int && value >= 0 && value <= 2;
+    }
+
+    function validReviewScores(scores) {
+      return scores is map
+        && scores.keys().hasOnly([
+          'localProblem', 'usefulSolution', 'evidence',
+          'safetyResponsibility', 'explanationReflection'
+        ])
+        && validRubricScore(scores.localProblem)
+        && validRubricScore(scores.usefulSolution)
+        && validRubricScore(scores.evidence)
+        && validRubricScore(scores.safetyResponsibility)
+        && validRubricScore(scores.explanationReflection);
+    }
+
+    function rubricTotal(scores) {
+      return scores.localProblem
+        + scores.usefulSolution
+        + scores.evidence
+        + scores.safetyResponsibility
+        + scores.explanationReflection;
+    }
+
+    function validReviewDecision(data) {
+      return (
+          data.decision == 'approved'
+          && data.totalScore >= 8
+          && data.scores.safetyResponsibility >= 1
+          && data.concern == 'none'
+        )
+        || (
+          data.decision == 'revision_requested'
+          && (
+            data.totalScore < 8
+            || data.scores.safetyResponsibility == 0
+            || data.concern != 'none'
+          )
+        );
+    }
+
+    function validReviewBinding(data, resultId) {
+      let assignment = get(/databases/$(database)/documents/reviewAssignments/$(resultId)).data;
+      let submission = get(/databases/$(database)/documents/users/$(data.learnerUid)/submissions/$(data.submissionId)).data;
+      return assignment.assignmentId == resultId
+        && assignment.learnerUid == data.learnerUid
+        && assignment.submissionId == data.submissionId
+        && assignment.reviewerUid == request.auth.uid
+        && assignment.status == 'assigned'
+        && submission.status == 'submitted'
+        && submission.courseVersion == data.courseVersion
+        && submission.assessmentVersion == data.assessmentVersion
+        && submission.submittedAt == data.submissionSubmittedAt;
+    }
+
+    function validPrivateReviewResult(data, resultId) {
+      return data.keys().hasOnly([
+          'assignmentId', 'learnerUid', 'submissionId', 'reviewerUid',
+          'rubricVersion', 'courseVersion', 'assessmentVersion',
+          'submissionSubmittedAt', 'scores', 'totalScore', 'decision',
+          'publicFeedback', 'concern', 'privateNote', 'reviewedAt'
+        ])
+        && data.assignmentId == resultId
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && validSubmissionId(data.submissionId)
+        && data.reviewerUid == request.auth.uid
+        && data.rubricVersion == 1
+        && data.courseVersion is int
+        && data.courseVersion >= 1
+        && data.courseVersion <= 10000
+        && data.assessmentVersion == 1
+        && data.submissionSubmittedAt is timestamp
+        && validReviewScores(data.scores)
+        && data.totalScore is int
+        && data.totalScore == rubricTotal(data.scores)
+        && data.decision in ['approved', 'revision_requested']
+        && data.publicFeedback is string
+        && data.publicFeedback.size() >= 40
+        && data.publicFeedback.size() <= 1500
+        && data.concern in ['none', 'plagiarism', 'identity', 'consent', 'safeguarding']
+        && data.privateNote is string
+        && data.privateNote.size() <= 2000
+        && (data.concern == 'none' || data.privateNote.size() >= 20)
+        && data.reviewedAt == request.time
+        && validReviewDecision(data)
+        && validReviewBinding(data, resultId);
+    }
+
+    function validPublicReviewResult(data, resultId) {
+      return data.keys().hasOnly([
+          'assignmentId', 'learnerUid', 'submissionId', 'rubricVersion',
+          'courseVersion', 'assessmentVersion', 'submissionSubmittedAt',
+          'scores', 'totalScore', 'decision', 'publicFeedback', 'reviewedAt'
+        ])
+        && data.assignmentId == resultId
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && validSubmissionId(data.submissionId)
+        && data.rubricVersion == 1
+        && data.courseVersion is int
+        && data.courseVersion >= 1
+        && data.courseVersion <= 10000
+        && data.assessmentVersion == 1
+        && data.submissionSubmittedAt is timestamp
+        && validReviewScores(data.scores)
+        && data.totalScore is int
+        && data.totalScore == rubricTotal(data.scores)
+        && data.decision in ['approved', 'revision_requested']
+        && data.publicFeedback is string
+        && data.publicFeedback.size() >= 40
+        && data.publicFeedback.size() <= 1500
+        && data.reviewedAt == request.time;
+    }
+
+    function samePublicReview(privateResult, publicResult) {
+      return privateResult.assignmentId == publicResult.assignmentId
+        && privateResult.learnerUid == publicResult.learnerUid
+        && privateResult.submissionId == publicResult.submissionId
+        && privateResult.rubricVersion == publicResult.rubricVersion
+        && privateResult.courseVersion == publicResult.courseVersion
+        && privateResult.assessmentVersion == publicResult.assessmentVersion
+        && privateResult.submissionSubmittedAt == publicResult.submissionSubmittedAt
+        && privateResult.scores == publicResult.scores
+        && privateResult.totalScore == publicResult.totalScore
+        && privateResult.decision == publicResult.decision
+        && privateResult.publicFeedback == publicResult.publicFeedback
+        && privateResult.reviewedAt == publicResult.reviewedAt;
+    }
+
     function validReviewAssignment(data, assignmentId) {
       return data.keys().hasOnly([
           'assignmentId', 'learnerUid', 'submissionId', 'reviewerUid',
@@ -645,6 +755,24 @@ service cloud.firestore {
           );
         allow delete: if false;
       }
+
+      // Learners receive a separate public-safe result. The linked private
+      // reviewer note and concern category never enter this learner-owned path.
+      match /reviewResults/{resultId} {
+        allow get, list: if owns(uid) || admin();
+        allow create: if reviewer()
+          && request.resource.data.learnerUid == uid
+          && validPublicReviewResult(request.resource.data, resultId)
+          && validPrivateReviewResult(
+            getAfter(/databases/$(database)/documents/reviewResults/$(resultId)).data,
+            resultId
+          )
+          && samePublicReview(
+            getAfter(/databases/$(database)/documents/reviewResults/$(resultId)).data,
+            request.resource.data
+          );
+        allow update, delete: if false;
+      }
     }
 
     // Collection-group queries are limited to submitted work for administrators.
@@ -656,8 +784,9 @@ service cloud.firestore {
     match /certificates/{credentialId} {
       allow get: if true;
       allow list: if false;
-      allow create, update: if admin() && validCertificate(request.resource.data, credentialId);
-      allow delete: if false;
+      // Issuance and status changes remain closed until the separate
+      // administrator-only certificate phase is implemented and tested.
+      allow create, update, delete: if false;
     }
 
     // Drafts remain private. Every accepted change requires a linked immutable
@@ -823,6 +952,30 @@ service cloud.firestore {
         && releaseMatchesPublishedLessonDraft(request.resource.data, releaseId);
       allow update, delete: if false;
     }
+    // The private result is readable only by administrators and its assigned
+    // reviewer. It must be created atomically with a matching learner-safe copy.
+    match /reviewResults/{resultId} {
+      allow get: if admin()
+        || (
+          reviewer()
+          && get(/databases/$(database)/documents/reviewAssignments/$(resultId)).data.reviewerUid == request.auth.uid
+          && get(/databases/$(database)/documents/reviewAssignments/$(resultId)).data.status == 'assigned'
+        );
+      allow list: if admin()
+        || (reviewer() && resource.data.reviewerUid == request.auth.uid);
+      allow create: if reviewer()
+        && validPrivateReviewResult(request.resource.data, resultId)
+        && validPublicReviewResult(
+          getAfter(/databases/$(database)/documents/users/$(request.resource.data.learnerUid)/reviewResults/$(resultId)).data,
+          resultId
+        )
+        && samePublicReview(
+          request.resource.data,
+          getAfter(/databases/$(database)/documents/users/$(request.resource.data.learnerUid)/reviewResults/$(resultId)).data
+        );
+      allow update, delete: if false;
+    }
+
     match /reviewAssignments/{assignmentId} {
       allow get, list: if admin()
         || (reviewer() && resource.data.reviewerUid == request.auth.uid);

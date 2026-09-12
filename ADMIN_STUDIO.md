@@ -2,9 +2,9 @@
 
 The EFBI Admin Studio is a separate, local-only application for trusted operators. It is not a route in the student website and must never be deployed to Firebase Hosting, GitHub Pages, or another public host.
 
-## Current Phase 15 boundary
+## Current Phase 16 boundary
 
-Phase 15 adds submitted-project assignment and narrow reviewer access to the localhost Studio. Practice questions remain browser-only learning checks, and reviewer scoring or certificate decisions are not active.
+Phase 16 adds fixed-rubric reviewer scoring and a separate learner-safe result to the localhost Studio. Practice questions remain browser-only learning checks, and certificate issuance is still disabled.
 
 - the server binds to `127.0.0.1` on port `5174`;
 - the interface blocks non-local hostnames;
@@ -17,7 +17,8 @@ Phase 15 adds submitted-project assignment and narrow reviewer access to the loc
 - Audit History shows the newest 250 course and lesson events with local filters and no mutation controls;
 - Administrators can read submitted projects, never private drafts, and create one immutable reviewer assignment;
 - Reviewers can read only their own assignments and linked submitted projects;
-- scoring, review decisions, private notes, files, certificates, and public enrollment remain outside this phase.
+- an assigned reviewer can publish one immutable calculated result with learner feedback and isolated private notes;
+- revision responses, appeals, files, certificates, and public enrollment remain outside this phase.
 
 The local interface reduces exposure, while Firebase claims and Firestore rules provide the actual authorization boundary.
 
@@ -55,7 +56,7 @@ npm run manage:roles -- set --email "owner@example.com" --role admin --value tru
 
 6. Sign out and sign in again so Firebase issues a fresh ID token.
 
-No role has been granted as part of Phases 9 through 15. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
+No role has been granted as part of Phases 9 through 16. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
 
 ## Remove access
 
@@ -67,8 +68,8 @@ Then revoke the user's refresh tokens in Firebase Console if access must end imm
 
 ## Role meanings
 
-- `admin`: may manage validated course and lesson releases, read submitted projects, create immutable reviewer assignments, and read the content audit. It cannot read private learner drafts.
-- `reviewer`: may list only assignments addressed to its own user ID and read only the linked submitted projects. It cannot read course drafts, other assignments, or the admin audit.
+- `admin`: may manage validated course and lesson releases, read submitted projects and private completed reviews, create immutable reviewer assignments, and read the content audit. It cannot read private learner drafts or create review decisions.
+- `reviewer`: may list only assignments addressed to its own user ID, read the linked submitted projects, and publish one permanent rubric result for each. It cannot read course drafts, other assignments, or the admin audit.
 - `support`: reserved for future limited support work. It currently receives no private operational reads.
 
 A route name, hidden button, or local interface is not authorization. Firebase Authentication claims and Firestore rules remain the real security boundary.
@@ -116,8 +117,11 @@ Lesson drafts stay private to administrators. They are not connected to the stud
 4. Confirm the UID before choosing **Assign reviewer**. Pilot assignments are immutable and cannot be silently reassigned or deleted.
 5. The reviewer signs in to the same localhost Studio. Only **Reviews** is available, and only that reviewer’s assigned projects load.
 6. Treat every external evidence link as untrusted. Never enter credentials or download unexpected files.
+7. Score all five rubric criteria from 0 to 2. The Studio calculates approval or revision requested; reviewers cannot override it.
+8. Write learner feedback without private or safeguarding information. Put internal concerns only in the private fields.
+9. Confirm the permanent result and publish it. The learner receives only the safe result copy.
 
-Scoring, decisions, revision requests, private reviewer notes, appeals, and certificate issuance remain disabled.
+Revision responses, appeals, file uploads, and certificate issuance remain disabled.
 
 ## Audit History workflow
 
@@ -140,6 +144,6 @@ Scoring, decisions, revision requests, private reviewer notes, appeals, and cert
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 16 gate
+## Phase 17 gate
 
-Phase 16 may add reviewer scoring and a public-safe learner result only after the rubric, decision states, one-revision limit, private-note isolation, reviewer identity binding, and emulator tests ship together. File uploads, certificate issuance, public enrollment, and production deployment remain outside that phase.
+Phase 17 may add one controlled learner revision only by preserving the original submission and result, creating a separate versioned revision, binding a second review to that exact revision, and testing the one-revision limit. Appeals, file uploads, certificate issuance, public enrollment, and production deployment remain outside that phase.

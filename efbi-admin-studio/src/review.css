@@ -61,3 +61,26 @@
   .review-meta { grid-template-columns: 1fr; }
   .review-record > header { align-items: stretch; flex-direction: column; }
 }
+
+.rubric-form { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.rubric-form > label { grid-template-columns: minmax(0, 1fr) 72px; align-items: center; }
+.rubric-form > label > span small { display: block; margin-top: 3px; color: var(--muted); font-weight: 500; line-height: 1.4; }
+.assignment-panel select, .assignment-panel textarea { width: 100%; padding: 9px 10px; border: 1px solid #cbd4cd; background: #fff; color: var(--deep); outline: none; }
+.assignment-panel select:focus, .assignment-panel textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(8,115,66,.1); }
+.rubric-form > label:has(textarea), .rubric-form > label:has(.assignment-confirm) { grid-template-columns: 1fr; }
+.rubric-form textarea { min-height: 100px; resize: vertical; }
+.review-calculation { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.review-calculation span { padding: 10px; color: var(--muted); background: #f4f7f5; font-size: .65rem; }
+.review-calculation strong { display: block; margin-top: 3px; color: var(--deep); font-size: .8rem; }
+.review-result { display: grid; gap: 12px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.review-result h2, .review-result h3, .review-result p { margin: 0; }
+.review-result > strong { color: var(--green); font-size: 2rem; }
+.review-result h3 { padding-top: 5px; color: var(--deep); font-size: .75rem; }
+.review-result p { color: var(--muted); font-size: .7rem; line-height: 1.55; white-space: pre-wrap; }
+.review-result > small { color: var(--muted); font-size: .62rem; }
+.review-result--revision_requested > strong { color: #8a6511; }
+.result-scores { display: grid; gap: 5px; }
+.result-scores span { display: flex; justify-content: space-between; gap: 10px; padding: 7px 8px; color: var(--deep); background: #f5f8f6; font-size: .68rem; font-weight: 800; }
+.result-scores small { color: var(--muted); font-weight: 600; }
+
+.rubric-form > label.assignment-confirm { grid-template-columns: 18px 1fr; }

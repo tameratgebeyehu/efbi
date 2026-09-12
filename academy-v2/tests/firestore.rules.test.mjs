@@ -993,10 +993,10 @@ test('learners cannot issue certificates', async () => {
   }))
 })
 
-test('an authenticated administrator can issue a public-safe certificate', async () => {
+test('certificate issuance remains closed even to administrators', async () => {
   const db = verifiedUser('admin-user', { admin: true })
-  await assertSucceeds(setDoc(doc(db, 'certificates', 'EFBI-REAL-001'), {
-    credentialId: 'EFBI-REAL-001',
+  await assertFails(setDoc(doc(db, 'certificates', 'EFBI-BLOCKED-001'), {
+    credentialId: 'EFBI-BLOCKED-001',
     learnerName: 'Approved Learner',
     courseId: 'ai-foundations',
     courseTitle: 'AI Foundations for Ethiopia',
@@ -1186,4 +1186,198 @@ test('a reviewer can see only their assignment and its submitted project', async
   await assertFails(getDocs(collection(reviewer, 'reviewAssignments')))
   await assertSucceeds(getDoc(doc(reviewer, 'users', 'alice', 'submissions', 'ai-foundations-project')))
   await assertFails(getDoc(doc(other, 'users', 'alice', 'submissions', 'ai-foundations-project')))
+})
+
+
+function rubricScores(overrides = {}) {
+  return {
+    localProblem: 2,
+    usefulSolution: 2,
+    evidence: 2,
+    safetyResponsibility: 2,
+    explanationReflection: 2,
+    ...overrides,
+  }
+}
+
+function privateReviewResult(submissionSubmittedAt, overrides = {}) {
+  return {
+    assignmentId: 'alice--ai-foundations-project',
+    learnerUid: 'alice',
+    submissionId: 'ai-foundations-project',
+    reviewerUid: 'reviewer-user',
+    rubricVersion: 1,
+    courseVersion: 1,
+    assessmentVersion: 1,
+    submissionSubmittedAt,
+    scores: rubricScores(),
+    totalScore: 10,
+    decision: 'approved',
+    publicFeedback: 'Your project identifies a clear local need, explains a useful response, and reflects responsibly on evidence and limits.',
+    concern: 'none',
+    privateNote: 'Evidence and disclosure were checked against the submitted record.',
+    reviewedAt: serverTimestamp(),
+    ...overrides,
+  }
+}
+
+function publicReviewResult(submissionSubmittedAt, overrides = {}) {
+  return {
+    assignmentId: 'alice--ai-foundations-project',
+    learnerUid: 'alice',
+    submissionId: 'ai-foundations-project',
+    rubricVersion: 1,
+    courseVersion: 1,
+    assessmentVersion: 1,
+    submissionSubmittedAt,
+    scores: rubricScores(),
+    totalScore: 10,
+    decision: 'approved',
+    publicFeedback: 'Your project identifies a clear local need, explains a useful response, and reflects responsibly on evidence and limits.',
+    reviewedAt: serverTimestamp(),
+    ...overrides,
+  }
+}
+
+function addReviewPair(batch, db, submissionSubmittedAt, privateOverrides = {}, publicOverrides = {}) {
+  const resultId = 'alice--ai-foundations-project'
+  batch.set(doc(db, 'reviewResults', resultId), privateReviewResult(submissionSubmittedAt, privateOverrides))
+  batch.set(doc(db, 'users', 'alice', 'reviewResults', resultId), publicReviewResult(submissionSubmittedAt, publicOverrides))
+}
+
+async function assignedSubmissionTime(db) {
+  const snapshot = await getDoc(doc(db, 'users', 'alice', 'submissions', 'ai-foundations-project'))
+  return snapshot.data().submittedAt
+}
+
+test('an assigned reviewer atomically creates one private result and learner-safe result', async () => {
+  await seedSubmittedProject('alice', 'reviewer-user')
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const submittedAt = await assignedSubmissionTime(reviewer)
+  const emptyResult = await assertSucceeds(getDoc(doc(reviewer, 'reviewResults', 'alice--ai-foundations-project')))
+  assert.equal(emptyResult.exists(), false)
+  const batch = writeBatch(reviewer)
+  addReviewPair(batch, reviewer, submittedAt)
+  await assertSucceeds(batch.commit())
+
+  const privateResult = await assertSucceeds(getDoc(doc(reviewer, 'reviewResults', 'alice--ai-foundations-project')))
+  assert.equal(privateResult.data().privateNote.length > 0, true)
+  const learner = verifiedUser('alice')
+  const publicResult = await assertSucceeds(getDoc(doc(learner, 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project')))
+  assert.equal(publicResult.data().decision, 'approved')
+  assert.equal('privateNote' in publicResult.data(), false)
+  assert.equal('concern' in publicResult.data(), false)
+  assert.equal('reviewerUid' in publicResult.data(), false)
+  await assertFails(getDoc(doc(learner, 'reviewResults', 'alice--ai-foundations-project')))
+})
+
+test('a review result requires matching private and learner-safe records in one batch', async () => {
+  await seedSubmittedProject('alice', 'reviewer-user')
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const submittedAt = await assignedSubmissionTime(reviewer)
+  await assertFails(setDoc(doc(reviewer, 'reviewResults', 'alice--ai-foundations-project'), privateReviewResult(submittedAt)))
+  await assertFails(setDoc(doc(reviewer, 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project'), publicReviewResult(submittedAt)))
+
+  const mismatched = writeBatch(reviewer)
+  addReviewPair(mismatched, reviewer, submittedAt, {}, { totalScore: 9 })
+  await assertFails(mismatched.commit())
+})
+
+test('rubric rules reject score tampering and inconsistent decisions', async () => {
+  await seedSubmittedProject('alice', 'reviewer-user')
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const submittedAt = await assignedSubmissionTime(reviewer)
+
+  async function reject(privateOverrides, publicOverrides) {
+    const batch = writeBatch(reviewer)
+    addReviewPair(batch, reviewer, submittedAt, privateOverrides, publicOverrides)
+    await assertFails(batch.commit())
+  }
+
+  await reject({ scores: rubricScores({ evidence: 3 }), totalScore: 11 }, { scores: rubricScores({ evidence: 3 }), totalScore: 11 })
+  await reject({ totalScore: 9 }, { totalScore: 9 })
+  const lowScores = rubricScores({ localProblem: 1, usefulSolution: 1, evidence: 1 })
+  await reject({ scores: lowScores, totalScore: 7 }, { scores: lowScores, totalScore: 7 })
+  const unsafeScores = rubricScores({ safetyResponsibility: 0 })
+  await reject({ scores: unsafeScores, totalScore: 8 }, { scores: unsafeScores, totalScore: 8 })
+  await reject({ concern: 'plagiarism' }, {})
+  await reject({ concern: 'identity', decision: 'revision_requested', privateNote: '' }, { decision: 'revision_requested' })
+  await reject({ decision: 'revision_requested' }, { decision: 'revision_requested' })
+})
+
+test('one revision-request result is valid and cannot be changed or deleted', async () => {
+  await seedSubmittedProject('alice', 'reviewer-user')
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const submittedAt = await assignedSubmissionTime(reviewer)
+  const scores = rubricScores({ safetyResponsibility: 0 })
+  const batch = writeBatch(reviewer)
+  addReviewPair(batch, reviewer, submittedAt, {
+    scores,
+    totalScore: 8,
+    decision: 'revision_requested',
+    publicFeedback: 'Please revise the project to explain how personal information is protected and how unsafe answers will be handled.',
+    concern: 'safeguarding',
+  }, {
+    scores,
+    totalScore: 8,
+    decision: 'revision_requested',
+    publicFeedback: 'Please revise the project to explain how personal information is protected and how unsafe answers will be handled.',
+  })
+  await assertSucceeds(batch.commit())
+
+  const privateReference = doc(reviewer, 'reviewResults', 'alice--ai-foundations-project')
+  const publicReference = doc(reviewer, 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project')
+  await assertFails(updateDoc(privateReference, { decision: 'approved' }))
+  await assertFails(updateDoc(publicReference, { decision: 'approved' }))
+  await assertFails(deleteDoc(privateReference))
+  await assertFails(deleteDoc(publicReference))
+})
+
+test('learners, unrelated reviewers, and administrators cannot write review results', async () => {
+  await seedSubmittedProject('alice', 'reviewer-user')
+  const assigned = verifiedUser('reviewer-user', { reviewer: true })
+  const submittedAt = await assignedSubmissionTime(assigned)
+  for (const db of [verifiedUser('alice'), verifiedUser('other-reviewer', { reviewer: true }), verifiedUser('admin-user', { admin: true })]) {
+    const batch = writeBatch(db)
+    addReviewPair(batch, db, submittedAt)
+    await assertFails(batch.commit())
+  }
+})
+
+test('private review fields stay isolated from learners and unrelated reviewers', async () => {
+  await seedSubmittedProject('alice', 'reviewer-user')
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const submittedAt = await assignedSubmissionTime(reviewer)
+  const batch = writeBatch(reviewer)
+  addReviewPair(batch, reviewer, submittedAt)
+  await assertSucceeds(batch.commit())
+
+  const other = verifiedUser('other-reviewer', { reviewer: true })
+  await assertFails(getDoc(doc(other, 'reviewResults', 'alice--ai-foundations-project')))
+  await assertFails(getDoc(doc(other, 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project')))
+  const admin = verifiedUser('admin-user', { admin: true })
+  await assertSucceeds(getDoc(doc(admin, 'reviewResults', 'alice--ai-foundations-project')))
+  await assertSucceeds(getDoc(doc(admin, 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project')))
+})
+
+test('an approved review does not grant certificate-writing authority', async () => {
+  await seedSubmittedProject('alice', 'reviewer-user')
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const submittedAt = await assignedSubmissionTime(reviewer)
+  const batch = writeBatch(reviewer)
+  addReviewPair(batch, reviewer, submittedAt)
+  await assertSucceeds(batch.commit())
+
+  for (const db of [verifiedUser('alice'), reviewer, verifiedUser('admin-user', { admin: true })]) {
+    await assertFails(setDoc(doc(db, 'certificates', 'EFBI-NOT-YET-001'), {
+      credentialId: 'EFBI-NOT-YET-001',
+      learnerName: 'Alice Learner',
+      courseId: 'ai-foundations',
+      courseTitle: 'AI Foundations for Ethiopia',
+      issuedAt: serverTimestamp(),
+      status: 'active',
+      public: true,
+      updatedAt: serverTimestamp(),
+    }))
+  }
 })

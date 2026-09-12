@@ -8,6 +8,25 @@ export const consentVersion = 'efbi-project-consent-v1'
 
 export type SubmissionStatus = 'draft' | 'submitted'
 
+export type ReviewScores = {
+  localProblem: number
+  usefulSolution: number
+  evidence: number
+  safetyResponsibility: number
+  explanationReflection: number
+}
+
+export type LearnerReviewResult = {
+  assignmentId: string
+  submissionId: string
+  rubricVersion: number
+  scores: ReviewScores
+  totalScore: number
+  decision: 'approved' | 'revision_requested'
+  publicFeedback: string
+  reviewedAt: unknown
+}
+
 export type SubmissionForm = {
   projectTitle: string
   problemStatement: string
@@ -134,6 +153,27 @@ export async function readSubmission(uid: string) {
   const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'submissions', submissionId)
   const snapshot = await services.firestoreSdk.getDoc(reference)
   return snapshot.exists() ? asSubmission(snapshot.data()) : null
+}
+
+export async function readLearnerReviewResult(uid: string): Promise<LearnerReviewResult | null> {
+  const services = await requireFirestore()
+  const assignmentId = `${uid}--${submissionId}`
+  const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'reviewResults', assignmentId)
+  const snapshot = await services.firestoreSdk.getDoc(reference)
+  if (!snapshot.exists()) return null
+  const data = snapshot.data()
+  const scores = data.scores && typeof data.scores === 'object' ? data.scores as Record<string, unknown> : {}
+  const score = (key: string) => typeof scores[key] === 'number' ? scores[key] as number : 0
+  return {
+    assignmentId,
+    submissionId: safeString(data.submissionId),
+    rubricVersion: typeof data.rubricVersion === 'number' ? data.rubricVersion : 1,
+    scores: { localProblem: score('localProblem'), usefulSolution: score('usefulSolution'), evidence: score('evidence'), safetyResponsibility: score('safetyResponsibility'), explanationReflection: score('explanationReflection') },
+    totalScore: typeof data.totalScore === 'number' ? data.totalScore : 0,
+    decision: data.decision === 'approved' ? 'approved' : 'revision_requested',
+    publicFeedback: safeString(data.publicFeedback),
+    reviewedAt: data.reviewedAt,
+  }
 }
 
 export async function readSubmissionEligibility(uid: string) {
