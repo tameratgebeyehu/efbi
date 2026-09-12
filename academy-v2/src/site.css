@@ -252,6 +252,22 @@ svg { width: 20px; height: 20px; }
 .course-roadmap h3 { margin-bottom: 5px; color: var(--green-dark); font-size: 1.08rem; }
 .course-roadmap p { margin: 0; color: var(--muted); font-size: .86rem; }
 .course-roadmap small { text-align: right; color: var(--muted); }
+.learner-catalog { margin-top: 90px; padding-top: 1px; }
+.learner-catalog .catalog-heading { margin-top: 0; }
+.catalog-loading { padding: 25px; color: var(--muted); border: 1px solid var(--line); background: #fff; }
+.catalog-empty { display: flex; gap: 18px; align-items: center; padding: 24px; color: var(--muted); border: 1px solid var(--line); background: #fff; }
+.catalog-empty > svg { flex: 0 0 28px; width: 28px; color: var(--green); }
+.catalog-empty strong { display: block; margin-bottom: 4px; color: var(--green-dark); }
+.catalog-empty p { margin: 0; line-height: 1.55; }
+.active-course-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.active-course-grid article { position: relative; min-width: 0; padding: 28px; border: 1px solid var(--line); background: #fff; }
+.active-course-number { position: absolute; top: 24px; right: 24px; color: var(--green); font-size: .72rem; font-weight: 850; letter-spacing: .08em; }
+.active-course-grid .course-tags { padding-right: 45px; margin-bottom: 22px; }
+.active-course-grid h3 { margin: 0 0 10px; color: var(--green-dark); font-size: 1.45rem; letter-spacing: -.025em; }
+.active-course-grid article > p { min-height: 52px; margin: 0 0 24px; color: var(--muted); line-height: 1.6; }
+.course-loading { min-height: 55vh; display: grid; align-content: center; }
+.course-loading h1 { margin: 6px 0 12px; color: var(--green-dark); font-size: clamp(2rem, 5vw, 4rem); }
+.course-loading > p:last-child { color: var(--muted); }
 .course-detail-grid { display: grid; grid-template-columns: 1fr 350px; gap: 80px; align-items: start; }
 .curriculum-list, .requirement-list { margin: 45px 0 0; padding: 0; border-top: 1px solid var(--line); list-style: none; }
 .curriculum-list li { display: grid; grid-template-columns: 56px 1fr 24px; gap: 22px; align-items: center; padding-block: 25px; border-bottom: 1px solid var(--line); }
@@ -262,7 +278,7 @@ svg { width: 20px; height: 20px; }
 .course-sidebar { position: sticky; top: 25px; padding: 22px; border: 1px solid var(--line); background: #fff; }
 .mini-cover { min-height: 235px; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 27px; padding: 22px; color: #fff; background: var(--green-deep); }
 .mini-cover span, .mini-cover small { color: #adcabc; font-size: .66rem; font-weight: 700; letter-spacing: .1em; }
-.mini-cover strong { font-family: 'Manrope', sans-serif; font-size: 2.2rem; line-height: .92; }
+.mini-cover strong { overflow-wrap: anywhere; font-family: 'Manrope', sans-serif; font-size: clamp(1.45rem, 2.4vw, 2.2rem); line-height: .96; }
 .course-sidebar h2 { margin-bottom: 10px; color: var(--green-dark); font-size: 1.35rem; }
 .course-sidebar > p { color: var(--muted); font-size: .87rem; line-height: 1.6; }
 .progress-label { display: flex; justify-content: space-between; margin-top: 24px; color: var(--muted); font-size: .75rem; }
@@ -498,6 +514,7 @@ svg { width: 20px; height: 20px; }
   .cover-main strong { font-size: 2.65rem; }
   .course-feature-copy { padding: 28px 24px 34px; }
   .catalog-heading, .blog-toolbar { align-items: flex-start; flex-direction: column; }
+  .active-course-grid { grid-template-columns: 1fr; }
   .course-roadmap article { grid-template-columns: 42px 1fr; }
   .course-roadmap article small { grid-column: 2; text-align: left; }
   .course-detail-grid { gap: 50px; }

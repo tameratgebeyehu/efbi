@@ -8,7 +8,7 @@ Phases 0–20 are complete. Phase 21 has recorded EFBI's owner, contact, unregis
 
 The rebuilt source code is backed up on GitHub, but `www.efbi.site` still serves the maintenance site. The rebuilt academy has a separate development Hosting target at `https://efbi-academy-dev-doha.web.app`; it must not be published there with open enrollment until the preview safety switch exists.
 
-The localhost Admin Studio can already manage course drafts, lesson drafts, three practice questions per lesson, releases, audited course activation, project reviews, certificates, audit records, and deletion requests. The verified EFBI owner account now has the server-issued administrator role; the owner still needs to confirm one fresh Admin Studio session and replace the temporary setup password. The protected learner player accepts validated published course IDs and preserves each learner's original course version. The multi-course catalog/detail experience, assessments, certificates, and deletion workflow still need the remaining migration.
+The localhost Admin Studio can already manage course drafts, lesson drafts, three practice questions per lesson, releases, audited course activation, project reviews, certificates, audit records, and deletion requests. The verified EFBI owner account now has the server-issued administrator role; the owner still needs to confirm one fresh Admin Studio session and replace the temporary setup password. Verified learners can browse complete activated courses, open dynamic course details, and continue a progress-locked version. Multi-course submissions, reviews, certificates, and deletion inventory still need the remaining migration.
 
 ## Phase 22 — owner access and safe preview controls
 

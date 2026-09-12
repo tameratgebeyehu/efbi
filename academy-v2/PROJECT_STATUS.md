@@ -452,8 +452,14 @@ The first three multi-course checkpoints are complete in the development codebas
 16. Activation creates the immutable course version, changes the active-course pointer, and creates its immutable audit event in one atomic batch.
 17. Firestore rules reject unaudited activation and require the linked audit event to be created in the same operation, so an old event cannot be reused to reactivate a version.
 18. Admin Studio lint and build pass, and all seventy-six Firestore authorization and lifecycle tests still pass after the audit rules were strengthened.
+19. The Courses page now adds an authenticated catalog for verified learners, populated only from complete activated course versions and their matching release records.
+20. Course Detail renders the selected activated title, description, level, lesson order, assessment type, and version instead of redirecting every non-AI course to the pilot.
+21. Anonymous visitors still receive only the version-controlled AI Foundations preview; protected release collections remain hidden.
+22. Closed enrollment now blocks new accounts without blocking an already verified learner from continuing an available course.
+23. The account page routes verified learners to the active-course catalog instead of assuming every learner belongs only to AI Foundations.
+24. Learner lint and the production build pass after the catalog migration. No Hosting or rules deployment was performed.
 
-Remaining Phase 23 work: build the authenticated multi-course catalog/detail experience, then generalize submissions, reviews, certificates, and deletion inventory while retaining the tested pilot compatibility path.
+Remaining Phase 23 work: generalize submissions, reviews, certificates, and deletion inventory while retaining the tested pilot compatibility path, then prove the complete lifecycle with two synthetic courses.
 
 
 ## Recovery commands

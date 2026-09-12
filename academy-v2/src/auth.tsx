@@ -319,7 +319,7 @@ export function AccountPage() {
       {status && <p className="form-status form-status--success" role="status">{status}</p>}
       <DeletionRequestPanel uid={user.uid} />
       <div className="access-actions">
-        {verified ? <><Link className="button button--primary" to="/learn/ai-foundations">Open your course</Link><Link className="button button--outline" to="/submit/ai-foundations">Project workspace</Link></> : <button className="button button--primary" onClick={async () => { await resendVerification(); setStatus('A new verification email was sent.') }}>Send verification again</button>}
+        {verified ? <><Link className="button button--primary" to="/courses">Browse active courses</Link><Link className="button button--outline" to="/submit/ai-foundations">AI Foundations project</Link></> : <button className="button button--primary" onClick={async () => { await resendVerification(); setStatus('A new verification email was sent.') }}>Send verification again</button>}
         <button className="button button--outline" onClick={() => void signOut()}>Sign out</button>
       </div>
     </AccessFrame>
@@ -339,10 +339,11 @@ export function RequireVerifiedUser({ children }: { children: ReactNode }) {
 
 export function CourseAccessButton({ courseId = 'ai-foundations' }: { courseId?: string }) {
   const { user } = useAuth()
-  if (!learnerEnrollmentEnabled) return <Link className="button button--primary" to="/join">Enrollment updates</Link>
   const coursePath = `/learn/${courseId}`
-  const destination = user?.emailVerified ? coursePath : user ? '/account' : `/signin?returnTo=${encodeURIComponent(coursePath)}`
-  return <Link className="button button--primary" to={destination}>{user?.emailVerified ? 'Continue course' : 'Start course'}</Link>
+  if (user?.emailVerified) return <Link className="button button--primary" to={coursePath}>Continue course</Link>
+  if (!learnerEnrollmentEnabled) return <Link className="button button--primary" to="/join">Enrollment updates</Link>
+  const destination = user ? '/account' : `/signin?returnTo=${encodeURIComponent(coursePath)}`
+  return <Link className="button button--primary" to={destination}>Start course</Link>
 }
 
 export function AccountActions({ mobile = false, onNavigate }: { mobile?: boolean; onNavigate?: () => void }) {

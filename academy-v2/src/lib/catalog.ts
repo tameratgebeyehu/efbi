@@ -63,6 +63,21 @@ type ActiveCourseRecord = {
   courseId: string
   versionId: string
   courseVersion: number
+  courseTitle: string
+  lessonCount: number
+  assessmentVersion: number
+  assessmentType: 'practice-only' | 'project'
+}
+
+export type ActiveCourseSummary = {
+  courseId: string
+  courseTitle: string
+  courseDescription: string
+  level: string
+  lessonCount: number
+  courseVersion: number
+  assessmentVersion: number
+  assessmentType: 'practice-only' | 'project'
 }
 
 const aiCourseId = 'ai-foundations'
@@ -158,8 +173,19 @@ function asActiveCourse(data: Record<string, unknown>, expectedCourseId: string)
   const courseId = safeString(data.courseId)
   const versionId = safeString(data.versionId)
   const courseVersion = safeNumber(data.courseVersion)
-  if (courseId !== expectedCourseId || versionId.length < 8 || courseVersion < 1) return null
-  return { courseId, versionId, courseVersion }
+  const assessmentType = data.assessmentType === 'practice-only' || data.assessmentType === 'project' ? data.assessmentType : null
+  const lessonCount = safeNumber(data.lessonCount)
+  const assessmentVersion = safeNumber(data.assessmentVersion)
+  if (courseId !== expectedCourseId || versionId.length < 8 || courseVersion < 1 || !assessmentType || lessonCount < 1 || lessonCount > 12 || assessmentVersion < 1) return null
+  return {
+    courseId,
+    versionId,
+    courseVersion,
+    courseTitle: safeString(data.courseTitle),
+    lessonCount,
+    assessmentVersion,
+    assessmentType,
+  }
 }
 
 function latestById(records: LessonReleaseRecord[], lessonIds: string[]) {
@@ -309,6 +335,67 @@ export async function loadCourseCatalog(courseIdValue: string, options: LoadCour
     return compatibleBackendCatalog(courseId, latestCourse, latestById(releases.lessons, aiLessonIds), aiLessonIds) ?? fallback
   } catch {
     return fallback
+  }
+}
+
+export async function loadActiveCourseSummaries(): Promise<ActiveCourseSummary[]> {
+  const services = await getFirebaseFirestore()
+  if (!services) return []
+
+  try {
+    const { collection, getDocs } = services.firestoreSdk
+    const [activeSnapshot, versionSnapshot, releaseSnapshot, lessonSnapshot] = await Promise.all([
+      getDocs(collection(services.db, 'activeCourses')),
+      getDocs(collection(services.db, 'courseVersions')),
+      getDocs(collection(services.db, 'courseReleases')),
+      getDocs(collection(services.db, 'lessonReleases')),
+    ])
+    const activeCourses = activeSnapshot.docs
+      .map((item) => asActiveCourse(item.data(), item.id))
+      .filter((item): item is ActiveCourseRecord => Boolean(item))
+    const versions = versionSnapshot.docs
+      .map((item) => {
+        const data = item.data()
+        const courseId = safeString(data.courseId)
+        return validCourseId(courseId) ? asCourseVersion(item.id, data, courseId) : null
+      })
+      .filter((item): item is CourseVersionRecord => Boolean(item))
+    const releases = releaseSnapshot.docs
+      .map((item) => {
+        const data = item.data()
+        const courseId = safeString(data.courseId)
+        return validCourseId(courseId) ? asCourseRelease(data, courseId) : null
+      })
+      .filter((item): item is CourseReleaseRecord => Boolean(item))
+    const lessons = lessonSnapshot.docs
+      .map((item) => {
+        const data = item.data()
+        const courseId = safeString(data.courseId)
+        return validCourseId(courseId) ? asLessonRelease(item.id, data, courseId) : null
+      })
+      .filter((item): item is LessonReleaseRecord => Boolean(item))
+
+    return activeCourses
+      .map((active) => {
+        const version = versions.find((item) => item.versionId === active.versionId && item.courseId === active.courseId)
+        const release = releases.find((item) => item.courseId === active.courseId && item.version === active.courseVersion)
+        const completeLessons = version?.lessonIds.every((lessonId) => lessons.some((item) => item.courseId === active.courseId && item.lessonId === lessonId && item.version === active.courseVersion))
+        if (!version || version.lessonIds.length !== active.lessonCount || !release || !completeLessons) return null
+        return {
+          courseId: active.courseId,
+          courseTitle: release.title || active.courseTitle,
+          courseDescription: release.summary || release.description,
+          level: release.level || 'Beginner',
+          lessonCount: active.lessonCount,
+          courseVersion: active.courseVersion,
+          assessmentVersion: active.assessmentVersion,
+          assessmentType: active.assessmentType,
+        }
+      })
+      .filter((item): item is ActiveCourseSummary => Boolean(item))
+      .sort((left, right) => left.courseTitle.localeCompare(right.courseTitle))
+  } catch {
+    return []
   }
 }
 

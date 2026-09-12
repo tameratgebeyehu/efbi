@@ -66,7 +66,7 @@ The protected learner route is `/learn/:courseId/:lessonSlug`.
 - A learner with no progress starts only the current active version.
 - Incomplete, mismatched, invalid, and unpublished course data fails closed.
 
-The public course listing and multi-course detail experience are not complete yet. Do not treat activation alone as public launch approval.
+Verified learners can browse complete activated courses and open their dynamic course details. Anonymous visitors still see only the safe built-in pilot preview. Do not treat activation alone as public launch approval.
 
 ## Certificate boundary
 

@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { PageHero, ProgramCard, RebuildNotice, SectionHeading } from './components'
-import { blogPosts, buildPillars, curriculum, methodology, programs, values } from './data'
+import { blogPosts, buildPillars, methodology, programs, values } from './data'
 import { Icon } from './icons'
 import { CourseAccessButton } from './auth'
+import { useAuth } from './auth-context'
+import { getFallbackCatalog, loadActiveCourseSummaries, loadCourseCatalog, type ActiveCourseSummary, type CourseCatalog } from './lib/catalog'
 
 import { learnerEnrollmentEnabled } from './site-mode'
 export function HomePage() {
@@ -153,6 +155,24 @@ export function ProgramDetailPage() {
 }
 
 export function CoursesPage() {
+  const { user } = useAuth()
+  const [activeCourses, setActiveCourses] = useState<ActiveCourseSummary[]>([])
+  const [catalogReady, setCatalogReady] = useState(false)
+  const verified = user?.emailVerified === true
+
+  useEffect(() => {
+    if (!user?.emailVerified) return undefined
+    let active = true
+    void loadActiveCourseSummaries().then((courses) => {
+      if (!active) return
+      setActiveCourses(courses)
+      setCatalogReady(true)
+    })
+    return () => { active = false }
+  }, [user])
+
+  const additionalCourses = activeCourses.filter((course) => course.courseId !== 'ai-foundations')
+
   return (
     <>
       <PageHero eyebrow="Courses" title="Courses built for doing." description="Learn in short steps, practice each idea, and finish with a project." className="page-hero--courses"><RebuildNotice compact /></PageHero>
@@ -171,6 +191,12 @@ export function CoursesPage() {
             <Link className="button button--primary" to="/courses/ai-foundations">View course <Icon name="arrow" /></Link>
           </div>
         </article>
+        {verified && <section className="learner-catalog" aria-labelledby="active-courses-title">
+          <div className="catalog-heading"><div><p className="eyebrow-label">Your course catalog</p><h2 id="active-courses-title">Active EFBI courses</h2></div><p>Only reviewed versions activated by EFBI appear here.</p></div>
+          {!catalogReady && <p className="catalog-loading" role="status">Checking active courses…</p>}
+          {catalogReady && additionalCourses.length === 0 && <div className="catalog-empty"><Icon name="book" /><div><strong>AI Foundations is the active pilot.</strong><p>More courses will appear here after EFBI reviews and activates their complete lesson sets.</p></div></div>}
+          {additionalCourses.length > 0 && <div className="active-course-grid">{additionalCourses.map((course) => <article key={course.courseId}><div className="active-course-number">V{course.courseVersion}</div><div className="course-tags"><span>{course.level}</span><span>{course.lessonCount} lessons</span><span>{course.assessmentType === 'project' ? 'Final project' : 'Practice course'}</span></div><h3>{course.courseTitle}</h3><p>{course.courseDescription}</p><Link className="button button--outline" to={`/courses/${course.courseId}`}>View course <Icon name="arrow" /></Link></article>)}</div>}
+        </section>}
         <div className="catalog-heading"><div><p className="eyebrow-label">Coming next</p><h2>More courses are on the way</h2></div><p>We’ll open each course after its lessons and learning tools are ready.</p></div>
         <div className="course-roadmap">{programs.slice(1).map((program, index) => <article key={program.slug}><span>{String(index + 2).padStart(2, '0')}</span><div><h3>{program.title}</h3><p>{program.description}</p></div><small>{program.level}</small></article>)}</div>
       </section>
@@ -180,17 +206,39 @@ export function CoursesPage() {
 
 export function CourseDetailPage() {
   const { courseId } = useParams()
-  if (courseId !== 'ai-foundations') return <Navigate to="/courses" replace />
+  const { user, loading } = useAuth()
+  const fallback = courseId ? getFallbackCatalog(courseId) : null
+  const [resolved, setResolved] = useState<{ courseId: string; catalog: CourseCatalog | null } | null>(null)
+  const verified = user?.emailVerified === true
+
+  useEffect(() => {
+    if (!verified || !courseId) return undefined
+    let active = true
+    void loadCourseCatalog(courseId).then((catalog) => {
+      if (active) setResolved({ courseId, catalog })
+    })
+    return () => { active = false }
+  }, [courseId, verified])
+
+  if (!courseId) return <Navigate to="/courses" replace />
+  if ((loading && !fallback) || (verified && resolved?.courseId !== courseId)) {
+    return <section className="section shell course-loading"><p className="eyebrow-label">Course catalog</p><h1>Opening the course…</h1><p>Checking the active version and its reviewed lessons.</p></section>
+  }
+
+  const catalog = verified ? resolved?.catalog ?? null : fallback
+  if (!catalog) return <Navigate to="/courses" replace />
+  const versionLabel = catalog.courseVersion ? `Version ${catalog.courseVersion}` : 'Pilot course'
+  const assessmentLabel = catalog.assessmentType === 'project' ? 'Final project' : 'Practice activities'
   return (
     <>
-      <PageHero eyebrow="Pilot course · Beginner" title="AI Foundations for Ethiopia" description="Four short lessons that help you understand AI and use it responsibly." className="page-hero--course-detail"><div className="page-stat"><strong>4</strong><span>lessons</span></div></PageHero>
+      <PageHero eyebrow={`${versionLabel} · ${catalog.level}`} title={catalog.courseTitle} description={catalog.courseDescription} className="page-hero--course-detail"><div className="page-stat"><strong>{catalog.lessons.length}</strong><span>lessons</span></div></PageHero>
       <section className="section shell course-detail-grid">
         <div>
           <SectionHeading eyebrow="Course outline" title="A clear path from idea to project" description="Each lesson ends with one practical step." />
-          <ol className="curriculum-list">{curriculum.map((item) => <li key={item.number}><span>{item.number}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div><Icon name="chevron" /></li>)}</ol>
-          <div className="video-note"><Icon name="play" /><div><strong>All four lessons are ready</strong><p>Verified learners can complete the pilot learning path and save 100% progress. Video slots activate when EFBI publishes each recording.</p></div></div>
+          <ol className="curriculum-list">{catalog.lessons.map((item) => <li key={item.slug}><span>{item.number}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div><Icon name="chevron" /></li>)}</ol>
+          <div className="video-note"><Icon name="play" /><div><strong>All {catalog.lessons.length} lessons are ready</strong><p>Verified learners can complete this version and save their progress. Videos load only when the learner chooses to connect to YouTube.</p></div></div>
         </div>
-        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>The four-lesson pilot is complete in the development academy.</p><div className="progress-label"><span>Learning path</span><strong>Complete</strong></div><div className="progress-track"><i /></div><CourseAccessButton courseId={courseId} /></aside>
+        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / {versionLabel.toUpperCase()}</span><strong>{catalog.courseTitle.toUpperCase()}</strong><small>{assessmentLabel.toUpperCase()}</small></div><h2>Course status</h2><p>{catalog.statusMessage}</p><div className="progress-label"><span>Learning path</span><strong>Available</strong></div><div className="progress-track"><i /></div><CourseAccessButton courseId={courseId} /></aside>
       </section>
     </>
   )
