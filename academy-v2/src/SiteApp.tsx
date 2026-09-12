@@ -3,6 +3,7 @@ import { Layout } from './Layout'
 import { AccountPage, AuthProvider, JoinPage, RequireVerifiedUser, SignInPage } from './auth'
 import { LearningPage } from './learning'
 import { SubmissionPage } from './submission'
+import { VerifyPage } from './verification'
 import {
   AboutPage,
   BlogPage,
@@ -14,7 +15,6 @@ import {
   NotFoundPage,
   ProgramDetailPage,
   ProgramsPage,
-  VerifyPage,
 } from './pages'
 import './site.css'
 

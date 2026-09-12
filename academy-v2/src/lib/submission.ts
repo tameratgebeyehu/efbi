@@ -21,6 +21,8 @@ export type ReviewScores = {
 export type LearnerReviewResult = {
   assignmentId: string
   submissionId: string
+  courseVersion: number
+  assessmentVersion: number
   rubricVersion: number
   scores: ReviewScores
   totalScore: number
@@ -179,6 +181,8 @@ export async function readLearnerReviewResult(uid: string, recordId = submission
   return {
     assignmentId,
     submissionId: safeString(data.submissionId),
+    courseVersion: typeof data.courseVersion === 'number' ? data.courseVersion : 1,
+    assessmentVersion: typeof data.assessmentVersion === 'number' ? data.assessmentVersion : 1,
     rubricVersion: typeof data.rubricVersion === 'number' ? data.rubricVersion : 1,
     scores: { localProblem: score('localProblem'), usefulSolution: score('usefulSolution'), evidence: score('evidence'), safetyResponsibility: score('safetyResponsibility'), explanationReflection: score('explanationReflection') },
     totalScore: typeof data.totalScore === 'number' ? data.totalScore : 0,

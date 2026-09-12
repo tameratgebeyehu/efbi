@@ -328,16 +328,33 @@ Implementation is complete in the development codebase:
 11. The tested Phase 17 Firestore rules were deployed only to `efbi-academy-dev-doha`.
 12. Appeals, certificates, file uploads, public enrollment, and production deployment remain disabled.
 
+## Phase 18 status
+
+Implementation is complete in the development codebase:
+
+1. A certificate request requires the learner's final approved review and separate public-name consent.
+2. The learner request is immutable and contains the exact approved review binding.
+3. Only a verified administrator may issue a credential; learner and reviewer issuance is denied.
+4. Issuance atomically creates immutable private evidence, immutable public core, active status, a one-per-course claim, and immutable audit evidence.
+5. Public verification exposes only the learner-approved name, course, issue date, credential ID, replacement link, and current status.
+6. Revocation preserves issuance history and permanently changes only the public status with a matching private audit event.
+7. Replacement creates a new ID, marks the old ID replaced, advances the learner claim, and preserves both public records atomically.
+8. Revoked and replaced credentials cannot be reactivated.
+9. Learner and Admin Studio builds and lint checks pass.
+10. Sixty-six Firestore emulator authorization and lifecycle tests pass.
+11. The tested Phase 18 rules were deployed only to efbi-academy-dev-doha.
+12. No public Hosting release, real learner record, role grant, appeal, file upload, or production operation was created.
+
 ## Next implementation phase
 
-Phase 18 may add secure certificate eligibility and administrator-controlled issuance:
+Phase 19 should add retention, deletion-request, and investigation-hold controls before production enrollment:
 
-1. Derive eligibility from the final valid approved review only.
-2. Require deliberate administrator confirmation and prevent reviewer or learner issuance.
-3. Create an immutable certificate and issuance audit record atomically.
-4. Keep public verification fields separate from private operational evidence.
-5. Define revocation and replacement without rewriting history.
-6. Keep appeals, uploads, public enrollment, and production deployment disabled until their own gates pass.
+1. Define retention periods for inactive drafts, submitted projects, private reviews, and certificate evidence.
+2. Add a learner-visible deletion-request path for eligible private data.
+3. Preserve only minimal deletion-completion evidence without copying deleted content.
+4. Define documented investigation holds and administrator authorization.
+5. Test that deletion cannot erase active certificate proof or immutable audit history improperly.
+6. Keep file uploads, public enrollment, and production deployment disabled until their own gates pass.
 
 ## Recovery commands
 

@@ -219,25 +219,6 @@ export function CertificationPage() {
   )
 }
 
-export function VerifyPage() {
-  return (
-    <>
-      <PageHero eyebrow="Certificate verification" title="Check an EFBI certificate." description="Enter the credential ID to confirm that a certificate was issued by EFBI." className="page-hero--verify" />
-      <section className="section shell verify-layout">
-        <div className="verify-card">
-          <div className="verify-icon"><Icon name="shield" /></div>
-          <h2>Verification is not open yet.</h2>
-          <p>It will open when EFBI issues its first certificates through the new platform.</p>
-          <label htmlFor="certificate-id">Credential ID</label>
-          <div className="verify-form"><input id="certificate-id" type="text" placeholder="EFBI-2026-0001" disabled /><button className="button button--primary" type="button" disabled>Verify</button></div>
-          <small>No certificates have been issued through the new system.</small>
-        </div>
-        <aside className="verification-info"><p className="eyebrow-label">The result will show</p><ul><li><Icon name="check" /><span><strong>Status</strong>Valid, replaced, or revoked.</span></li><li><Icon name="check" /><span><strong>Learner and course</strong>The public details on the certificate.</span></li><li><Icon name="check" /><span><strong>Issue information</strong>The credential ID and issue date.</span></li></ul></aside>
-      </section>
-    </>
-  )
-}
-
 export function BlogPage() {
   const [query, setQuery] = useState('')
   const filtered = useMemo(() => blogPosts.slice(1).filter((post) => `${post.title} ${post.category} ${post.excerpt}`.toLowerCase().includes(query.toLowerCase())), [query])

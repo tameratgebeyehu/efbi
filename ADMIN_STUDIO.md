@@ -4,7 +4,7 @@ The EFBI Admin Studio is a separate, local-only application for trusted operator
 
 ## Current Phase 17 boundary
 
-Phase 17 adds one controlled learner revision after a permanent revision request. The revision is a separate submitted version with its own assignment and review; certificate issuance remains disabled.
+Phase 18 adds a controlled certificate lifecycle after a final approved review and separate learner consent. Issuance, revocation, and replacement are administrator-only, atomic, and audited.
 
 - the server binds to `127.0.0.1` on port `5174`;
 - the interface blocks non-local hostnames;
@@ -56,7 +56,7 @@ npm run manage:roles -- set --email "owner@example.com" --role admin --value tru
 
 6. Sign out and sign in again so Firebase issues a fresh ID token.
 
-No role has been granted as part of Phases 9 through 17. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
+No role has been granted as part of Phases 9 through 18. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
 
 ## Remove access
 
@@ -68,7 +68,7 @@ Then revoke the user's refresh tokens in Firebase Console if access must end imm
 
 ## Role meanings
 
-- `admin`: may manage validated course and lesson releases, read submitted projects and private completed reviews, create immutable reviewer assignments, and read the content audit. It cannot read private learner drafts or create review decisions.
+- `admin`: may manage validated course and lesson releases, read submitted projects and private completed reviews, create immutable reviewer assignments, operate the audited certificate lifecycle, and read private audit evidence. It cannot read private learner drafts or create review decisions.
 - `reviewer`: may list only assignments addressed to its own user ID, read the linked submitted projects, and publish one permanent rubric result for each. It cannot read course drafts, other assignments, or the admin audit.
 - `support`: reserved for future limited support work. It currently receives no private operational reads.
 
@@ -124,7 +124,20 @@ Lesson drafts stay private to administrators. They are not connected to the stud
 11. Return as an administrator and assign the submitted revision separately. A draft revision never appears in the Studio.
 12. The assigned reviewer reviews the exact revision and publishes its separate permanent result.
 
-No third version is allowed. Appeals, file uploads, and certificate issuance remain disabled.
+No third version is allowed. Appeals and file uploads remain disabled. Certificate operations follow the separate controlled workflow below.
+
+## Certificate workflow
+
+1. The learner's final approved review unlocks a certificate request, not automatic issuance.
+2. The learner chooses and explicitly consents to the name shown in public verification.
+3. Open **Certificates** as an administrator and select the eligible request.
+4. Check the final review binding and public name, then accept the permanent-action confirmation.
+5. Issue the certificate. Private evidence, public core, active status, learner claim, and audit event are committed atomically.
+6. Use revocation only when the credential must no longer be valid. The original issuance remains unchanged.
+7. Use replacement for a correction while the credential is active. A new ID becomes active and the old ID stays publicly verifiable as replaced.
+8. Confirm every action through the public verification link. Never use Firebase Console for ordinary certificate changes.
+
+See academy-v2/CERTIFICATE_OPERATIONS.md for fields, privacy boundaries, and permanent-state rules.
 
 ## Audit History workflow
 
@@ -147,6 +160,6 @@ No third version is allowed. Appeals, file uploads, and certificate issuance rem
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 18 gate
+## Phase 18 status
 
-Phase 18 may add administrator-controlled certificate eligibility and issuance only after an approved final review. It must create immutable issuance audit evidence, keep verification fields public-safe, define revocation and replacement, and pass role-boundary tests. Appeals, file uploads, public enrollment, and production deployment remain outside that phase.
+The secure certificate lifecycle is implemented and tested in the development environment. Appeals, file uploads, public enrollment, public Hosting deployment, and production certificate operations remain outside Phase 18.

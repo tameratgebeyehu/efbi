@@ -993,7 +993,7 @@ test('learners cannot issue certificates', async () => {
   }))
 })
 
-test('certificate issuance remains closed even to administrators', async () => {
+test('legacy standalone certificate writes remain closed even to administrators', async () => {
   const db = verifiedUser('admin-user', { admin: true })
   await assertFails(setDoc(doc(db, 'certificates', 'EFBI-BLOCKED-001'), {
     credentialId: 'EFBI-BLOCKED-001',
@@ -1587,4 +1587,309 @@ test('a second requested result never unlocks a third submission version', async
   await assertFails(setDoc(doc(learner, 'users', 'alice', 'submissions', 'ai-foundations-project-revision-2'), revisionDraft({
     submissionId: 'ai-foundations-project-revision-2', revisionNumber: 2,
   })))
+})
+
+
+const certificateIdOne = 'EFBI-2026-ABCD2345EFGH'
+const certificateIdTwo = 'EFBI-2026-JKLM6789NPQR'
+const certificateClaimId = 'alice--ai-foundations'
+
+async function seedApprovedCertificateReview() {
+  await seedSubmittedProject('alice')
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    const submittedAt = new Date('2026-09-12T00:10:00Z')
+    const reviewedAt = new Date('2026-09-12T01:00:00Z')
+    await setDoc(doc(db, 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project'), {
+      ...publicReviewResult(submittedAt),
+      reviewedAt,
+    })
+  })
+}
+
+function certificateRequest(reviewedAt, overrides = {}) {
+  return {
+    requestId: 'ai-foundations',
+    learnerUid: 'alice',
+    courseId: 'ai-foundations',
+    publicName: 'Alice Learner',
+    consentVersion: 'efbi-certificate-public-v1',
+    consentAcceptedAt: serverTimestamp(),
+    finalReviewId: 'alice--ai-foundations-project',
+    submissionId: 'ai-foundations-project',
+    courseVersion: 1,
+    assessmentVersion: 1,
+    reviewedAt,
+    status: 'requested',
+    createdAt: serverTimestamp(),
+    ...overrides,
+  }
+}
+
+async function seedCertificateRequest() {
+  await seedApprovedCertificateReview()
+  const learner = verifiedUser('alice')
+  const result = await getDoc(doc(learner, 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project'))
+  await assertSucceeds(setDoc(
+    doc(learner, 'users', 'alice', 'certificateRequests', 'ai-foundations'),
+    certificateRequest(result.data().reviewedAt),
+  ))
+  return result.data().reviewedAt
+}
+
+function certificateIssuance(credentialId, reviewedAt, auditId, replacesCredentialId = '') {
+  return {
+    credentialId,
+    claimId: certificateClaimId,
+    learnerUid: 'alice',
+    publicName: 'Alice Learner',
+    courseId: 'ai-foundations',
+    courseTitle: 'AI Foundations for Ethiopia',
+    finalReviewId: 'alice--ai-foundations-project',
+    submissionId: 'ai-foundations-project',
+    courseVersion: 1,
+    assessmentVersion: 1,
+    reviewedAt,
+    issuedAt: serverTimestamp(),
+    issuedBy: 'admin-user',
+    auditId,
+    replacesCredentialId,
+  }
+}
+
+function publicCertificate(credentialId, replacesCredentialId = '') {
+  return {
+    credentialId,
+    publicName: 'Alice Learner',
+    courseId: 'ai-foundations',
+    courseTitle: 'AI Foundations for Ethiopia',
+    issuedAt: serverTimestamp(),
+    replacesCredentialId,
+  }
+}
+
+function certificateStatus(credentialId, auditId) {
+  return {
+    credentialId,
+    status: 'active',
+    updatedAt: serverTimestamp(),
+    replacedBy: '',
+    lastAuditId: auditId,
+  }
+}
+
+function certificateAudit(eventId, action, credentialId, replacementCredentialId = '', reason = 'Approved review and learner consent confirmed.') {
+  return {
+    eventId,
+    action,
+    credentialId,
+    replacementCredentialId,
+    learnerUid: 'alice',
+    actorUid: 'admin-user',
+    reason,
+    createdAt: serverTimestamp(),
+  }
+}
+
+function addInitialCertificatePackage(batch, db, reviewedAt, credentialId = certificateIdOne, auditId = 'certificate-issued-audit-0001') {
+  batch.set(doc(db, 'certificateIssuances', credentialId), certificateIssuance(credentialId, reviewedAt, auditId))
+  batch.set(doc(db, 'certificates', credentialId), publicCertificate(credentialId))
+  batch.set(doc(db, 'certificateStatuses', credentialId), certificateStatus(credentialId, auditId))
+  batch.set(doc(db, 'certificateClaims', certificateClaimId), {
+    claimId: certificateClaimId,
+    learnerUid: 'alice',
+    courseId: 'ai-foundations',
+    currentCredentialId: credentialId,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    lastAuditId: auditId,
+  })
+  batch.set(doc(db, 'certificateAudit', auditId), certificateAudit(auditId, 'certificate.issued', credentialId))
+}
+
+async function issueInitialCertificate() {
+  const reviewedAt = await seedCertificateRequest()
+  const admin = verifiedUser('admin-user', { admin: true })
+  const batch = writeBatch(admin)
+  addInitialCertificatePackage(batch, admin, reviewedAt)
+  await assertSucceeds(batch.commit())
+  return admin
+}
+
+test('only an approved learner can create one immutable public-name certificate request', async () => {
+  await seedSubmittedProject('alice')
+  const learner = verifiedUser('alice')
+  const requestRef = doc(learner, 'users', 'alice', 'certificateRequests', 'ai-foundations')
+  await assertFails(setDoc(requestRef, certificateRequest(new Date('2026-09-12T01:00:00Z'))))
+
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project'), {
+      ...publicReviewResult(new Date('2026-09-12T00:10:00Z')),
+      reviewedAt: new Date('2026-09-12T01:00:00Z'),
+    })
+  })
+  const result = await getDoc(doc(learner, 'users', 'alice', 'reviewResults', 'alice--ai-foundations-project'))
+  await assertFails(setDoc(requestRef, certificateRequest(result.data().reviewedAt, { publicName: 'A' })))
+  await assertSucceeds(setDoc(requestRef, certificateRequest(result.data().reviewedAt)))
+  await assertFails(updateDoc(requestRef, { publicName: 'Changed Name' }))
+  await assertFails(deleteDoc(requestRef))
+})
+
+test('certificate requests and claims remain scoped to the learner and administrators', async () => {
+  await seedCertificateRequest()
+  const learner = verifiedUser('alice')
+  const other = verifiedUser('bob')
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const admin = verifiedUser('admin-user', { admin: true })
+  const requestPath = ['users', 'alice', 'certificateRequests', 'ai-foundations']
+  await assertSucceeds(getDoc(doc(learner, ...requestPath)))
+  await assertSucceeds(getDoc(doc(admin, ...requestPath)))
+  await assertFails(getDoc(doc(other, ...requestPath)))
+  await assertFails(getDoc(doc(reviewer, ...requestPath)))
+  await assertFails(getDoc(doc(other, 'certificateClaims', certificateClaimId)))
+})
+
+test('an administrator can issue only the complete atomic certificate package', async () => {
+  const reviewedAt = await seedCertificateRequest()
+  const admin = verifiedUser('admin-user', { admin: true })
+  const partial = writeBatch(admin)
+  partial.set(doc(admin, 'certificateIssuances', certificateIdOne), certificateIssuance(certificateIdOne, reviewedAt, 'certificate-issued-partial-0001'))
+  await assertFails(partial.commit())
+
+  const complete = writeBatch(admin)
+  addInitialCertificatePackage(complete, admin, reviewedAt)
+  await assertSucceeds(complete.commit())
+  const issuance = await getDoc(doc(admin, 'certificateIssuances', certificateIdOne))
+  assert.equal(issuance.data().publicName, 'Alice Learner')
+})
+
+test('learners and reviewers cannot issue credentials even with a valid request', async () => {
+  const reviewedAt = await seedCertificateRequest()
+  for (const db of [verifiedUser('alice'), verifiedUser('reviewer-user', { reviewer: true })]) {
+    const batch = writeBatch(db)
+    addInitialCertificatePackage(batch, db, reviewedAt)
+    await assertFails(batch.commit())
+  }
+})
+
+function addReplacementCertificatePackage(batch, db, reviewedAt, auditId = 'certificate-replaced-audit-0002') {
+  batch.set(doc(db, 'certificateIssuances', certificateIdTwo), certificateIssuance(certificateIdTwo, reviewedAt, auditId, certificateIdOne))
+  batch.set(doc(db, 'certificates', certificateIdTwo), publicCertificate(certificateIdTwo, certificateIdOne))
+  batch.set(doc(db, 'certificateStatuses', certificateIdTwo), certificateStatus(certificateIdTwo, auditId))
+  batch.update(doc(db, 'certificateClaims', certificateClaimId), {
+    currentCredentialId: certificateIdTwo,
+    updatedAt: serverTimestamp(),
+    lastAuditId: auditId,
+  })
+  batch.update(doc(db, 'certificateStatuses', certificateIdOne), {
+    status: 'replaced',
+    updatedAt: serverTimestamp(),
+    replacedBy: certificateIdTwo,
+    lastAuditId: auditId,
+  })
+  batch.set(doc(db, 'certificateAudit', auditId), certificateAudit(
+    auditId,
+    'certificate.replaced',
+    certificateIdOne,
+    certificateIdTwo,
+    'The public credential needed a corrected replacement.',
+  ))
+}
+
+async function revokeInitialCertificate(admin) {
+  const auditId = 'certificate-revoked-audit-0002'
+  const batch = writeBatch(admin)
+  batch.update(doc(admin, 'certificateStatuses', certificateIdOne), {
+    status: 'revoked',
+    updatedAt: serverTimestamp(),
+    replacedBy: '',
+    lastAuditId: auditId,
+  })
+  batch.set(doc(admin, 'certificateAudit', auditId), certificateAudit(
+    auditId,
+    'certificate.revoked',
+    certificateIdOne,
+    '',
+    'The credential must no longer be treated as valid.',
+  ))
+  await assertSucceeds(batch.commit())
+}
+
+test('public verification exposes only the approved certificate core and current status', async () => {
+  await issueInitialCertificate()
+  const visitor = environment.unauthenticatedContext().firestore()
+  const publicRecord = await assertSucceeds(getDoc(doc(visitor, 'certificates', certificateIdOne)))
+  const statusRecord = await assertSucceeds(getDoc(doc(visitor, 'certificateStatuses', certificateIdOne)))
+  assert.deepEqual(
+    Object.keys(publicRecord.data()).sort(),
+    ['courseId', 'courseTitle', 'credentialId', 'issuedAt', 'publicName', 'replacesCredentialId'].sort(),
+  )
+  assert.equal(statusRecord.data().status, 'active')
+  for (const field of ['learnerUid', 'email', 'scores', 'reviewerUid', 'privateNote', 'issuedBy']) {
+    assert.equal(field in publicRecord.data(), false)
+  }
+  await assertFails(getDoc(doc(visitor, 'certificateIssuances', certificateIdOne)))
+  await assertFails(getDoc(doc(visitor, 'certificateAudit', 'certificate-issued-audit-0001')))
+  await assertFails(getDocs(collection(visitor, 'certificates')))
+  await assertFails(getDocs(collection(visitor, 'certificateStatuses')))
+})
+
+test('one course claim prevents a second initial credential', async () => {
+  const admin = await issueInitialCertificate()
+  const request = await getDoc(doc(admin, 'users', 'alice', 'certificateRequests', 'ai-foundations'))
+  const duplicate = writeBatch(admin)
+  addInitialCertificatePackage(duplicate, admin, request.data().reviewedAt, certificateIdTwo, 'certificate-duplicate-audit-0002')
+  await assertFails(duplicate.commit())
+  assert.equal((await getDoc(doc(admin, 'certificateClaims', certificateClaimId))).data().currentCredentialId, certificateIdOne)
+})
+
+test('revocation requires one atomic status change and private audit record', async () => {
+  const admin = await issueInitialCertificate()
+  await assertFails(updateDoc(doc(admin, 'certificateStatuses', certificateIdOne), {
+    status: 'revoked',
+    updatedAt: serverTimestamp(),
+    replacedBy: '',
+    lastAuditId: 'certificate-revoked-orphan-0002',
+  }))
+  await revokeInitialCertificate(admin)
+  assert.equal((await getDoc(doc(admin, 'certificateStatuses', certificateIdOne))).data().status, 'revoked')
+  assert.equal((await getDoc(doc(admin, 'certificateIssuances', certificateIdOne))).data().credentialId, certificateIdOne)
+  await assertFails(updateDoc(doc(admin, 'certificates', certificateIdOne), { publicName: 'Changed after issue' }))
+  await assertFails(deleteDoc(doc(admin, 'certificateIssuances', certificateIdOne)))
+})
+
+test('replacement atomically preserves the old record and activates one new credential', async () => {
+  const admin = await issueInitialCertificate()
+  const request = await getDoc(doc(admin, 'users', 'alice', 'certificateRequests', 'ai-foundations'))
+  const batch = writeBatch(admin)
+  addReplacementCertificatePackage(batch, admin, request.data().reviewedAt)
+  await assertSucceeds(batch.commit())
+
+  const oldStatus = await getDoc(doc(admin, 'certificateStatuses', certificateIdOne))
+  const newStatus = await getDoc(doc(admin, 'certificateStatuses', certificateIdTwo))
+  const claim = await getDoc(doc(admin, 'certificateClaims', certificateClaimId))
+  const replacement = await getDoc(doc(admin, 'certificates', certificateIdTwo))
+  assert.equal(oldStatus.data().status, 'replaced')
+  assert.equal(oldStatus.data().replacedBy, certificateIdTwo)
+  assert.equal(newStatus.data().status, 'active')
+  assert.equal(claim.data().currentCredentialId, certificateIdTwo)
+  assert.equal(replacement.data().replacesCredentialId, certificateIdOne)
+  assert.equal((await getDoc(doc(admin, 'certificates', certificateIdOne))).data().credentialId, certificateIdOne)
+})
+
+test('a revoked credential cannot be reactivated or used as a replacement source', async () => {
+  const admin = await issueInitialCertificate()
+  await revokeInitialCertificate(admin)
+  await assertFails(updateDoc(doc(admin, 'certificateStatuses', certificateIdOne), {
+    status: 'active',
+    updatedAt: serverTimestamp(),
+    replacedBy: '',
+    lastAuditId: 'certificate-reactivate-audit-0003',
+  }))
+
+  const request = await getDoc(doc(admin, 'users', 'alice', 'certificateRequests', 'ai-foundations'))
+  const replacement = writeBatch(admin)
+  addReplacementCertificatePackage(replacement, admin, request.data().reviewedAt, 'certificate-replace-revoked-0003')
+  await assertFails(replacement.commit())
+  assert.equal((await getDoc(doc(admin, 'certificateStatuses', certificateIdOne))).data().status, 'revoked')
 })

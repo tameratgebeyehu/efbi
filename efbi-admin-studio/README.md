@@ -24,8 +24,8 @@ npm run lint
 
 Do not deploy this directory. Do not expose its development port to the internet. Do not add an `/admin` route to the student app. Do not place service-account credentials or role-management logic in browser code.
 
-Phase 17 adds one controlled, separate revision after a permanent revision request. Original and revised versions keep separate assignments and immutable reviews; learners still receive only safe result copies. Additional revisions, appeals, certificates, file uploads, and public catalog release browsing remain locked.
+Phase 18 adds administrator-only certificate issuance, revocation, and replacement after the learner explicitly approves the public certificate name. Every action is atomic and audited; reviewer-only accounts cannot open certificate controls. Appeals, file uploads, and public catalog release browsing remain locked.
 
 Unsaved course and lesson text have best-effort browser recovery copies for power-loss recovery. Firestore is still authoritative, and recovery is blocked if the saved server revision changed.
 
-See `../ADMIN_STUDIO.md` for administrator and reviewer provisioning, revocation, workflow, and the Phase 18 gate.
+See `../ADMIN_STUDIO.md` for role provisioning and workflows, and `../academy-v2/CERTIFICATE_OPERATIONS.md` for the certificate lifecycle.

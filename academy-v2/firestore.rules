@@ -746,6 +746,255 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(data.learnerUid)/submissions/$(data.submissionId)).data.status == 'submitted';
     }
 
+    function validCredentialId(credentialId) {
+      return credentialId is string
+        && credentialId.matches('EFBI-[0-9]{4}-[A-Z0-9]{12}');
+    }
+
+    function validCertificateRequest(data, uid, requestId) {
+      let result = get(/databases/$(database)/documents/users/$(uid)/reviewResults/$(data.finalReviewId)).data;
+      return data.keys().hasOnly([
+          'requestId', 'learnerUid', 'courseId', 'publicName',
+          'consentVersion', 'consentAcceptedAt', 'finalReviewId',
+          'submissionId', 'courseVersion', 'assessmentVersion',
+          'reviewedAt', 'status', 'createdAt'
+        ])
+        && requestId == 'ai-foundations'
+        && data.requestId == requestId
+        && data.learnerUid == uid
+        && data.courseId == requestId
+        && data.publicName is string
+        && data.publicName.size() >= 2
+        && data.publicName.size() <= 80
+        && data.consentVersion == 'efbi-certificate-public-v1'
+        && data.consentAcceptedAt == request.time
+        && data.finalReviewId == uid + '--' + data.submissionId
+        && validSubmissionId(data.submissionId)
+        && data.courseVersion is int
+        && data.assessmentVersion == 1
+        && data.reviewedAt is timestamp
+        && data.status == 'requested'
+        && data.createdAt == request.time
+        && result.assignmentId == data.finalReviewId
+        && result.learnerUid == uid
+        && result.submissionId == data.submissionId
+        && result.courseVersion == data.courseVersion
+        && result.assessmentVersion == data.assessmentVersion
+        && result.reviewedAt == data.reviewedAt
+        && result.decision == 'approved';
+    }
+
+    function validCertificateClaim(data, claimId) {
+      return data.keys().hasOnly([
+          'claimId', 'learnerUid', 'courseId', 'currentCredentialId',
+          'createdAt', 'updatedAt', 'lastAuditId'
+        ])
+        && data.claimId == claimId
+        && claimId == data.learnerUid + '--' + data.courseId
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && data.courseId == 'ai-foundations'
+        && validCredentialId(data.currentCredentialId)
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time
+        && data.lastAuditId is string
+        && data.lastAuditId.size() >= 16
+        && data.lastAuditId.size() <= 180;
+    }
+
+    function validCertificateIssuance(data, credentialId) {
+      let certificateRequest = get(/databases/$(database)/documents/users/$(data.learnerUid)/certificateRequests/ai-foundations).data;
+      return data.keys().hasOnly([
+          'credentialId', 'claimId', 'learnerUid', 'publicName', 'courseId',
+          'courseTitle', 'finalReviewId', 'submissionId', 'courseVersion',
+          'assessmentVersion', 'reviewedAt', 'issuedAt', 'issuedBy',
+          'auditId', 'replacesCredentialId'
+        ])
+        && validCredentialId(credentialId)
+        && data.credentialId == credentialId
+        && data.claimId == data.learnerUid + '--ai-foundations'
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && data.publicName is string
+        && data.publicName.size() >= 2
+        && data.publicName.size() <= 80
+        && data.courseId == 'ai-foundations'
+        && data.courseTitle == 'AI Foundations for Ethiopia'
+        && data.finalReviewId is string
+        && validSubmissionId(data.submissionId)
+        && data.courseVersion is int
+        && data.courseVersion >= 1
+        && data.courseVersion <= 10000
+        && data.assessmentVersion == 1
+        && data.reviewedAt is timestamp
+        && data.issuedAt == request.time
+        && data.issuedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180
+        && (data.replacesCredentialId == '' || validCredentialId(data.replacesCredentialId))
+        && certificateRequest.status == 'requested'
+        && certificateRequest.learnerUid == data.learnerUid
+        && certificateRequest.publicName == data.publicName
+        && certificateRequest.finalReviewId == data.finalReviewId
+        && certificateRequest.submissionId == data.submissionId
+        && certificateRequest.courseVersion == data.courseVersion
+        && certificateRequest.assessmentVersion == data.assessmentVersion
+        && certificateRequest.reviewedAt == data.reviewedAt;
+    }
+
+    function validPublicCertificate(data, credentialId) {
+      return data.keys().hasOnly([
+          'credentialId', 'publicName', 'courseId', 'courseTitle',
+          'issuedAt', 'replacesCredentialId'
+        ])
+        && validCredentialId(credentialId)
+        && data.credentialId == credentialId
+        && data.publicName is string
+        && data.publicName.size() >= 2
+        && data.publicName.size() <= 80
+        && data.courseId == 'ai-foundations'
+        && data.courseTitle == 'AI Foundations for Ethiopia'
+        && data.issuedAt == request.time
+        && (data.replacesCredentialId == '' || validCredentialId(data.replacesCredentialId));
+    }
+
+    function publicCertificateMatches(issuance, publicCertificate) {
+      return issuance.credentialId == publicCertificate.credentialId
+        && issuance.publicName == publicCertificate.publicName
+        && issuance.courseId == publicCertificate.courseId
+        && issuance.courseTitle == publicCertificate.courseTitle
+        && issuance.issuedAt == publicCertificate.issuedAt
+        && issuance.replacesCredentialId == publicCertificate.replacesCredentialId;
+    }
+
+    function validCertificateStatus(data, credentialId) {
+      return data.keys().hasOnly([
+          'credentialId', 'status', 'updatedAt', 'replacedBy', 'lastAuditId'
+        ])
+        && validCredentialId(credentialId)
+        && data.credentialId == credentialId
+        && data.status in ['active', 'revoked', 'replaced']
+        && data.updatedAt == request.time
+        && data.replacedBy is string
+        && (data.replacedBy == '' || validCredentialId(data.replacedBy))
+        && data.lastAuditId is string
+        && data.lastAuditId.size() >= 16
+        && data.lastAuditId.size() <= 180;
+    }
+
+    function validCertificateAudit(data, eventId) {
+      return data.keys().hasOnly([
+          'eventId', 'action', 'credentialId', 'replacementCredentialId',
+          'learnerUid', 'actorUid', 'reason', 'createdAt'
+        ])
+        && data.eventId == eventId
+        && eventId.size() >= 16
+        && eventId.size() <= 180
+        && data.action in ['certificate.issued', 'certificate.revoked', 'certificate.replaced']
+        && validCredentialId(data.credentialId)
+        && data.replacementCredentialId is string
+        && (data.replacementCredentialId == '' || validCredentialId(data.replacementCredentialId))
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && data.actorUid == request.auth.uid
+        && data.reason is string
+        && data.reason.size() >= 10
+        && data.reason.size() <= 500
+        && data.createdAt == request.time;
+    }
+
+    function initialCertificatePackage(issuance, credentialId) {
+      let claim = getAfter(/databases/$(database)/documents/certificateClaims/$(issuance.claimId)).data;
+      let publicCertificate = getAfter(/databases/$(database)/documents/certificates/$(credentialId)).data;
+      let status = getAfter(/databases/$(database)/documents/certificateStatuses/$(credentialId)).data;
+      let audit = getAfter(/databases/$(database)/documents/certificateAudit/$(issuance.auditId)).data;
+      return issuance.replacesCredentialId == ''
+        && !exists(/databases/$(database)/documents/certificateClaims/$(issuance.claimId))
+        && claim.currentCredentialId == credentialId
+        && claim.learnerUid == issuance.learnerUid
+        && claim.courseId == issuance.courseId
+        && claim.createdAt == request.time
+        && claim.updatedAt == request.time
+        && claim.lastAuditId == issuance.auditId
+        && publicCertificateMatches(issuance, publicCertificate)
+        && status.credentialId == credentialId
+        && status.status == 'active'
+        && status.replacedBy == ''
+        && status.updatedAt == request.time
+        && status.lastAuditId == issuance.auditId
+        && audit.action == 'certificate.issued'
+        && audit.credentialId == credentialId
+        && audit.replacementCredentialId == ''
+        && audit.learnerUid == issuance.learnerUid
+        && audit.actorUid == request.auth.uid
+        && audit.createdAt == request.time;
+    }
+
+    function replacementCertificatePackage(issuance, credentialId) {
+      let oldIssuance = get(/databases/$(database)/documents/certificateIssuances/$(issuance.replacesCredentialId)).data;
+      let oldStatus = get(/databases/$(database)/documents/certificateStatuses/$(issuance.replacesCredentialId)).data;
+      let replacedStatus = getAfter(/databases/$(database)/documents/certificateStatuses/$(issuance.replacesCredentialId)).data;
+      let oldClaim = get(/databases/$(database)/documents/certificateClaims/$(issuance.claimId)).data;
+      let claim = getAfter(/databases/$(database)/documents/certificateClaims/$(issuance.claimId)).data;
+      let status = getAfter(/databases/$(database)/documents/certificateStatuses/$(credentialId)).data;
+      let publicCertificate = getAfter(/databases/$(database)/documents/certificates/$(credentialId)).data;
+      let audit = getAfter(/databases/$(database)/documents/certificateAudit/$(issuance.auditId)).data;
+      return validCredentialId(issuance.replacesCredentialId)
+        && oldIssuance.claimId == issuance.claimId
+        && oldIssuance.learnerUid == issuance.learnerUid
+        && oldIssuance.courseId == issuance.courseId
+        && oldStatus.status == 'active'
+        && oldClaim.currentCredentialId == issuance.replacesCredentialId
+        && claim.currentCredentialId == credentialId
+        && claim.createdAt == oldClaim.createdAt
+        && claim.updatedAt == request.time
+        && claim.lastAuditId == issuance.auditId
+        && replacedStatus.status == 'replaced'
+        && replacedStatus.replacedBy == credentialId
+        && replacedStatus.updatedAt == request.time
+        && replacedStatus.lastAuditId == issuance.auditId
+        && status.status == 'active'
+        && status.replacedBy == ''
+        && status.updatedAt == request.time
+        && status.lastAuditId == issuance.auditId
+        && publicCertificateMatches(issuance, publicCertificate)
+        && audit.action == 'certificate.replaced'
+        && audit.credentialId == issuance.replacesCredentialId
+        && audit.replacementCredentialId == credentialId
+        && audit.learnerUid == issuance.learnerUid
+        && audit.actorUid == request.auth.uid
+        && audit.createdAt == request.time;
+    }
+
+    function certificatePackageIsValid(issuance, credentialId) {
+      return validCertificateIssuance(issuance, credentialId)
+        && (
+          initialCertificatePackage(issuance, credentialId)
+          || replacementCertificatePackage(issuance, credentialId)
+        );
+    }
+
+    function validRevocation(status, credentialId) {
+      let issuance = get(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data;
+      let claim = get(/databases/$(database)/documents/certificateClaims/$(issuance.claimId)).data;
+      let audit = getAfter(/databases/$(database)/documents/certificateAudit/$(status.lastAuditId)).data;
+      return validCertificateStatus(status, credentialId)
+        && resource.data.status == 'active'
+        && status.status == 'revoked'
+        && status.replacedBy == ''
+        && claim.currentCredentialId == credentialId
+        && audit.action == 'certificate.revoked'
+        && audit.credentialId == credentialId
+        && audit.replacementCredentialId == ''
+        && audit.learnerUid == issuance.learnerUid
+        && audit.actorUid == request.auth.uid
+        && audit.createdAt == request.time;
+    }
+
     match /users/{uid} {
       allow create: if owns(uid) && validProfile(request.resource.data);
       allow get: if owns(uid) || admin();
@@ -822,6 +1071,17 @@ service cloud.firestore {
           );
         allow update, delete: if false;
       }
+
+      // An approved learner deliberately chooses the name that may appear in
+      // public certificate verification. The request is immutable.
+      match /certificateRequests/{requestId} {
+        allow get: if owns(uid) || admin();
+        allow list: if owns(uid) || admin();
+        allow create: if owns(uid)
+          && verified()
+          && validCertificateRequest(request.resource.data, uid, requestId);
+        allow update, delete: if false;
+      }
     }
 
     // Collection-group queries are limited to submitted work for administrators.
@@ -830,12 +1090,118 @@ service cloud.firestore {
       allow list: if admin() && resource.data.status == 'submitted';
     }
 
+    match /{path=**}/certificateRequests/{requestId} {
+      allow list: if admin();
+    }
+
+    // Public verification exposes only the learner-authorized name and core
+    // credential fields. Status is stored separately so issuance never changes.
     match /certificates/{credentialId} {
       allow get: if true;
       allow list: if false;
-      // Issuance and status changes remain closed until the separate
-      // administrator-only certificate phase is implemented and tested.
-      allow create, update, delete: if false;
+      allow create: if admin()
+        && validPublicCertificate(request.resource.data, credentialId)
+        && validCertificateIssuance(
+          getAfter(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data,
+          credentialId
+        )
+        && publicCertificateMatches(
+          getAfter(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data,
+          request.resource.data
+        );
+      allow update, delete: if false;
+    }
+
+    match /certificateIssuances/{credentialId} {
+      allow get, list: if admin();
+      allow create: if admin()
+        && certificatePackageIsValid(request.resource.data, credentialId);
+      allow update, delete: if false;
+    }
+
+    match /certificateClaims/{claimId} {
+      allow get: if admin() || (signedIn() && resource.data.learnerUid == request.auth.uid);
+      allow list: if admin();
+      allow create: if admin()
+        && validCertificateClaim(request.resource.data, claimId)
+        && request.resource.data.createdAt == request.time
+        && validCertificateIssuance(
+          getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data,
+          request.resource.data.currentCredentialId
+        )
+        && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data.replacesCredentialId == ''
+        && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data.auditId == request.resource.data.lastAuditId;
+      allow update: if admin()
+        && validCertificateClaim(request.resource.data, claimId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'currentCredentialId', 'updatedAt', 'lastAuditId'
+        ])
+        && validCertificateIssuance(
+          getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data,
+          request.resource.data.currentCredentialId
+        )
+        && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data.replacesCredentialId == resource.data.currentCredentialId
+        && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data.auditId == request.resource.data.lastAuditId;
+      allow delete: if false;
+    }
+
+    match /certificateStatuses/{credentialId} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if admin()
+        && validCertificateStatus(request.resource.data, credentialId)
+        && request.resource.data.status == 'active'
+        && request.resource.data.replacedBy == ''
+        && validCertificateIssuance(
+          getAfter(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data,
+          credentialId
+        )
+        && getAfter(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data.auditId == request.resource.data.lastAuditId
+        && getAfter(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data.issuedAt == request.resource.data.updatedAt;
+      allow update: if admin()
+        && (
+          validRevocation(request.resource.data, credentialId)
+          || (
+            validCertificateStatus(request.resource.data, credentialId)
+            && resource.data.status == 'active'
+            && request.resource.data.status == 'replaced'
+            && validCredentialId(request.resource.data.replacedBy)
+            && certificatePackageIsValid(
+              getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.replacedBy)).data,
+              request.resource.data.replacedBy
+            )
+          )
+        );
+      allow delete: if false;
+    }
+
+    match /certificateAudit/{eventId} {
+      allow get, list: if admin();
+      allow create: if admin()
+        && validCertificateAudit(request.resource.data, eventId)
+        && (
+          (
+            request.resource.data.action == 'certificate.issued'
+            && request.resource.data.replacementCredentialId == ''
+            && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.credentialId)).data.auditId == eventId
+            && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.credentialId)).data.learnerUid == request.resource.data.learnerUid
+          )
+          || (
+            request.resource.data.action == 'certificate.replaced'
+            && validCredentialId(request.resource.data.replacementCredentialId)
+            && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.replacementCredentialId)).data.auditId == eventId
+            && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.replacementCredentialId)).data.replacesCredentialId == request.resource.data.credentialId
+            && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.replacementCredentialId)).data.learnerUid == request.resource.data.learnerUid
+          )
+          || (
+            request.resource.data.action == 'certificate.revoked'
+            && request.resource.data.replacementCredentialId == ''
+            && getAfter(/databases/$(database)/documents/certificateStatuses/$(request.resource.data.credentialId)).data.status == 'revoked'
+            && getAfter(/databases/$(database)/documents/certificateStatuses/$(request.resource.data.credentialId)).data.lastAuditId == eventId
+            && get(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.credentialId)).data.learnerUid == request.resource.data.learnerUid
+          )
+        );
+      allow update, delete: if false;
     }
 
     // Drafts remain private. Every accepted change requires a linked immutable

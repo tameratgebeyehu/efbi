@@ -1,6 +1,6 @@
 # EFBI assessment and project-submission boundary
 
-## Current Phase 17 status
+## Current Phase 18 status
 
 The development environment now supports a complete, controlled review cycle for the AI Foundations pilot:
 
@@ -13,7 +13,7 @@ The development environment now supports a complete, controlled review cycle for
 - the revision receives its own assignment and second permanent review;
 - the learner sees only scores, decision, and public feedback from each review.
 
-Appeals, certificate eligibility, certificate issuance, file uploads, public enrollment, production review operations, and production deployment remain disabled. Course completion and an approved result still do not issue a certificate.
+Certificate requests now require the final approved review plus separate learner consent for the public name. Issuance, revocation, and replacement are administrator-only, atomic, and audited. Appeals, file uploads, public enrollment, production review operations, and production deployment remain disabled.
 
 ## Submission versions
 
@@ -76,22 +76,22 @@ Reviewers cannot manually override the calculated decision. Public feedback must
 
 Roles come from trusted Firebase custom claims. Neither browser application can grant or change a role.
 
-## Certificate lock
+## Certificate lifecycle
 
-Certificate creation, updates, and deletion remain denied to every browser identity, including administrators. An approved review does not create certificate eligibility. The certificate phase must define eligibility, atomic issuance and audit records, revocation, replacement, and public-safe verification before certificate writes reopen.
+An approved final review lets the learner create one immutable certificate request with an explicitly chosen public name. It does not issue a credential automatically. Only an administrator may issue, revoke, or replace a certificate through the localhost Studio, and each action must include matching immutable audit evidence in the same atomic operation. Public verification reads only the immutable certificate core and current status. See CERTIFICATE_OPERATIONS.md.
 
 ## Retention boundary
 
 Automated retention cleanup is not active. Before production enrollment, EFBI must implement a clear draft-deletion request, a 90-day inactive-draft policy, deletion of project and review data after the agreed retention period, investigation holds, and minimal deletion-completion logs that do not preserve project content.
 
-## Phase 18 gate
+## Phase 18 implementation
 
-Do not enable certificate issuance until all of these ship together:
+All certificate controls ship together in the development environment:
 
-1. Derive eligibility only from the final valid review state.
-2. Require a trusted administrator action with deliberate confirmation.
-3. Create the certificate and immutable issuance audit evidence atomically.
-4. Store only public-safe fields in the verification record.
-5. Define revocation and replacement without rewriting certificate history.
-6. Test learner, reviewer, support, anonymous, and administrator boundaries.
-7. Keep appeals, file uploads, public enrollment, and production deployment disabled until their separate readiness gates pass.
+1. Eligibility derives only from the final valid approved review.
+2. The learner separately consents to the public certificate name.
+3. Issuance creates private evidence, public core, active status, one-per-course claim, and audit history atomically.
+4. Public verification exposes only the approved name, course, issue date, credential ID, replacement link, and status.
+5. Revocation and replacement preserve original issuance history.
+6. Sixty-six role-boundary and lifecycle tests pass.
+7. Appeals, file uploads, public enrollment, and production deployment remain disabled.
