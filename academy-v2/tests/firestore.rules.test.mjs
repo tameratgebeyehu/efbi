@@ -264,6 +264,54 @@ function fourLessonProgressRecord() {
   }
 }
 
+function courseVersionRecord({ versionId, courseId, courseTitle, lessonIds, courseVersion = 1, assessmentVersion = 1, assessmentType = 'practice-only' }) {
+  return {
+    versionId,
+    courseId,
+    courseTitle,
+    courseVersion,
+    assessmentVersion,
+    assessmentType,
+    lessonIds,
+    publishedAt: serverTimestamp(),
+    publishedBy: 'admin-user',
+  }
+}
+
+function activeCourseRecord({ versionId, courseId, courseTitle, lessonIds, courseVersion = 1, assessmentVersion = 1, assessmentType = 'practice-only' }) {
+  return {
+    courseId,
+    versionId,
+    courseVersion,
+    courseTitle,
+    lessonCount: lessonIds.length,
+    assessmentVersion,
+    assessmentType,
+    activatedAt: serverTimestamp(),
+    activatedBy: 'admin-user',
+  }
+}
+
+function versionedProgressRecord({ courseId, versionId, courseVersion = 1, lessonCount, completedLessonIds, createdAt = serverTimestamp() }) {
+  return {
+    courseId,
+    versionId,
+    courseVersion,
+    lessonCount,
+    completedLessonIds,
+    lastLessonId: completedLessonIds.at(-1),
+    createdAt,
+    updatedAt: serverTimestamp(),
+  }
+}
+
+async function publishCourseFoundation(db, values) {
+  const batch = writeBatch(db)
+  batch.set(doc(db, 'courseVersions', values.versionId), courseVersionRecord(values))
+  batch.set(doc(db, 'activeCourses', values.courseId), activeCourseRecord(values))
+  await batch.commit()
+}
+
 test('an unauthenticated visitor cannot read learner data', async () => {
   const db = environment.unauthenticatedContext().firestore()
   await assertFails(getDoc(doc(db, 'users', 'alice')))
@@ -436,6 +484,135 @@ test('completed progress cannot be reset or have its creation time rewritten', a
     createdAt: finalProgress.data().createdAt,
   }))
   await assertFails(setDoc(reference, fourLessonProgressRecord()))
+})
+
+test('administrators publish immutable course versions while public and unverified access stays closed', async () => {
+  const admin = verifiedUser('admin-user', { admin: true })
+  const values = {
+    versionId: 'web-basics--v1',
+    courseId: 'web-basics',
+    courseTitle: 'Web Development Basics',
+    lessonIds: ['web-introduction', 'html-foundations'],
+  }
+
+  await assertSucceeds(publishCourseFoundation(admin, values))
+  await assertSucceeds(getDoc(doc(verifiedUser('alice'), 'courseVersions', values.versionId)))
+  await assertSucceeds(getDoc(doc(verifiedUser('alice'), 'activeCourses', values.courseId)))
+  await assertFails(getDoc(doc(environment.unauthenticatedContext().firestore(), 'activeCourses', values.courseId)))
+  await assertFails(getDoc(doc(environment.authenticatedContext('unverified', { email_verified: false }).firestore(), 'courseVersions', values.versionId)))
+  await assertFails(updateDoc(doc(admin, 'courseVersions', values.versionId), { courseTitle: 'Changed later' }))
+
+  const learner = verifiedUser('alice')
+  await assertFails(setDoc(doc(learner, 'courseVersions', 'forged-course--v1'), courseVersionRecord({
+    versionId: 'forged-course--v1',
+    courseId: 'forged-course',
+    courseTitle: 'Forged Course Version',
+    lessonIds: ['forged-lesson'],
+  })))
+  await assertFails(setDoc(doc(admin, 'courseVersions', 'duplicate-lessons--v1'), courseVersionRecord({
+    versionId: 'duplicate-lessons--v1',
+    courseId: 'duplicate-lessons',
+    courseTitle: 'Duplicate Lesson Course',
+    lessonIds: ['same-lesson', 'same-lesson'],
+  })))
+})
+
+test('two courses keep progress isolated and reject skipped or foreign lessons', async () => {
+  const admin = verifiedUser('admin-user', { admin: true })
+  const ai = {
+    versionId: 'ai-practice--v1',
+    courseId: 'ai-practice',
+    courseTitle: 'Practical AI Skills',
+    lessonIds: ['ai-first-step', 'ai-safe-use', 'ai-small-project'],
+  }
+  const web = {
+    versionId: 'web-basics--v1',
+    courseId: 'web-basics',
+    courseTitle: 'Web Development Basics',
+    lessonIds: ['web-introduction', 'html-foundations'],
+  }
+  await assertSucceeds(publishCourseFoundation(admin, ai))
+  await assertSucceeds(publishCourseFoundation(admin, web))
+
+  const alice = verifiedUser('alice')
+  const aiReference = doc(alice, 'users', 'alice', 'progress', ai.courseId)
+  const webReference = doc(alice, 'users', 'alice', 'progress', web.courseId)
+  await assertSucceeds(setDoc(aiReference, versionedProgressRecord({ ...ai, lessonCount: ai.lessonIds.length, completedLessonIds: [ai.lessonIds[0]] })))
+  await assertSucceeds(setDoc(webReference, versionedProgressRecord({ ...web, lessonCount: web.lessonIds.length, completedLessonIds: [web.lessonIds[0]] })))
+
+  const aiStart = await getDoc(aiReference)
+  const webStart = await getDoc(webReference)
+  await assertFails(setDoc(aiReference, versionedProgressRecord({
+    ...ai,
+    lessonCount: ai.lessonIds.length,
+    completedLessonIds: [ai.lessonIds[0], ai.lessonIds[2]],
+    createdAt: aiStart.data().createdAt,
+  })))
+  await assertFails(setDoc(doc(alice, 'users', 'alice', 'progress', web.courseId), versionedProgressRecord({
+    ...web,
+    versionId: ai.versionId,
+    lessonCount: ai.lessonIds.length,
+    completedLessonIds: [ai.lessonIds[0]],
+  })))
+  await assertFails(setDoc(doc(alice, 'users', 'alice', 'progress', 'unknown-course'), versionedProgressRecord({
+    courseId: 'unknown-course',
+    versionId: 'unknown-course--v1',
+    lessonCount: 1,
+    completedLessonIds: ['unknown-lesson'],
+  })))
+  await assertSucceeds(setDoc(webReference, versionedProgressRecord({
+    ...web,
+    lessonCount: web.lessonIds.length,
+    completedLessonIds: web.lessonIds,
+    createdAt: webStart.data().createdAt,
+  })))
+  await assertFails(getDoc(doc(verifiedUser('bob'), 'users', 'alice', 'progress', ai.courseId)))
+})
+
+test('activating a new course version does not rewrite progress already locked to an older version', async () => {
+  const admin = verifiedUser('admin-user', { admin: true })
+  const versionOne = {
+    versionId: 'web-basics--v1',
+    courseId: 'web-basics',
+    courseTitle: 'Web Development Basics',
+    lessonIds: ['web-introduction', 'html-foundations'],
+  }
+  await assertSucceeds(publishCourseFoundation(admin, versionOne))
+
+  const alice = verifiedUser('alice')
+  const aliceReference = doc(alice, 'users', 'alice', 'progress', versionOne.courseId)
+  await assertSucceeds(setDoc(aliceReference, versionedProgressRecord({ ...versionOne, lessonCount: 2, completedLessonIds: ['web-introduction'] })))
+  const aliceStart = await getDoc(aliceReference)
+
+  const versionTwo = {
+    ...versionOne,
+    versionId: 'web-basics--v2',
+    courseVersion: 2,
+    lessonIds: ['web-introduction-v2', 'html-foundations-v2', 'publish-a-page'],
+  }
+  const activation = writeBatch(admin)
+  activation.set(doc(admin, 'courseVersions', versionTwo.versionId), courseVersionRecord(versionTwo))
+  activation.set(doc(admin, 'activeCourses', versionTwo.courseId), activeCourseRecord(versionTwo))
+  await assertSucceeds(activation.commit())
+
+  await assertSucceeds(setDoc(aliceReference, versionedProgressRecord({
+    ...versionOne,
+    lessonCount: 2,
+    completedLessonIds: versionOne.lessonIds,
+    createdAt: aliceStart.data().createdAt,
+  })))
+
+  const bob = verifiedUser('bob')
+  await assertFails(setDoc(doc(bob, 'users', 'bob', 'progress', versionOne.courseId), versionedProgressRecord({
+    ...versionOne,
+    lessonCount: 2,
+    completedLessonIds: ['web-introduction'],
+  })))
+  await assertSucceeds(setDoc(doc(bob, 'users', 'bob', 'progress', versionTwo.courseId), versionedProgressRecord({
+    ...versionTwo,
+    lessonCount: 3,
+    completedLessonIds: ['web-introduction-v2'],
+  })))
 })
 
 test('a certificate can be fetched by id but the registry cannot be listed', async () => {

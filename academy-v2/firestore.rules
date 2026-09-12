@@ -51,7 +51,7 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
-    function validProgress(data, courseId) {
+    function validLegacyProgress(data, courseId) {
       let publishedLessonIds = ['understanding-ai', 'prompting-with-purpose', 'responsible-use', 'build-an-ethiopian-solution'];
       let validFirstLesson = data.completedLessonIds == ['understanding-ai']
         && data.lastLessonId == 'understanding-ai'
@@ -196,6 +196,124 @@ service cloud.firestore {
         && lessonId.size() >= 3
         && lessonId.size() <= 64
         && lessonId.matches('[a-z0-9]+(-[a-z0-9]+)*');
+    }
+
+    function validLessonIdList(lessonIds) {
+      return lessonIds is list
+        && lessonIds.size() >= 1
+        && lessonIds.size() <= 12
+        && lessonIds.toSet().size() == lessonIds.size()
+        && validLessonId(lessonIds[0])
+        && (lessonIds.size() < 2 || validLessonId(lessonIds[1]))
+        && (lessonIds.size() < 3 || validLessonId(lessonIds[2]))
+        && (lessonIds.size() < 4 || validLessonId(lessonIds[3]))
+        && (lessonIds.size() < 5 || validLessonId(lessonIds[4]))
+        && (lessonIds.size() < 6 || validLessonId(lessonIds[5]))
+        && (lessonIds.size() < 7 || validLessonId(lessonIds[6]))
+        && (lessonIds.size() < 8 || validLessonId(lessonIds[7]))
+        && (lessonIds.size() < 9 || validLessonId(lessonIds[8]))
+        && (lessonIds.size() < 10 || validLessonId(lessonIds[9]))
+        && (lessonIds.size() < 11 || validLessonId(lessonIds[10]))
+        && (lessonIds.size() < 12 || validLessonId(lessonIds[11]));
+    }
+
+    function validCourseVersion(data, versionId) {
+      return data.keys().hasOnly([
+          'versionId', 'courseId', 'courseTitle', 'courseVersion',
+          'assessmentVersion', 'assessmentType', 'lessonIds',
+          'publishedAt', 'publishedBy'
+        ])
+        && data.versionId == versionId
+        && validCourseId(data.courseId)
+        && data.courseTitle is string
+        && data.courseTitle.size() >= 5
+        && data.courseTitle.size() <= 100
+        && data.courseVersion is int
+        && data.courseVersion >= 1
+        && data.courseVersion <= 10000
+        && data.assessmentVersion is int
+        && data.assessmentVersion >= 1
+        && data.assessmentVersion <= 10000
+        && data.assessmentType in ['practice-only', 'project']
+        && validLessonIdList(data.lessonIds)
+        && data.publishedAt == request.time
+        && data.publishedBy == request.auth.uid;
+    }
+
+    function validActiveCourse(data, courseId) {
+      let version = getAfter(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
+      return data.keys().hasOnly([
+          'courseId', 'versionId', 'courseVersion', 'courseTitle',
+          'lessonCount', 'assessmentVersion', 'assessmentType',
+          'activatedAt', 'activatedBy'
+        ])
+        && data.courseId == courseId
+        && validCourseId(courseId)
+        && data.versionId is string
+        && data.versionId.size() >= 8
+        && data.versionId.size() <= 140
+        && version.versionId == data.versionId
+        && version.courseId == courseId
+        && data.courseVersion == version.courseVersion
+        && data.courseTitle == version.courseTitle
+        && data.lessonCount == version.lessonIds.size()
+        && data.assessmentVersion == version.assessmentVersion
+        && data.assessmentType == version.assessmentType
+        && data.activatedAt == request.time
+        && data.activatedBy == request.auth.uid;
+    }
+
+    function validVersionedProgress(data, courseId) {
+      let version = get(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
+      return data.keys().hasOnly([
+          'courseId', 'versionId', 'courseVersion', 'lessonCount',
+          'completedLessonIds', 'lastLessonId', 'createdAt', 'updatedAt'
+        ])
+        && data.courseId == courseId
+        && validCourseId(courseId)
+        && data.versionId is string
+        && version.versionId == data.versionId
+        && version.courseId == courseId
+        && data.courseVersion == version.courseVersion
+        && data.lessonCount == version.lessonIds.size()
+        && data.completedLessonIds is list
+        && data.completedLessonIds.size() >= 1
+        && data.completedLessonIds.size() <= data.lessonCount
+        && data.completedLessonIds.toSet().size() == data.completedLessonIds.size()
+        && data.completedLessonIds.toSet().difference(version.lessonIds.toSet()).size() == 0
+        && data.lastLessonId in data.completedLessonIds
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function validProgress(data, courseId) {
+      return data.keys().hasAll(['versionId'])
+        ? validVersionedProgress(data, courseId)
+        : validLegacyProgress(data, courseId);
+    }
+
+    function versionedProgressStartsAtFirstLesson(data, courseId) {
+      let version = get(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
+      let activeCourse = get(/databases/$(database)/documents/activeCourses/$(courseId)).data;
+      return validVersionedProgress(data, courseId)
+        && activeCourse.courseId == courseId
+        && activeCourse.versionId == data.versionId
+        && data.completedLessonIds == [version.lessonIds[0]]
+        && data.lastLessonId == version.lessonIds[0]
+        && data.createdAt == request.time;
+    }
+
+    function versionedProgressAddsNextLesson(data, previous, courseId) {
+      let version = get(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
+      return previous.keys().hasAll(['versionId'])
+        && validVersionedProgress(data, courseId)
+        && data.versionId == previous.versionId
+        && data.courseVersion == previous.courseVersion
+        && data.lessonCount == previous.lessonCount
+        && data.createdAt == previous.createdAt
+        && data.completedLessonIds.size() == previous.completedLessonIds.size() + 1
+        && previous.completedLessonIds.toSet().difference(data.completedLessonIds.toSet()).size() == 0
+        && data.lastLessonId == version.lessonIds[previous.completedLessonIds.size()];
     }
 
     function validLessonContent(data) {
@@ -1320,6 +1438,20 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Each published course version is immutable. The active-course document is
+    // a narrow pointer that lets new progress records lock to one reviewed version.
+    match /courseVersions/{versionId} {
+      allow get, list: if verified();
+      allow create: if admin() && validCourseVersion(request.resource.data, versionId);
+      allow update, delete: if false;
+    }
+
+    match /activeCourses/{courseId} {
+      allow get, list: if verified();
+      allow create, update: if admin() && validActiveCourse(request.resource.data, courseId);
+      allow delete: if false;
+    }
+
     match /users/{uid} {
       allow create: if owns(uid) && enrollmentOpen() && learnerWritesAllowed(uid) && validProfile(request.resource.data);
       allow get: if owns(uid) || admin();
@@ -1337,17 +1469,30 @@ service cloud.firestore {
           && verified()
           && learnerWritesAllowed(uid)
           && validProgress(request.resource.data, courseId)
-          && request.resource.data.completedLessonIds == ['understanding-ai']
-          && request.resource.data.createdAt == request.time;
+          && (request.resource.data.keys().hasAll(['versionId'])
+            ? versionedProgressStartsAtFirstLesson(request.resource.data, courseId)
+            : (
+              courseId == 'ai-foundations'
+              && request.resource.data.completedLessonIds == ['understanding-ai']
+              && request.resource.data.createdAt == request.time
+            )
+          );
         allow update: if owns(uid)
           && verified()
           && learnerWritesAllowed(uid)
           && validProgress(request.resource.data, courseId)
-          && request.resource.data.createdAt == resource.data.createdAt
-          && request.resource.data.completedLessonIds.size() == resource.data.completedLessonIds.size() + 1
-          && request.resource.data.percent == resource.data.percent + 25
-          && resource.data.completedLessonIds.toSet()
-            .difference(request.resource.data.completedLessonIds.toSet()).size() == 0;
+          && (request.resource.data.keys().hasAll(['versionId'])
+            ? versionedProgressAddsNextLesson(request.resource.data, resource.data, courseId)
+            : (
+              courseId == 'ai-foundations'
+              && !resource.data.keys().hasAny(['versionId'])
+              && request.resource.data.createdAt == resource.data.createdAt
+              && request.resource.data.completedLessonIds.size() == resource.data.completedLessonIds.size() + 1
+              && request.resource.data.percent == resource.data.percent + 25
+              && resource.data.completedLessonIds.toSet()
+                .difference(request.resource.data.completedLessonIds.toSet()).size() == 0
+            )
+          );
         allow delete: if admin() && deletionPackageValid(uid);
       }
 

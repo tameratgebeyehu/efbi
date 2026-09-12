@@ -413,7 +413,7 @@ Phase 21 should close the remaining owner-supplied and external-review gates bef
 
 ## Phase 22 status
 
-The technical safe-preview boundary is complete; owner account activation is still pending:
+The technical safe-preview boundary is complete; final owner-session confirmation and password rotation remain:
 
 1. Public builds now default to read-only preview mode.
 2. The preview visibly closes join, sign-in, account, and protected learning routes.
@@ -425,10 +425,26 @@ The technical safe-preview boundary is complete; owner account activation is sti
 8. Learner and Admin Studio lint and preview/production builds pass.
 9. Seventy-three Firestore authorization and lifecycle tests pass.
 10. The Phase 22 development preview responds successfully on all primary routes.
-11. The real owner Authentication account, email verification, admin role grant, and Admin Studio sign-in still require the owner’s private password action.
+11. The real owner Authentication account exists, its email is verified, and the exact account has the server-issued `admin` role. A fresh Admin Studio sign-in still requires the owner’s private password action.
 12. No custom-domain change or public enrollment was performed.
 
 See `SAFE_PREVIEW.md` and `LAUNCH_ROADMAP.md`.
+
+## Phase 23 status
+
+The first multi-course security checkpoint is complete in the development codebase:
+
+1. Immutable `courseVersions` records hold a reviewed course title, version, assessment mode, and ordered lesson IDs.
+2. A narrow `activeCourses` pointer determines which immutable version a new learner starts.
+3. New progress records lock to one course version and may advance only one approved lesson at a time.
+4. Activating a newer course version does not rewrite or block progress already locked to an older version.
+5. The original AI Foundations progress schema remains accepted so existing pilot records are not silently migrated or broken.
+6. Course versions support 1–12 unique lessons and either practice-only or project assessment at this checkpoint.
+7. Emulator tests prove that two unrelated synthetic courses cannot exchange versions or lessons, skip lesson order, expose another learner’s progress, or start from an inactive version.
+8. Seventy-six Firestore authorization and lifecycle tests pass. Learner lint and the production build also pass.
+9. No development or production rules were deployed, no synthetic record left the emulator, and enrollment remains closed.
+
+Remaining Phase 23 work: migrate learner catalog and routes, then generalize submissions, reviews, certificates, and deletion inventory while retaining the tested pilot compatibility path.
 
 
 ## Recovery commands
