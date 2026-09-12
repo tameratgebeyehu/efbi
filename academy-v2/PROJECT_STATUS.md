@@ -58,6 +58,8 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Completed learners can save a private AI Foundations project draft and submit an immutable text-and-HTTPS-link record with versioned consent.
 - Administrators can assign submitted projects; assigned reviewers can publish one immutable rubric result; learners receive a separate public-safe result without private review fields.
 - One separate revision is available only after a revision request; Version 1 and both review histories remain immutable.
+- Learners can request or cancel deletion from Account; active requests freeze learning and assessment changes.
+- The localhost Admin Studio supports private audited holds and atomic deletion while preserving certificate proof.
 
 ## Firebase environments
 
@@ -70,7 +72,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Contact form submissions.
 - Published course video playback; no EFBI YouTube lesson ID has been supplied yet.
 - Appeals and additional learner revisions beyond the one controlled response.
-- Certificate issuance and new public verification records.
+- Production certificate issuance and real learner credential operations.
 - File uploads and production review operations.
 - Production deployment or custom-domain migration.
 
@@ -345,17 +347,35 @@ Implementation is complete in the development codebase:
 11. The tested Phase 18 rules were deployed only to efbi-academy-dev-doha.
 12. No public Hosting release, real learner record, role grant, appeal, file upload, or production operation was created.
 
+## Phase 19 status
+
+Implementation is complete in the development codebase:
+
+1. A signed-in learner can create, cancel, or reopen one fixed-schema deletion request from the Account page.
+2. Requested, held, and completed states freeze profile, progress, submission, review, assignment, certificate-request, and certificate-issuance changes.
+3. Only a verified administrator can place or release a documented private hold, and each transition requires a matching immutable audit event in the same batch.
+4. Deletion is an all-or-nothing Firestore batch. It removes the profile, AI Foundations progress, and every eligible fixed pilot assessment record before completion can be recorded.
+5. If a certificate claim exists, certificate-linked submissions, reviews, learner consent, private issuance evidence, public verification, status, claim, and audit history remain protected.
+6. Learners see request status and minimal completion evidence but cannot read private hold reasons or retention audit events.
+7. Firebase Authentication deletion is intentionally a separate exact-UID console step; no service-account or Admin SDK credential is placed in browser code.
+8. The provisional retention schedule and 30-day hold review process are documented, but automated expiry is not active and the policy requires Ethiopian legal and safeguarding approval before enrollment.
+9. Learner and Admin Studio builds and lint checks pass.
+10. Seventy-one Firestore emulator authorization and lifecycle tests pass, including partial-deletion rejection, active-hold blocking, cross-user denial, and certificate-evidence preservation.
+11. The tested Phase 19 rules are deployed only to `efbi-academy-dev-doha`.
+12. No public Hosting release, learner data, Authentication deletion, role grant, hold, completion record, or production operation was created during development.
+
+See `RETENTION_AND_DELETION.md` and `../ADMIN_STUDIO.md` for the policy, scope limits, and exact operating procedure.
+
 ## Next implementation phase
 
-Phase 19 should add retention, deletion-request, and investigation-hold controls before production enrollment:
+Phase 20 should prepare controlled pre-production operations without opening public enrollment:
 
-1. Define retention periods for inactive drafts, submitted projects, private reviews, and certificate evidence.
-2. Add a learner-visible deletion-request path for eligible private data.
-3. Preserve only minimal deletion-completion evidence without copying deleted content.
-4. Define documented investigation holds and administrator authorization.
-5. Test that deletion cannot erase active certificate proof or immutable audit history improperly.
-6. Keep file uploads, public enrollment, and production deployment disabled until their own gates pass.
-
+1. Obtain Ethiopian privacy and safeguarding review of the notice, retention periods, lawful bases, child-safety handling, and certificate exception.
+2. Design a trusted scheduled retention executor and monitoring path; do not place server credentials in either browser application.
+3. Add overdue-request and 30-day hold-review indicators without exposing private reasons to learners.
+4. Run an end-to-end development exercise with dedicated learner, reviewer, and administrator test accounts, then delete every synthetic record.
+5. Review App Check monitoring and incident recovery before any enforcement decision.
+6. Keep file uploads, public enrollment, production deployment, and the Admin Studio off public Hosting.
 ## Recovery commands
 
 From this directory:

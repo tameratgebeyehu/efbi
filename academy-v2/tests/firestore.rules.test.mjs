@@ -1893,3 +1893,187 @@ test('a revoked credential cannot be reactivated or used as a replacement source
   await assertFails(replacement.commit())
   assert.equal((await getDoc(doc(admin, 'certificateStatuses', certificateIdOne))).data().status, 'revoked')
 })
+function dataDeletionRequest(uid = 'alice') {
+  return {
+    requestId: uid,
+    learnerUid: uid,
+    scope: 'account-and-learning-data',
+    policyVersion: 'efbi-retention-v1',
+    status: 'requested',
+    requestedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    completedAt: null,
+    certificateEvidenceRetained: false,
+  }
+}
+
+function retentionAudit(eventId, action, uid = 'alice', reason = 'Documented privacy operation approved after a careful review.') {
+  return { eventId, action, learnerUid: uid, actorUid: 'admin-user', reason, createdAt: serverTimestamp() }
+}
+
+function deletionCompletion(uid, auditId, certificateEvidenceRetained = false) {
+  return {
+    completionId: uid,
+    learnerUid: uid,
+    policyVersion: 'efbi-retention-v1',
+    completedAt: serverTimestamp(),
+    certificateEvidenceRetained,
+    authenticationRemoval: 'manual-console-required',
+    deletedCategories: certificateEvidenceRetained
+      ? ['profile', 'courseProgress']
+      : ['profile', 'courseProgress', 'projectSubmissions', 'reviewRecords', 'certificateRequest'],
+    auditId,
+  }
+}
+
+async function seedPrivacyRecords(uid = 'alice', withEvidence = true) {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    await setDoc(doc(db, 'users', uid), { displayName: 'Alice Learner', status: 'active', createdAt: new Date(), updatedAt: new Date() })
+    await setDoc(doc(db, 'users', uid, 'progress', 'ai-foundations'), { courseId: 'ai-foundations' })
+    if (!withEvidence) return
+    await setDoc(doc(db, 'users', uid, 'certificateRequests', 'ai-foundations'), { learnerUid: uid })
+    for (const submissionId of ['ai-foundations-project', 'ai-foundations-project-revision-1']) {
+      const resultId = uid + '--' + submissionId
+      await setDoc(doc(db, 'users', uid, 'submissions', submissionId), { learnerUid: uid, status: 'submitted' })
+      await setDoc(doc(db, 'users', uid, 'reviewResults', resultId), { learnerUid: uid })
+      await setDoc(doc(db, 'reviewResults', resultId), { learnerUid: uid })
+      await setDoc(doc(db, 'reviewAssignments', resultId), { learnerUid: uid })
+    }
+  })
+}
+
+async function requestOwnDeletion(uid = 'alice') {
+  const learner = verifiedUser(uid)
+  await assertSucceeds(setDoc(doc(learner, 'deletionRequests', uid), dataDeletionRequest(uid)))
+  return learner
+}
+
+function addDeletionCompletion(batch, db, uid = 'alice', certificateEvidenceRetained = false) {
+  const auditId = 'retention-deletion-completed-' + uid + '-0001'
+  batch.update(doc(db, 'deletionRequests', uid), {
+    status: 'completed', updatedAt: serverTimestamp(), completedAt: serverTimestamp(), certificateEvidenceRetained,
+  })
+  batch.set(doc(db, 'deletionCompletions', uid), deletionCompletion(uid, auditId, certificateEvidenceRetained))
+  batch.set(doc(db, 'retentionAudit', auditId), retentionAudit(
+    auditId,
+    'deletion.completed',
+    uid,
+    certificateEvidenceRetained
+      ? 'Eligible learner data deleted while certificate evidence remains protected.'
+      : 'Eligible learner data deleted after confirming no certificate evidence was required.',
+  ))
+}
+
+test('a learner controls one deletion request and an active request freezes learning writes', async () => {
+  await seedPrivacyRecords('alice', false)
+  const learner = await requestOwnDeletion()
+  await assertFails(updateDoc(doc(learner, 'users', 'alice'), { displayName: 'Changed Name', updatedAt: serverTimestamp() }))
+  await assertFails(setDoc(doc(learner, 'users', 'alice', 'progress', 'ai-foundations'), {
+    courseId: 'ai-foundations', completedLessonIds: ['understanding-ai'], lastLessonId: 'understanding-ai', percent: 25,
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }))
+  await assertSucceeds(updateDoc(doc(learner, 'deletionRequests', 'alice'), { status: 'cancelled', updatedAt: serverTimestamp() }))
+  await assertSucceeds(updateDoc(doc(learner, 'users', 'alice'), { displayName: 'Changed Name', updatedAt: serverTimestamp() }))
+  await assertSucceeds(updateDoc(doc(learner, 'deletionRequests', 'alice'), { status: 'requested', updatedAt: serverTimestamp() }))
+  await assertFails(updateDoc(doc(learner, 'deletionRequests', 'alice'), { status: 'completed', updatedAt: serverTimestamp() }))
+  await assertFails(setDoc(doc(verifiedUser('bob'), 'deletionRequests', 'alice'), dataDeletionRequest('alice')))
+})
+
+test('retention holds are private and require one atomic request and audit transition', async () => {
+  const learner = await requestOwnDeletion()
+  const admin = verifiedUser('admin-user', { admin: true })
+  const holdId = 'retention-hold-created-alice-0001'
+  await assertFails(updateDoc(doc(admin, 'deletionRequests', 'alice'), { status: 'held', updatedAt: serverTimestamp() }))
+  const holdBatch = writeBatch(admin)
+  holdBatch.set(doc(admin, 'retentionHolds', 'alice'), {
+    holdId: 'alice', learnerUid: 'alice', status: 'active', reason: 'A documented certificate-integrity investigation is still open.',
+    createdAt: serverTimestamp(), createdBy: 'admin-user', updatedAt: serverTimestamp(), updatedBy: 'admin-user', auditId: holdId,
+  })
+  holdBatch.update(doc(admin, 'deletionRequests', 'alice'), { status: 'held', updatedAt: serverTimestamp() })
+  holdBatch.set(doc(admin, 'retentionAudit', holdId), retentionAudit(holdId, 'retention.hold.created'))
+  await assertSucceeds(holdBatch.commit())
+  await assertFails(getDoc(doc(learner, 'retentionHolds', 'alice')))
+  assert.equal((await getDoc(doc(learner, 'deletionRequests', 'alice'))).data().status, 'held')
+
+  const releaseId = 'retention-hold-released-alice-0002'
+  const releaseBatch = writeBatch(admin)
+  releaseBatch.update(doc(admin, 'retentionHolds', 'alice'), {
+    status: 'released', reason: 'The investigation closed and the evidence restriction is no longer needed.',
+    updatedAt: serverTimestamp(), updatedBy: 'admin-user', auditId: releaseId,
+  })
+  releaseBatch.update(doc(admin, 'deletionRequests', 'alice'), { status: 'requested', updatedAt: serverTimestamp() })
+  releaseBatch.set(doc(admin, 'retentionAudit', releaseId), retentionAudit(releaseId, 'retention.hold.released'))
+  await assertSucceeds(releaseBatch.commit())
+  await assertFails(updateDoc(doc(admin, 'retentionAudit', releaseId), { reason: 'Changed later without permission.' }))
+})
+
+test('deletion without a certificate removes every eligible fixed record in one audited batch', async () => {
+  await seedPrivacyRecords()
+  const learner = await requestOwnDeletion()
+  const admin = verifiedUser('admin-user', { admin: true })
+  const batch = writeBatch(admin)
+  batch.delete(doc(admin, 'users', 'alice'))
+  batch.delete(doc(admin, 'users', 'alice', 'progress', 'ai-foundations'))
+  batch.delete(doc(admin, 'users', 'alice', 'certificateRequests', 'ai-foundations'))
+  for (const submissionId of ['ai-foundations-project', 'ai-foundations-project-revision-1']) {
+    const resultId = 'alice--' + submissionId
+    batch.delete(doc(admin, 'users', 'alice', 'submissions', submissionId))
+    batch.delete(doc(admin, 'users', 'alice', 'reviewResults', resultId))
+    batch.delete(doc(admin, 'reviewResults', resultId))
+    batch.delete(doc(admin, 'reviewAssignments', resultId))
+  }
+  addDeletionCompletion(batch, admin)
+  await assertSucceeds(batch.commit())
+  assert.equal((await getDoc(doc(learner, 'deletionRequests', 'alice'))).data().status, 'completed')
+  const completion = await getDoc(doc(learner, 'deletionCompletions', 'alice'))
+  assert.equal(completion.data().authenticationRemoval, 'manual-console-required')
+  assert.equal(completion.data().certificateEvidenceRetained, false)
+  await assertFails(getDoc(doc(learner, 'retentionAudit', completion.data().auditId)))
+  assert.equal((await getDoc(doc(admin, 'users', 'alice'))).exists(), false)
+})
+
+test('partial deletion and deletion during an active hold are rejected without a completion record', async () => {
+  await seedPrivacyRecords('alice', false)
+  await requestOwnDeletion()
+  const admin = verifiedUser('admin-user', { admin: true })
+  const partial = writeBatch(admin)
+  partial.delete(doc(admin, 'users', 'alice'))
+  addDeletionCompletion(partial, admin)
+  await assertFails(partial.commit())
+
+  const holdId = 'retention-hold-created-alice-0003'
+  const holdBatch = writeBatch(admin)
+  holdBatch.set(doc(admin, 'retentionHolds', 'alice'), {
+    holdId: 'alice', learnerUid: 'alice', status: 'active', reason: 'A documented safety investigation requires a temporary processing hold.',
+    createdAt: serverTimestamp(), createdBy: 'admin-user', updatedAt: serverTimestamp(), updatedBy: 'admin-user', auditId: holdId,
+  })
+  holdBatch.update(doc(admin, 'deletionRequests', 'alice'), { status: 'held', updatedAt: serverTimestamp() })
+  holdBatch.set(doc(admin, 'retentionAudit', holdId), retentionAudit(holdId, 'retention.hold.created'))
+  await assertSucceeds(holdBatch.commit())
+  const blocked = writeBatch(admin)
+  blocked.delete(doc(admin, 'users', 'alice'))
+  blocked.delete(doc(admin, 'users', 'alice', 'progress', 'ai-foundations'))
+  addDeletionCompletion(blocked, admin)
+  await assertFails(blocked.commit())
+  assert.equal((await getDoc(doc(admin, 'deletionCompletions', 'alice'))).exists(), false)
+})
+
+test('a certificate deletion preserves credential evidence while removing basic learner data', async () => {
+  await seedPrivacyRecords()
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'certificateClaims', 'alice--ai-foundations'), { learnerUid: 'alice' })
+  })
+  const learner = await requestOwnDeletion()
+  const admin = verifiedUser('admin-user', { admin: true })
+  const batch = writeBatch(admin)
+  batch.delete(doc(admin, 'users', 'alice'))
+  batch.delete(doc(admin, 'users', 'alice', 'progress', 'ai-foundations'))
+  addDeletionCompletion(batch, admin, 'alice', true)
+  await assertSucceeds(batch.commit())
+  assert.equal((await getDoc(doc(learner, 'deletionCompletions', 'alice'))).data().certificateEvidenceRetained, true)
+  assert.equal((await getDoc(doc(admin, 'users', 'alice', 'submissions', 'ai-foundations-project'))).exists(), true)
+  assert.equal((await getDoc(doc(admin, 'reviewResults', 'alice--ai-foundations-project'))).exists(), true)
+  await assertFails(deleteDoc(doc(admin, 'certificateClaims', 'alice--ai-foundations')))
+  await assertFails(deleteDoc(doc(admin, 'users', 'alice', 'submissions', 'ai-foundations-project')))
+})

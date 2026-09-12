@@ -1,0 +1,46 @@
+.retention-workspace { min-width: 0; }
+.retention-layout { display: grid; grid-template-columns: 245px minmax(420px, 1fr) minmax(310px, .76fr); gap: 22px; align-items: start; }
+.retention-list, .retention-record, .retention-actions { min-width: 0; border: 1px solid var(--line); background: #fff; }
+.retention-list { position: sticky; top: 24px; overflow: hidden; }
+.retention-list > div { display: flex; justify-content: space-between; gap: 10px; padding: 16px; border-bottom: 1px solid var(--line); }
+.retention-list > div strong { color: var(--deep); font-size: .82rem; }
+.retention-list > div span { color: var(--green); font-size: .72rem; font-weight: 800; }
+.retention-list > p { padding: 18px; color: var(--muted); font-size: .75rem; line-height: 1.55; }
+.retention-list > button { width: 100%; display: grid; gap: 6px; padding: 15px 16px; text-align: left; border: 0; border-bottom: 1px solid #edf0ed; background: #fff; }
+.retention-list > button:hover, .retention-list > button.selected { background: #f2f8f4; }
+.retention-list > button.selected { box-shadow: inset 4px 0 var(--green); }
+.retention-list button strong { overflow-wrap: anywhere; color: var(--deep); font-family: ui-monospace, Consolas, monospace; font-size: .7rem; }
+.retention-list button span { color: var(--muted); font-size: .66rem; }
+.retention-state { width: max-content; padding: 4px 8px; color: #315f45; background: #eaf7ee; font-size: .62rem; font-weight: 850; text-transform: uppercase; }
+.retention-state--held { color: #7d5d11; background: #fff6d9; }
+.retention-state--cancelled { color: #68726c; background: #edf0ee; }
+.retention-state--completed { color: #2f5b7a; background: #eaf4fb; }
+.retention-record { padding: 26px; }
+.retention-record > header { display: flex; justify-content: space-between; gap: 20px; align-items: start; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.retention-record h2 { overflow-wrap: anywhere; margin: 5px 0; color: var(--deep); font-family: ui-monospace, Consolas, monospace; font-size: 1rem; }
+.retention-record header p:last-child { margin: 0; color: var(--muted); font-size: .72rem; }
+.retention-record > dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 24px 0; }
+.retention-record > dl div { min-width: 0; padding: 13px; border: 1px solid #e1e7e2; background: #fafcfa; }
+.retention-record dt { color: #718077; font-size: .62rem; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+.retention-record dd { overflow-wrap: anywhere; margin: 5px 0 0; color: #34473c; font-size: .72rem; }
+.retention-private, .retention-complete { padding: 16px; border: 1px solid #ead8a6; background: #fffaf0; }
+.retention-complete { border-color: #c9ddea; background: #f1f8fc; }
+.retention-private strong, .retention-complete strong { color: var(--deep); font-size: .78rem; }
+.retention-private p, .retention-complete p { margin: 6px 0 0; color: var(--muted); font-size: .72rem; line-height: 1.55; }
+.retention-empty { padding: 50px 20px; text-align: center; }
+.retention-empty strong { color: var(--deep); }
+.retention-empty p { color: var(--muted); }
+.retention-actions { position: sticky; top: 24px; padding: 22px; }
+.retention-actions form { display: grid; gap: 14px; padding: 0 0 22px; margin: 0 0 22px; border-bottom: 1px solid var(--line); }
+.retention-actions h2 { margin: 3px 0 0; color: var(--deep); font-size: 1.15rem; }
+.retention-actions form > p { margin: 0; color: var(--muted); font-size: .73rem; line-height: 1.55; }
+.retention-actions form > label:not(.retention-confirm) { display: grid; gap: 7px; color: #30453a; font-size: .72rem; font-weight: 800; }
+.retention-actions textarea, .retention-actions label > input:not([type]) { min-height: 42px; padding: 10px; border: 1px solid #cbd4cd; }
+.retention-actions textarea { min-height: 88px; resize: vertical; }
+.retention-confirm { display: grid; grid-template-columns: auto 1fr; gap: 9px; color: #4e5e55; font-size: .7rem; line-height: 1.5; }
+.retention-confirm input { margin-top: 3px; accent-color: var(--green); }
+.retention-locked, .retention-boundary { margin-top: 14px; padding: 14px; color: #53645a; border: 1px solid #d7e4da; background: #f3f8f4; font-size: .72rem; line-height: 1.55; }
+.retention-locked strong, .retention-boundary strong { color: var(--deep); }
+.retention-locked p, .retention-boundary p { margin: 5px 0 0; }
+@media (max-width: 1100px) { .retention-layout { grid-template-columns: 210px minmax(0, 1fr); } .retention-actions { position: static; grid-column: 1 / -1; } }
+@media (max-width: 700px) { .retention-layout { grid-template-columns: 1fr; } .retention-list { position: static; display: flex; overflow-x: auto; } .retention-list > div, .retention-list > button { min-width: 190px; } .retention-record { padding: 20px 16px; } .retention-record > header { flex-direction: column; } .retention-record > dl { grid-template-columns: 1fr; } .retention-actions { grid-column: auto; } }

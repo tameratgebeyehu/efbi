@@ -2,9 +2,9 @@
 
 The EFBI Admin Studio is a separate, local-only application for trusted operators. It is not a route in the student website and must never be deployed to Firebase Hosting, GitHub Pages, or another public host.
 
-## Current Phase 17 boundary
+## Current Phase 19 boundary
 
-Phase 18 adds a controlled certificate lifecycle after a final approved review and separate learner consent. Issuance, revocation, and replacement are administrator-only, atomic, and audited.
+Phase 19 adds learner-controlled deletion requests, administrator-only documented holds, and atomic deletion of eligible Firestore data. Certificate evidence and immutable audit history remain protected.
 
 - the server binds to `127.0.0.1` on port `5174`;
 - the interface blocks non-local hostnames;
@@ -18,7 +18,9 @@ Phase 18 adds a controlled certificate lifecycle after a final approved review a
 - Administrators can read submitted projects, never private drafts, and create one immutable reviewer assignment;
 - Reviewers can read only their own assignments and linked submitted projects;
 - an assigned reviewer can publish one immutable calculated result with learner feedback and isolated private notes;
-- exactly one revision is allowed after a revision request; additional revisions, appeals, files, certificates, and public enrollment remain outside this phase.
+- exactly one revision is allowed after a revision request;
+- administrators can process learner deletion requests without erasing certificate proof;
+- additional revisions, appeals, files, and public enrollment remain outside this phase.
 
 The local interface reduces exposure, while Firebase claims and Firestore rules provide the actual authorization boundary.
 
@@ -56,7 +58,7 @@ npm run manage:roles -- set --email "owner@example.com" --role admin --value tru
 
 6. Sign out and sign in again so Firebase issues a fresh ID token.
 
-No role has been granted as part of Phases 9 through 18. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
+No role has been granted as part of Phases 9 through 19. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
 
 ## Remove access
 
@@ -68,7 +70,7 @@ Then revoke the user's refresh tokens in Firebase Console if access must end imm
 
 ## Role meanings
 
-- `admin`: may manage validated course and lesson releases, read submitted projects and private completed reviews, create immutable reviewer assignments, operate the audited certificate lifecycle, and read private audit evidence. It cannot read private learner drafts or create review decisions.
+- `admin`: may manage validated course and lesson releases, read submitted projects and private completed reviews, create immutable reviewer assignments, operate the audited certificate lifecycle, process documented deletion requests and holds, and read private audit evidence. It cannot read private learner drafts or create review decisions.
 - `reviewer`: may list only assignments addressed to its own user ID, read the linked submitted projects, and publish one permanent rubric result for each. It cannot read course drafts, other assignments, or the admin audit.
 - `support`: reserved for future limited support work. It currently receives no private operational reads.
 
@@ -139,6 +141,19 @@ No third version is allowed. Appeals and file uploads remain disabled. Certifica
 
 See academy-v2/CERTIFICATE_OPERATIONS.md for fields, privacy boundaries, and permanent-state rules.
 
+## Privacy and retention workflow
+
+1. The learner creates or cancels the request from the Account page. An active request immediately freezes new learning changes.
+2. Open **Privacy & retention** as an administrator and select the exact learner UID.
+3. Place a hold only for a documented legal, safety, fraud, or integrity purpose. The learner sees that processing is held but never sees the private reason.
+4. Release the hold as soon as the reason ends.
+5. Before deletion, check the exact UID, certificate claim, and hold state. Type the UID and confirm.
+6. The atomic Firestore batch deletes eligible records and creates immutable completion and audit evidence. It either succeeds completely or changes nothing.
+7. When a certificate exists, profile and progress are removed but certificate-linked work and all credential history remain.
+8. After Firestore completion, delete only the matching UID from Firebase Authentication in the Firebase Console and confirm sign-in no longer works.
+
+Never place an Admin SDK or service-account credential in the Studio to automate the Authentication step. See `academy-v2/RETENTION_AND_DELETION.md` for the provisional schedule, legal-review gate, and full record inventory.
+
 ## Audit History workflow
 
 1. Open **Audit history** to load the newest 250 immutable content events.
@@ -160,6 +175,6 @@ See academy-v2/CERTIFICATE_OPERATIONS.md for fields, privacy boundaries, and per
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 18 status
+## Phase 19 status
 
-The secure certificate lifecycle is implemented and tested in the development environment. Appeals, file uploads, public enrollment, public Hosting deployment, and production certificate operations remain outside Phase 18.
+The controlled deletion and retention-hold workflow is implemented and tested in the development environment. The provisional schedule still requires Ethiopian legal and safeguarding approval, and automated expiry is not active. Appeals, file uploads, public enrollment, public Hosting deployment, and production privacy operations remain outside Phase 19.

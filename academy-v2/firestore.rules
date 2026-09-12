@@ -995,32 +995,306 @@ service cloud.firestore {
         && audit.createdAt == request.time;
     }
 
+    function validDeletionRequest(data, uid) {
+      return data.keys().hasOnly([
+          'requestId', 'learnerUid', 'scope', 'policyVersion', 'status',
+          'requestedAt', 'updatedAt', 'completedAt', 'certificateEvidenceRetained'
+        ])
+        && data.requestId == uid
+        && data.learnerUid == uid
+        && data.scope == 'account-and-learning-data'
+        && data.policyVersion == 'efbi-retention-v1'
+        && data.status in ['requested', 'cancelled', 'held', 'completed']
+        && data.requestedAt is timestamp
+        && data.updatedAt == request.time
+        && (data.completedAt == null || data.completedAt is timestamp)
+        && data.certificateEvidenceRetained is bool;
+    }
+
+    function learnerWritesAllowed(uid) {
+      return !exists(/databases/$(database)/documents/deletionRequests/$(uid))
+        || get(/databases/$(database)/documents/deletionRequests/$(uid)).data.status == 'cancelled';
+    }
+
+    function validRetentionHold(data, uid) {
+      return data.keys().hasOnly([
+          'holdId', 'learnerUid', 'status', 'reason', 'createdAt', 'createdBy',
+          'updatedAt', 'updatedBy', 'auditId'
+        ])
+        && data.holdId == uid
+        && data.learnerUid == uid
+        && data.status in ['active', 'released']
+        && data.reason is string
+        && data.reason.size() >= 20
+        && data.reason.size() <= 500
+        && data.createdAt is timestamp
+        && data.createdBy is string
+        && data.createdBy.size() >= 1
+        && data.createdBy.size() <= 128
+        && data.updatedAt == request.time
+        && data.updatedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180;
+    }
+
+    function validDeletionCompletion(data, uid) {
+      return data.keys().hasOnly([
+          'completionId', 'learnerUid', 'policyVersion', 'completedAt',
+          'certificateEvidenceRetained', 'authenticationRemoval',
+          'deletedCategories', 'auditId'
+        ])
+        && data.completionId == uid
+        && data.learnerUid == uid
+        && data.policyVersion == 'efbi-retention-v1'
+        && data.completedAt == request.time
+        && data.certificateEvidenceRetained is bool
+        && data.authenticationRemoval == 'manual-console-required'
+        && data.deletedCategories is list
+        && (
+          (
+            data.certificateEvidenceRetained == true
+            && data.deletedCategories == ['profile', 'courseProgress']
+          )
+          || (
+            data.certificateEvidenceRetained == false
+            && data.deletedCategories == [
+              'profile', 'courseProgress', 'projectSubmissions',
+              'reviewRecords', 'certificateRequest'
+            ]
+          )
+        )
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180;
+    }
+
+    function validRetentionAudit(data, eventId) {
+      return data.keys().hasOnly([
+          'eventId', 'action', 'learnerUid', 'actorUid', 'reason', 'createdAt'
+        ])
+        && data.eventId == eventId
+        && eventId.size() >= 16
+        && eventId.size() <= 180
+        && data.action in [
+          'retention.hold.created', 'retention.hold.released', 'deletion.completed'
+        ]
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && data.actorUid == request.auth.uid
+        && data.reason is string
+        && data.reason.size() >= 20
+        && data.reason.size() <= 500
+        && data.createdAt == request.time;
+    }
+
+    function retentionAuditLinked(data, eventId) {
+      let deletionRequest = getAfter(/databases/$(database)/documents/deletionRequests/$(data.learnerUid)).data;
+      let hold = getAfter(/databases/$(database)/documents/retentionHolds/$(data.learnerUid)).data;
+      let completion = getAfter(/databases/$(database)/documents/deletionCompletions/$(data.learnerUid)).data;
+      return (
+          data.action == 'retention.hold.created'
+          && hold.status == 'active'
+          && hold.auditId == eventId
+          && deletionRequest.status == 'held'
+        )
+        || (
+          data.action == 'retention.hold.released'
+          && hold.status == 'released'
+          && hold.auditId == eventId
+          && deletionRequest.status == 'requested'
+        )
+        || (
+          data.action == 'deletion.completed'
+          && completion.auditId == eventId
+          && deletionRequest.status == 'completed'
+          && completion.learnerUid == data.learnerUid
+        );
+    }
+
+    function basicLearnerRecordsGone(uid) {
+      return !existsAfter(/databases/$(database)/documents/users/$(uid))
+        && !existsAfter(/databases/$(database)/documents/users/$(uid)/progress/ai-foundations);
+    }
+
+    function eligibleEvidenceGone(uid) {
+      return !existsAfter(/databases/$(database)/documents/users/$(uid)/certificateRequests/ai-foundations)
+        && !existsAfter(/databases/$(database)/documents/users/$(uid)/submissions/ai-foundations-project)
+        && !existsAfter(/databases/$(database)/documents/users/$(uid)/submissions/ai-foundations-project-revision-1)
+        && !existsAfter(/databases/$(database)/documents/users/$(uid)/reviewResults/$(uid + '--ai-foundations-project'))
+        && !existsAfter(/databases/$(database)/documents/users/$(uid)/reviewResults/$(uid + '--ai-foundations-project-revision-1'))
+        && !existsAfter(/databases/$(database)/documents/reviewResults/$(uid + '--ai-foundations-project'))
+        && !existsAfter(/databases/$(database)/documents/reviewResults/$(uid + '--ai-foundations-project-revision-1'))
+        && !existsAfter(/databases/$(database)/documents/reviewAssignments/$(uid + '--ai-foundations-project'))
+        && !existsAfter(/databases/$(database)/documents/reviewAssignments/$(uid + '--ai-foundations-project-revision-1'));
+    }
+
+    function deletionPackageValid(uid) {
+      let deletionRequest = getAfter(/databases/$(database)/documents/deletionRequests/$(uid)).data;
+      let completion = getAfter(/databases/$(database)/documents/deletionCompletions/$(uid)).data;
+      let audit = getAfter(/databases/$(database)/documents/retentionAudit/$(completion.auditId)).data;
+      let hasCertificate = exists(/databases/$(database)/documents/certificateClaims/$(uid + '--ai-foundations'));
+      let holdAllowsDeletion = !exists(/databases/$(database)/documents/retentionHolds/$(uid))
+        || get(/databases/$(database)/documents/retentionHolds/$(uid)).data.status == 'released';
+      return validDeletionRequest(deletionRequest, uid)
+        && deletionRequest.status == 'completed'
+        && deletionRequest.completedAt == request.time
+        && deletionRequest.certificateEvidenceRetained == hasCertificate
+        && validDeletionCompletion(completion, uid)
+        && completion.certificateEvidenceRetained == hasCertificate
+        && validRetentionAudit(audit, completion.auditId)
+        && audit.action == 'deletion.completed'
+        && audit.learnerUid == uid
+        && holdAllowsDeletion
+        && basicLearnerRecordsGone(uid)
+        && (hasCertificate || eligibleEvidenceGone(uid));
+    }
+
+    function evidenceDeletionAllowed(uid) {
+      return admin()
+        && !exists(/databases/$(database)/documents/certificateClaims/$(uid + '--ai-foundations'))
+        && deletionPackageValid(uid);
+    }
+    match /deletionRequests/{uid} {
+      allow get: if owns(uid) || admin();
+      allow list: if admin();
+      allow create: if owns(uid)
+        && validDeletionRequest(request.resource.data, uid)
+        && request.resource.data.status == 'requested'
+        && request.resource.data.requestedAt == request.time
+        && request.resource.data.completedAt == null
+        && request.resource.data.certificateEvidenceRetained == false;
+      allow update: if validDeletionRequest(request.resource.data, uid)
+        && (
+          (
+            owns(uid)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+            && (
+              (resource.data.status == 'requested' && request.resource.data.status == 'cancelled')
+              || (resource.data.status == 'cancelled' && request.resource.data.status == 'requested')
+            )
+          )
+          || (
+            admin()
+            && (
+              (
+                resource.data.status == 'requested'
+                && request.resource.data.status == 'held'
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+                && getAfter(/databases/$(database)/documents/retentionHolds/$(uid)).data.status == 'active'
+                && getAfter(/databases/$(database)/documents/retentionAudit/$(getAfter(/databases/$(database)/documents/retentionHolds/$(uid)).data.auditId)).data.action == 'retention.hold.created'
+              )
+              || (
+                resource.data.status == 'held'
+                && request.resource.data.status == 'requested'
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+                && getAfter(/databases/$(database)/documents/retentionHolds/$(uid)).data.status == 'released'
+                && getAfter(/databases/$(database)/documents/retentionAudit/$(getAfter(/databases/$(database)/documents/retentionHolds/$(uid)).data.auditId)).data.action == 'retention.hold.released'
+              )
+              || (
+                resource.data.status == 'requested'
+                && request.resource.data.status == 'completed'
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                  'status', 'updatedAt', 'completedAt', 'certificateEvidenceRetained'
+                ])
+                && deletionPackageValid(uid)
+              )
+            )
+          )
+        );
+      allow delete: if false;
+    }
+
+    match /retentionHolds/{uid} {
+      allow get, list: if admin();
+      allow create: if admin()
+        && validRetentionHold(request.resource.data, uid)
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid
+        && get(/databases/$(database)/documents/deletionRequests/$(uid)).data.status == 'requested'
+        && getAfter(/databases/$(database)/documents/deletionRequests/$(uid)).data.status == 'held'
+        && validRetentionAudit(
+          getAfter(/databases/$(database)/documents/retentionAudit/$(request.resource.data.auditId)).data,
+          request.resource.data.auditId
+        )
+        && getAfter(/databases/$(database)/documents/retentionAudit/$(request.resource.data.auditId)).data.action == 'retention.hold.created';
+      allow update: if admin()
+        && validRetentionHold(request.resource.data, uid)
+        && (
+          (
+            resource.data.status == 'active'
+            && request.resource.data.status == 'released'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'reason', 'updatedAt', 'updatedBy', 'auditId'
+            ])
+            && get(/databases/$(database)/documents/deletionRequests/$(uid)).data.status == 'held'
+            && getAfter(/databases/$(database)/documents/deletionRequests/$(uid)).data.status == 'requested'
+            && getAfter(/databases/$(database)/documents/retentionAudit/$(request.resource.data.auditId)).data.action == 'retention.hold.released'
+          )
+          || (
+            resource.data.status == 'released'
+            && request.resource.data.status == 'active'
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.createdBy == request.auth.uid
+            && get(/databases/$(database)/documents/deletionRequests/$(uid)).data.status == 'requested'
+            && getAfter(/databases/$(database)/documents/deletionRequests/$(uid)).data.status == 'held'
+            && getAfter(/databases/$(database)/documents/retentionAudit/$(request.resource.data.auditId)).data.action == 'retention.hold.created'
+          )
+        )
+        && validRetentionAudit(
+          getAfter(/databases/$(database)/documents/retentionAudit/$(request.resource.data.auditId)).data,
+          request.resource.data.auditId
+        );
+      allow delete: if false;
+    }
+
+    match /deletionCompletions/{uid} {
+      allow get: if owns(uid) || admin();
+      allow list: if admin();
+      allow create: if admin()
+        && validDeletionCompletion(request.resource.data, uid)
+        && deletionPackageValid(uid);
+      allow update, delete: if false;
+    }
+
+    match /retentionAudit/{eventId} {
+      allow get, list: if admin();
+      allow create: if admin()
+        && validRetentionAudit(request.resource.data, eventId)
+        && retentionAuditLinked(request.resource.data, eventId);
+      allow update, delete: if false;
+    }
     match /users/{uid} {
-      allow create: if owns(uid) && validProfile(request.resource.data);
+      allow create: if owns(uid) && learnerWritesAllowed(uid) && validProfile(request.resource.data);
       allow get: if owns(uid) || admin();
       allow list: if admin();
       allow update: if owns(uid)
+        && learnerWritesAllowed(uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'updatedAt'])
         && validDisplayName(request.resource.data.displayName)
         && request.resource.data.updatedAt == request.time;
-      allow delete: if false;
+      allow delete: if admin() && deletionPackageValid(uid);
 
       match /progress/{courseId} {
         allow get, list: if owns(uid) || admin();
         allow create: if owns(uid)
           && verified()
+          && learnerWritesAllowed(uid)
           && validProgress(request.resource.data, courseId)
           && request.resource.data.completedLessonIds == ['understanding-ai']
           && request.resource.data.createdAt == request.time;
         allow update: if owns(uid)
           && verified()
+          && learnerWritesAllowed(uid)
           && validProgress(request.resource.data, courseId)
           && request.resource.data.createdAt == resource.data.createdAt
           && request.resource.data.completedLessonIds.size() == resource.data.completedLessonIds.size() + 1
           && request.resource.data.percent == resource.data.percent + 25
           && resource.data.completedLessonIds.toSet()
             .difference(request.resource.data.completedLessonIds.toSet()).size() == 0;
-        allow delete: if false;
+        allow delete: if admin() && deletionPackageValid(uid);
       }
 
       match /submissions/{submissionId} {
@@ -1031,6 +1305,7 @@ service cloud.firestore {
           || (admin() && resource.data.status == 'submitted');
         allow create: if owns(uid)
           && verified()
+          && learnerWritesAllowed(uid)
           && completedAiFoundations(uid)
           && validSubmissionDraft(request.resource.data, submissionId, uid)
           && request.resource.data.createdAt == request.time
@@ -1040,6 +1315,7 @@ service cloud.firestore {
           );
         allow update: if owns(uid)
           && verified()
+          && learnerWritesAllowed(uid)
           && completedAiFoundations(uid)
           && resource.data.status == 'draft'
           && sameSubmissionIdentity()
@@ -1051,7 +1327,7 @@ service cloud.firestore {
             validSubmissionDraft(request.resource.data, submissionId, uid)
             || validFinalSubmission(request.resource.data, submissionId, uid)
           );
-        allow delete: if false;
+        allow delete: if evidenceDeletionAllowed(uid);
       }
 
       // Learners receive a separate public-safe result. The linked private
@@ -1059,6 +1335,7 @@ service cloud.firestore {
       match /reviewResults/{resultId} {
         allow get, list: if owns(uid) || admin();
         allow create: if reviewer()
+          && learnerWritesAllowed(uid)
           && request.resource.data.learnerUid == uid
           && validPublicReviewResult(request.resource.data, resultId)
           && validPrivateReviewResult(
@@ -1069,7 +1346,8 @@ service cloud.firestore {
             getAfter(/databases/$(database)/documents/reviewResults/$(resultId)).data,
             request.resource.data
           );
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if evidenceDeletionAllowed(uid);
       }
 
       // An approved learner deliberately chooses the name that may appear in
@@ -1079,8 +1357,10 @@ service cloud.firestore {
         allow list: if owns(uid) || admin();
         allow create: if owns(uid)
           && verified()
+          && learnerWritesAllowed(uid)
           && validCertificateRequest(request.resource.data, uid, requestId);
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if evidenceDeletionAllowed(uid);
       }
     }
 
@@ -1115,6 +1395,7 @@ service cloud.firestore {
     match /certificateIssuances/{credentialId} {
       allow get, list: if admin();
       allow create: if admin()
+        && learnerWritesAllowed(request.resource.data.learnerUid)
         && certificatePackageIsValid(request.resource.data, credentialId);
       allow update, delete: if false;
     }
@@ -1379,6 +1660,7 @@ service cloud.firestore {
       allow list: if admin()
         || (reviewer() && resource.data.reviewerUid == request.auth.uid);
       allow create: if reviewer()
+        && learnerWritesAllowed(request.resource.data.learnerUid)
         && validPrivateReviewResult(request.resource.data, resultId)
         && validPublicReviewResult(
           getAfter(/databases/$(database)/documents/users/$(request.resource.data.learnerUid)/reviewResults/$(resultId)).data,
@@ -1388,15 +1670,18 @@ service cloud.firestore {
           request.resource.data,
           getAfter(/databases/$(database)/documents/users/$(request.resource.data.learnerUid)/reviewResults/$(resultId)).data
         );
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if evidenceDeletionAllowed(resource.data.learnerUid);
     }
 
     match /reviewAssignments/{assignmentId} {
       allow get, list: if admin()
         || (reviewer() && resource.data.reviewerUid == request.auth.uid);
       allow create: if admin()
+        && learnerWritesAllowed(request.resource.data.learnerUid)
         && validReviewAssignment(request.resource.data, assignmentId);
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if evidenceDeletionAllowed(resource.data.learnerUid);
     }
 
     match /adminAudit/{eventId} {

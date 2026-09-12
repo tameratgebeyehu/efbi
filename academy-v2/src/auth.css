@@ -23,3 +23,16 @@
 @media (max-width: 620px) {
   .access-panel--form { padding: 30px 22px; }
 }
+.privacy-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .8fr); gap: 24px; margin: 34px 0 24px; padding: 24px; border: 1px solid var(--line); background: #f8faf8; }
+.privacy-panel > svg { width: 30px; color: var(--green); }
+.privacy-panel h2 { margin: 5px 0 9px; color: var(--green-dark); font-size: 1.3rem; }
+.privacy-panel p, .privacy-panel li { color: var(--muted); font-size: .87rem; line-height: 1.6; }
+.privacy-panel ul { margin: 14px 0 0; padding-left: 18px; }
+.privacy-panel__action { display: grid; align-content: start; gap: 14px; }
+.privacy-panel--pending, .privacy-panel--held, .privacy-panel--complete { grid-template-columns: auto 1fr; }
+.privacy-panel--pending { border-color: #d8c98f; background: #fffaf0; }
+.privacy-panel--held { border-color: #dbc3a0; background: #fff8ee; }
+.privacy-panel--complete { border-color: rgba(8,115,66,.28); background: var(--green-soft); }
+.privacy-panel .submission-consent { margin: 0; }
+.privacy-panel .text-button { justify-self: start; }
+@media (max-width: 620px) { .privacy-panel { grid-template-columns: 1fr; } .privacy-panel--pending, .privacy-panel--held, .privacy-panel--complete { grid-template-columns: auto 1fr; } }

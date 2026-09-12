@@ -17,8 +17,9 @@ This phase replaces the legacy public Apps Script endpoint with Firebase Authent
 - A verified Firebase email and server-issued custom claim are required; hiding a route is never treated as authorization.
 - Course and lesson changes use strict field lists, length limits, allowed values, server timestamps, immutable ownership metadata, and one-step revision changes.
 - A course or lesson change and its audit event must succeed in one atomic batch; course publication also creates an immutable release snapshot in that batch.
-- Review assignments remain read-only in browser code until their own workflow and tests are implemented.
-- Project submissions remain denied until their workflow and rules are separately designed and tested.
+- Submitted projects, reviewer assignments, private/public review results, and certificate operations use fixed schemas and least-privilege roles.
+- An active deletion request freezes learner, review, assignment, and certificate changes until it is cancelled or safely completed.
+- Eligible deletion is one atomic batch with immutable completion and audit evidence; issued-certificate proof cannot be erased.
 - App Check should be monitored before enforcement is enabled. It limits abuse but does not replace Authentication or Firestore rules.
 
 ## Collections
@@ -142,6 +143,51 @@ adminAudit/{eventId}
 
 The public course pages still use the version-controlled pilot outline. The protected AI Foundations learning route can read compatible course and lesson releases after sign-in, but falls back to the version-controlled curriculum if release data is missing or incompatible.
 
+## Deletion and retention collections
+
+```text
+deletionRequests/{uid}
+  requestId
+  learnerUid
+  scope
+  policyVersion
+  status                    # requested | cancelled | held | completed
+  requestedAt
+  updatedAt
+  completedAt
+  certificateEvidenceRetained
+
+retentionHolds/{uid}        # administrator-only
+  holdId
+  learnerUid
+  status                    # active | released
+  reason
+  createdAt
+  createdBy
+  updatedAt
+  updatedBy
+  auditId
+
+deletionCompletions/{uid}
+  completionId
+  learnerUid
+  policyVersion
+  completedAt
+  certificateEvidenceRetained
+  authenticationRemoval     # manual-console-required
+  deletedCategories
+  auditId
+
+retentionAudit/{eventId}    # administrator-only and immutable
+  eventId
+  action
+  learnerUid
+  actorUid
+  reason
+  createdAt
+```
+
+The learner may create, cancel, or reopen their own request. A requested, held, or completed state blocks new learning and assessment writes. Administrators may hold, release, or complete only through linked atomic operations. Firestore completion does not remove the Firebase Authentication user; the operator must delete the exact UID separately in Firebase Console. See RETENTION_AND_DELETION.md.
 ## Development environment
 
 - Firebase project: `efbi-academy-dev-doha`

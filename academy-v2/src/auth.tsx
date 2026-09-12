@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import type { User } from 'firebase/auth'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { DeletionRequestPanel } from './deletion-request'
 import { Icon } from './icons'
 import { firebaseConfigured, getFirebaseFirestore, getFirebaseServices } from './lib/firebase'
 import { AuthContext, useAuth, type AuthContextValue } from './auth-context'
@@ -249,6 +250,7 @@ export function AccountPage() {
         <div><strong>{verified ? 'Email verified' : 'Verify your email'}</strong><p>{verified ? 'Your account can open protected lessons.' : 'Use the link EFBI sent before starting a course.'}</p></div>
       </div>
       {status && <p className="form-status form-status--success" role="status">{status}</p>}
+      <DeletionRequestPanel uid={user.uid} />
       <div className="access-actions">
         {verified ? <><Link className="button button--primary" to="/learn/ai-foundations">Open your course</Link><Link className="button button--outline" to="/submit/ai-foundations">Project workspace</Link></> : <button className="button button--primary" onClick={async () => { await resendVerification(); setStatus('A new verification email was sent.') }}>Send verification again</button>}
         <button className="button button--outline" onClick={() => void signOut()}>Sign out</button>
