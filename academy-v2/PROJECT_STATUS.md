@@ -432,7 +432,7 @@ See `SAFE_PREVIEW.md` and `LAUNCH_ROADMAP.md`.
 
 ## Phase 23 status
 
-The first multi-course security checkpoint is complete in the development codebase:
+The first two multi-course checkpoints are complete in the development codebase:
 
 1. Immutable `courseVersions` records hold a reviewed course title, version, assessment mode, and ordered lesson IDs.
 2. A narrow `activeCourses` pointer determines which immutable version a new learner starts.
@@ -442,9 +442,14 @@ The first multi-course security checkpoint is complete in the development codeba
 6. Course versions support 1–12 unique lessons and either practice-only or project assessment at this checkpoint.
 7. Emulator tests prove that two unrelated synthetic courses cannot exchange versions or lessons, skip lesson order, expose another learner’s progress, or start from an inactive version.
 8. Seventy-six Firestore authorization and lifecycle tests pass. Learner lint and the production build also pass.
-9. No development or production rules were deployed, no synthetic record left the emulator, and enrollment remains closed.
+9. Protected learner routes now use `/learn/:courseId/:lessonSlug` instead of a route fixed to AI Foundations.
+10. The learner catalog can open an administrator-activated course version only when its matching course and ordered lesson releases are complete.
+11. Existing versioned progress reopens its original course version after a newer version is activated; existing unversioned AI Foundations progress stays on the tested legacy catalog.
+12. New course progress sends the locked version fields required by the security rules, while the AI pilot keeps its compatible record shape.
+13. Invalid, incomplete, and unpublished course IDs fail closed with a clear course-unavailable screen.
+14. The updated learner lint and production build pass. No development or production rules were deployed, no synthetic record left the emulator, and enrollment remains closed.
 
-Remaining Phase 23 work: migrate learner catalog and routes, then generalize submissions, reviews, certificates, and deletion inventory while retaining the tested pilot compatibility path.
+Remaining Phase 23 work: build the authenticated multi-course catalog/detail experience and activation workflow, then generalize submissions, reviews, certificates, and deletion inventory while retaining the tested pilot compatibility path.
 
 
 ## Recovery commands

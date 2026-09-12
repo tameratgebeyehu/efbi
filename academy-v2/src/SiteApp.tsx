@@ -28,7 +28,7 @@ export default function SiteApp() {
           <Route path="programs" element={<ProgramsPage />} />
           <Route path="programs/:slug" element={<ProgramDetailPage />} />
           <Route path="courses" element={<CoursesPage />} />
-          <Route path="courses/ai-foundations" element={<CourseDetailPage />} />
+          <Route path="courses/:courseId" element={<CourseDetailPage />} />
           <Route path="certification" element={<CertificationPage />} />
           <Route path="verify" element={<VerifyPage />} />
           <Route path="blog" element={<BlogPage />} />
@@ -38,8 +38,8 @@ export default function SiteApp() {
           <Route path="signin" element={<SignInPage />} />
           <Route path="owner-setup" element={<OwnerSetupPage />} />
           <Route path="account" element={<AccountPage />} />
-          <Route path="learn/ai-foundations" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />
-          <Route path="learn/ai-foundations/:lessonSlug" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />
+          <Route path="learn/:courseId" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />
+          <Route path="learn/:courseId/:lessonSlug" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />
           <Route path="submit/ai-foundations" element={<RequireVerifiedUser><SubmissionPage /></RequireVerifiedUser>} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

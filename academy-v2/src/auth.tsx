@@ -337,10 +337,11 @@ export function RequireVerifiedUser({ children }: { children: ReactNode }) {
   return children
 }
 
-export function CourseAccessButton() {
+export function CourseAccessButton({ courseId = 'ai-foundations' }: { courseId?: string }) {
   const { user } = useAuth()
   if (!learnerEnrollmentEnabled) return <Link className="button button--primary" to="/join">Enrollment updates</Link>
-  const destination = user?.emailVerified ? '/learn/ai-foundations' : user ? '/account' : '/signin?returnTo=%2Flearn%2Fai-foundations'
+  const coursePath = `/learn/${courseId}`
+  const destination = user?.emailVerified ? coursePath : user ? '/account' : `/signin?returnTo=${encodeURIComponent(coursePath)}`
   return <Link className="button button--primary" to={destination}>{user?.emailVerified ? 'Continue course' : 'Start course'}</Link>
 }
 

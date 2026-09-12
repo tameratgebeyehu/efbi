@@ -3,13 +3,10 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from './auth-context'
 import type { CourseLesson, KnowledgeCheckQuestion } from './data'
 import { Icon } from './icons'
-import { getFallbackCatalog, loadAiFoundationsCatalog, type CourseCatalog } from './lib/catalog'
-import { completeLesson, readCourseProgress, type CourseProgress } from './lib/progress'
+import { loadCourseCatalog, type CourseCatalog } from './lib/catalog'
+import { completeLesson, readCourseProgress, readProgressBinding, type CourseProgress } from './lib/progress'
 import './learning.css'
 
-const courseId = 'ai-foundations'
-const coursePath = '/learn/ai-foundations'
-const fallbackCatalog = getFallbackCatalog()
 const lowBandwidthPreference = 'efbi-low-bandwidth'
 const initialProgress: CourseProgress = { completedLessonIds: [], lastLessonId: '', percent: 0 }
 const lessonTakeaways: Record<string, string> = {
@@ -50,7 +47,11 @@ function progressErrorMessage(error: unknown) {
   const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : ''
   if (code.includes('unavailable') || code.includes('network')) return 'Your progress could not reach EFBI. Check your connection and try again.'
   if (code.includes('permission-denied')) return 'Your session cannot update progress. Sign out, sign in again, and retry.'
-  if (error instanceof Error && error.message.startsWith('Complete the earlier lesson')) return error.message
+  if (error instanceof Error && (
+    error.message.startsWith('Complete the earlier lesson')
+    || error.message.startsWith('Your saved course version')
+    || error.message.startsWith('Your original course progress')
+  )) return error.message
   return 'Your progress could not be updated. Please try again.'
 }
 
@@ -154,58 +155,78 @@ function KnowledgeCheck({ questions }: { questions: KnowledgeCheckQuestion[] }) 
 }
 
 export function LearningPage() {
-  const { lessonSlug } = useParams()
+  const { courseId: courseIdParam, lessonSlug } = useParams()
+  const courseId = courseIdParam?.trim() ?? ''
+  const coursePath = `/learn/${courseId}`
   const { user } = useAuth()
-  const [catalog, setCatalog] = useState<CourseCatalog>(fallbackCatalog)
-  const [catalogState, setCatalogState] = useState<'loading' | 'ready'>('loading')
-  const publishedLessons = catalog.lessons
-  const publishedLessonIds = useMemo(() => publishedLessons.map((item) => item.slug), [publishedLessons])
-  const requestedLesson = publishedLessons.find((lesson) => lesson.slug === lessonSlug)
-  const lesson = requestedLesson ?? publishedLessons[0]
-  const lessonIndex = publishedLessons.findIndex((item) => item.slug === lesson.slug)
+  const [catalog, setCatalog] = useState<CourseCatalog | null>(null)
+  const [missingCourseId, setMissingCourseId] = useState('')
   const [progress, setProgress] = useState<CourseProgress>(initialProgress)
   const [progressState, setProgressState] = useState<'loading' | 'ready' | 'saving' | 'error'>('loading')
   const [progressError, setProgressError] = useState('')
+
+  useEffect(() => {
+    if (!user || !courseId) return undefined
+    let active = true
+
+    void (async () => {
+      try {
+        const binding = await readProgressBinding({ uid: user.uid, courseId })
+        const nextCatalog = await loadCourseCatalog(courseId, {
+          preferredVersionId: binding.kind === 'versioned' ? binding.versionId : undefined,
+          legacy: binding.kind === 'legacy',
+        })
+        if (!active) return
+        if (!nextCatalog) {
+          setMissingCourseId(courseId)
+          setProgressState('error')
+          return
+        }
+
+        const lessonIds = nextCatalog.lessons.map((item) => item.slug)
+        const savedProgress = await readCourseProgress({
+          uid: user.uid,
+          courseId,
+          allowedLessonIds: lessonIds,
+          totalLessonCount: nextCatalog.lessons.length,
+          versionId: nextCatalog.versionId,
+          courseVersion: nextCatalog.courseVersion,
+        })
+        if (!active) return
+        setMissingCourseId('')
+        setCatalog(nextCatalog)
+        setProgress(savedProgress)
+        setProgressError('')
+        setProgressState('ready')
+      } catch (error) {
+        if (!active) return
+        setMissingCourseId(courseId)
+        setProgressError(progressErrorMessage(error))
+        setProgressState('error')
+      }
+    })()
+
+    return () => { active = false }
+  }, [user, courseId])
+
+  const publishedLessons = useMemo(() => catalog?.lessons ?? [], [catalog])
+  const publishedLessonIds = useMemo(() => publishedLessons.map((item) => item.slug), [publishedLessons])
+
+  if (!user || (catalog?.courseId !== courseId && missingCourseId !== courseId)) {
+    return <section className="learning-page"><div className="shell learning-header"><div><p className="eyebrow-label">EFBI Academy</p><h1>Opening your course…</h1><p>Checking the published lessons and your saved progress.</p></div></div></section>
+  }
+
+  if (missingCourseId === courseId || !catalog || publishedLessons.length < 1) {
+    return <section className="learning-page"><div className="shell learning-header"><div><p className="eyebrow-label">Course unavailable</p><h1>This course is not open.</h1><p>{progressError || 'The link may be old, or EFBI may still be preparing the course.'}</p><Link className="button button--primary" to="/courses">View available courses</Link></div></div></section>
+  }
+
+  const requestedLesson = publishedLessons.find((item) => item.slug === lessonSlug)
+  const lesson = requestedLesson ?? publishedLessons[0]
+  const lessonIndex = publishedLessons.findIndex((item) => item.slug === lesson.slug)
   const lessonComplete = progress.completedLessonIds.includes(lesson.slug)
   const previousLesson = lessonIndex > 0 ? publishedLessons[lessonIndex - 1] : undefined
   const nextPublishedLesson = publishedLessons[lessonIndex + 1]
   const lessonUnlocked = !previousLesson || progress.completedLessonIds.includes(previousLesson.slug)
-
-  useEffect(() => {
-    if (!user) return undefined
-    let active = true
-    void loadAiFoundationsCatalog()
-      .then((nextCatalog) => {
-        if (!active) return
-        setCatalog(nextCatalog)
-        setCatalogState('ready')
-      })
-      .catch(() => {
-        if (!active) return
-        setCatalog(fallbackCatalog)
-        setCatalogState('ready')
-      })
-    return () => { active = false }
-  }, [user])
-
-  useEffect(() => {
-    if (!user) return undefined
-    let active = true
-
-    void readCourseProgress({ uid: user.uid, courseId, allowedLessonIds: publishedLessonIds, totalLessonCount: publishedLessons.length })
-      .then((savedProgress) => {
-        if (!active) return
-        setProgress(savedProgress)
-        setProgressState('ready')
-      })
-      .catch((error: unknown) => {
-        if (!active) return
-        setProgressError(progressErrorMessage(error))
-        setProgressState('error')
-      })
-
-    return () => { active = false }
-  }, [user, publishedLessonIds, publishedLessons.length])
 
   async function markLessonComplete() {
     if (!user || lessonComplete || progressState === 'saving') return
@@ -219,6 +240,8 @@ export function LearningPage() {
         lessonId: lesson.slug,
         allowedLessonIds: publishedLessonIds,
         totalLessonCount: publishedLessons.length,
+        versionId: catalog?.versionId,
+        courseVersion: catalog?.courseVersion,
       })
       setProgress(savedProgress)
       setProgressState('ready')
@@ -232,7 +255,14 @@ export function LearningPage() {
     if (!user) return
     setProgressError('')
     setProgressState('loading')
-    void readCourseProgress({ uid: user.uid, courseId, allowedLessonIds: publishedLessonIds, totalLessonCount: publishedLessons.length })
+    void readCourseProgress({
+      uid: user.uid,
+      courseId,
+      allowedLessonIds: publishedLessonIds,
+      totalLessonCount: publishedLessons.length,
+      versionId: catalog?.versionId,
+      courseVersion: catalog?.courseVersion,
+    })
       .then((savedProgress) => {
         setProgress(savedProgress)
         setProgressState('ready')
@@ -260,7 +290,7 @@ export function LearningPage() {
     <section className="learning-page">
       <div className="learning-topbar">
         <div className="shell learning-topbar-inner">
-          <Link to="/courses/ai-foundations">← Course outline</Link>
+          <Link to={`/courses/${courseId}`}>← Course outline</Link>
           <span>Lesson {lessonIndex + 1} of {publishedLessons.length}</span>
         </div>
       </div>
@@ -270,7 +300,7 @@ export function LearningPage() {
           <p className="eyebrow-label">{catalog.courseTitle}</p>
           <h1>{lesson.title}</h1>
           <p>{lesson.detail}</p>
-          <p className="catalog-source">{catalogState === 'loading' ? 'Checking EFBI lesson releases…' : catalog.statusMessage}</p>
+          <p className="catalog-source">{catalog.statusMessage}</p>
         </div>
         <div className="learning-progress" aria-label={`Course progress: ${progress.percent} percent`}>
           <strong>{progressState === 'loading' ? '—' : `${progress.percent}%`}</strong>
@@ -284,7 +314,7 @@ export function LearningPage() {
           <header className="lesson-heading">
             <div className="lesson-number">{lesson.number}</div>
             <div>
-              <p>{lesson.duration} · Beginner</p>
+              <p>{lesson.duration} · {catalog.level}</p>
               <h2>{lesson.title}</h2>
               <p>{lesson.detail}</p>
             </div>
@@ -312,7 +342,7 @@ export function LearningPage() {
             ))}
             <div className="lesson-takeaway">
               <Icon name="spark" />
-              <div><strong>Remember</strong><p>{lessonTakeaways[lesson.slug]}</p></div>
+              <div><strong>Remember</strong><p>{lessonTakeaways[lesson.slug] ?? lesson.objectives[0] ?? lesson.detail}</p></div>
             </div>
           </article>
 
@@ -339,7 +369,7 @@ export function LearningPage() {
             {nextPublishedLesson ? (
               <><div><p className="eyebrow-label">Up next</p><h2>{nextPublishedLesson.title}</h2><p>{lessonComplete ? 'Continue when you are ready.' : 'Complete this lesson first.'}</p></div>{lessonComplete ? <Link className="button button--primary" to={`${coursePath}/${nextPublishedLesson.slug}`}>Open Lesson {lessonIndex + 2} <Icon name="arrow" /></Link> : <button className="button button--outline" type="button" disabled>Complete Lesson {lessonIndex + 1} first</button>}</>
             ) : (
-              <><div><p className="eyebrow-label">{lessonComplete ? 'Learning complete' : 'Final lesson'}</p><h2>{lessonComplete ? 'You completed all four lessons.' : 'Finish your project lesson.'}</h2><p>{lessonComplete ? 'Your 100% lesson progress is saved. You can now prepare your private project submission.' : 'Mark this lesson complete after you finish the project steps and reflection.'}</p></div>{lessonComplete ? <Link className="button button--primary" to="/submit/ai-foundations">Open project workspace</Link> : <Link className="button button--outline" to="/certification">Certification requirements</Link>}</>
+              <><div><p className="eyebrow-label">{lessonComplete ? 'Learning complete' : 'Final lesson'}</p><h2>{lessonComplete ? `You completed all ${publishedLessons.length} lessons.` : 'Finish the final lesson.'}</h2><p>{lessonComplete ? catalog.assessmentType === 'project' ? 'Your lesson progress is saved. The course assessment is the next step.' : 'Your lesson progress is saved.' : 'Mark this lesson complete after you finish its activities and reflection.'}</p></div>{lessonComplete && courseId === 'ai-foundations' && catalog.assessmentType === 'project' ? <Link className="button button--primary" to="/submit/ai-foundations">Open project workspace</Link> : <Link className="button button--outline" to={`/courses/${courseId}`}>{lessonComplete ? 'Return to course' : 'View course outline'}</Link>}</>
             )}
           </div>
         </main>

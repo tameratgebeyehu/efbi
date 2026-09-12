@@ -179,6 +179,8 @@ export function CoursesPage() {
 }
 
 export function CourseDetailPage() {
+  const { courseId } = useParams()
+  if (courseId !== 'ai-foundations') return <Navigate to="/courses" replace />
   return (
     <>
       <PageHero eyebrow="Pilot course · Beginner" title="AI Foundations for Ethiopia" description="Four short lessons that help you understand AI and use it responsibly." className="page-hero--course-detail"><div className="page-stat"><strong>4</strong><span>lessons</span></div></PageHero>
@@ -188,7 +190,7 @@ export function CourseDetailPage() {
           <ol className="curriculum-list">{curriculum.map((item) => <li key={item.number}><span>{item.number}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div><Icon name="chevron" /></li>)}</ol>
           <div className="video-note"><Icon name="play" /><div><strong>All four lessons are ready</strong><p>Verified learners can complete the pilot learning path and save 100% progress. Video slots activate when EFBI publishes each recording.</p></div></div>
         </div>
-        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>The four-lesson pilot is complete in the development academy.</p><div className="progress-label"><span>Learning path</span><strong>Complete</strong></div><div className="progress-track"><i /></div><CourseAccessButton /></aside>
+        <aside className="course-sidebar"><div className="mini-cover"><span>EFBI / 01</span><strong>AI<br />FOUNDATIONS</strong><small>FOR ETHIOPIA</small></div><h2>Course status</h2><p>The four-lesson pilot is complete in the development academy.</p><div className="progress-label"><span>Learning path</span><strong>Complete</strong></div><div className="progress-track"><i /></div><CourseAccessButton courseId={courseId} /></aside>
       </section>
     </>
   )
