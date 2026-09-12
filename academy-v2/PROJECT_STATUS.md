@@ -54,6 +54,7 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Legacy Apps Script browser loading and default credentials removed; its handlers now return a retired response.
 - Course publishing, lesson draft editing, and immutable lesson release publishing are available only in the localhost Admin Studio with linked audit records.
 - Protected AI Foundations lessons can load compatible immutable backend releases with a safe fallback to the version-controlled curriculum.
+- The localhost Admin Studio can inspect the newest 250 immutable content audit events with read-only filters.
 
 ## Firebase environments
 
@@ -65,10 +66,9 @@ The original public EFBI site is in security maintenance mode. This `efbi-academ
 - Public student enrollment; development authentication is connected but not production-ready.
 - Contact form submissions.
 - Published course video playback; no EFBI YouTube lesson ID has been supplied yet.
-- Lesson and practice-question editing in the Admin Studio.
 - Reviewed assessments and project submissions.
 - Certificate issuance and public verification records.
-- Review, submission, certificate, and audit-log operations in the Admin Studio.
+- Review, submission, and certificate operations in the Admin Studio.
 - Production deployment or custom-domain migration.
 
 ## Phase 3 status
@@ -262,15 +262,29 @@ Protected backend release loading is implemented and verified:
 
 See `LEARNING_CONTENT.md`, `LESSON_MANAGEMENT.md`, `COURSE_VERSIONING.md`, and `BACKEND_FOUNDATION.md` for content and release boundaries.
 
+## Phase 14 status
+
+Implementation is complete:
+
+1. Audit History is available only after the localhost Studio verifies a signed-in administrator claim.
+2. The view loads at most the newest 250 events, ordered newest first.
+3. Administrators can filter by course or lesson, action, content ID, actor ID, and release ID.
+4. The view contains no create, update, delete, export, or role-management operation.
+5. Existing Firestore rules keep audit records administrator-readable and universally immutable after creation.
+6. Learners, reviewers, and support accounts cannot read the audit collection.
+7. The student app has no `/admin` route or private administration code.
+8. Submissions, uploads, certificate issuance, public enrollment, and production deployment remain disabled.
+
 ## Next implementation phase
 
-Phase 14 should add an administrator-facing audit/history view without opening learner submissions or certificates:
+Phase 15 may begin the learner submission and review foundation only after the complete security gate is agreed:
 
-1. Show immutable audit events in the localhost Admin Studio.
-2. Filter by course, lesson, action, actor, and release ID.
-3. Keep audit records read-only and deny browser edits or deletion.
-4. Preserve the student-app boundary; no `/admin` route or public operational data.
-5. Keep submissions, uploads, certificate issuance, public enrollment, and production deployment disabled.
+1. Start with text and evidence links; do not enable file uploads.
+2. Enforce learner ownership, explicit consent, immutable submission snapshots, and narrow state transitions.
+3. Allow reviewers to read only specifically assigned submissions.
+4. Keep course completion separate from assessment approval and certificate eligibility.
+5. Test cross-user isolation, reviewer limits, forbidden mutation, and retention behavior before any live development use.
+6. Keep public enrollment, certificate issuance, and production deployment disabled.
 
 ## Recovery commands
 

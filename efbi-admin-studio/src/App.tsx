@@ -4,6 +4,7 @@ import type { User } from 'firebase/auth'
 import { firebaseConfigured, getAdminFirebase } from './firebase'
 import CourseManager from './CourseManager'
 import LessonManager from './LessonManager'
+import AuditLog from './AuditLog'
 
 type AccessState = 'loading' | 'signed-out' | 'denied' | 'admin' | 'error'
 
@@ -49,12 +50,13 @@ function SignIn({ onError }: { onError: (message: string) => void }) {
 }
 
 function Dashboard({ user, signOut }: { user: User; signOut: () => Promise<void> }) {
-  const [section, setSection] = useState<'overview' | 'courses' | 'lessons'>('overview')
+  const [section, setSection] = useState<'overview' | 'courses' | 'lessons' | 'audit'>('overview')
   const areas = [
     { number: '01', title: 'Courses', detail: 'Create, review, preview, and publish versioned course records.', status: 'Available' },
     { number: '02', title: 'Lessons & questions', detail: 'Draft lessons and browser-only practice checks with audited saves.', status: 'Available' },
     { number: '03', title: 'Submissions', detail: 'Text and evidence-link review arrives after course migration.', status: 'Locked' },
     { number: '04', title: 'Certificates', detail: 'Issuance stays disabled until reviewed assessment is proven.', status: 'Locked' },
+    { number: '05', title: 'Audit history', detail: 'Read the immutable history of course and lesson operations.', status: 'Available' },
   ]
 
   return (
@@ -67,20 +69,20 @@ function Dashboard({ user, signOut }: { user: User; signOut: () => Promise<void>
           <button className={section === 'lessons' ? 'active' : ''} onClick={() => setSection('lessons')}>Lessons</button>
           <button disabled>Reviews</button>
           <button disabled>Certificates</button>
-          <button disabled>Audit log</button>
+          <button className={section === 'audit' ? 'active' : ''} onClick={() => setSection('audit')}>Audit history</button>
         </nav>
         <div className="operator"><small>Verified operator</small><strong>{user.email}</strong><button onClick={() => void signOut()}>Sign out</button></div>
       </aside>
       <main className="workspace">
-        {section === 'courses' ? <CourseManager user={user} /> : section === 'lessons' ? <LessonManager user={user} /> : <>
-        <header><div><p className="eyebrow">Phase 11 workspace</p><h1>Good morning, builder.</h1><p>Course publishing and lesson drafting are available through validated, audited steps.</p></div><span className="security-badge">Admin claim verified</span></header>
+        {section === 'courses' ? <CourseManager user={user} /> : section === 'lessons' ? <LessonManager user={user} /> : section === 'audit' ? <AuditLog /> : <>
+        <header><div><p className="eyebrow">Phase 14 workspace</p><h1>Good morning, builder.</h1><p>Course publishing, lesson drafting, and read-only history are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
         <section className="safety-grid" aria-label="Security status">
           <article><small>Network</small><strong>Localhost only</strong><p>Not published with the student website.</p></article>
           <article><small>Session</small><strong>Browser session</strong><p>No shared admin password or permanent browser role.</p></article>
-          <article><small>Lessons</small><strong>Audited drafts</strong><p>Lesson saves require matching audit records.</p></article>
+          <article><small>History</small><strong>Read only</strong><p>Audit records cannot be edited or deleted.</p></article>
         </section>
         <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Control areas</p><h2>Built in secure stages</h2></div><p>Only tested workflows are enabled. Later operations remain visibly locked.</p></div><div className="area-grid">{areas.map((area) => <article key={area.number}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>{area.status}</small></article>)}</div></section>
-        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Lessons are controlled drafts</h2><p>Lessons can now be prepared with browser-only practice questions. Student migration and public lesson publishing stay separate.</p></div><span className="next-step__badge">Phase 11 active</span></section>
+        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Every content change leaves a trail</h2><p>The local studio can now inspect immutable course and lesson history without adding any audit write or deletion control.</p></div><span className="next-step__badge">Phase 14 active</span></section>
         </>}
       </main>
     </div>

@@ -24,7 +24,7 @@ npm run lint
 
 Do not deploy this directory. Do not expose its development port to the internet. Do not add an `/admin` route to the student app. Do not place service-account credentials or role-management logic in browser code.
 
-Phase 13 enables validated course publishing, private lesson editing, immutable lesson releases, and protected student loading of compatible releases. Every accepted course or lesson change is linked to an audit event in the same Firestore batch. Reviews, certificates, submissions, public catalog release browsing, and the Audit Log interface remain locked.
+Phase 14 enables validated course publishing, private lesson editing, immutable lesson releases, protected student loading of compatible releases, and a read-only Audit History interface. Every accepted course or lesson change is linked to an immutable audit event in the same Firestore batch. Reviews, certificates, submissions, and public catalog release browsing remain locked.
 
 Unsaved course and lesson text have best-effort browser recovery copies for power-loss recovery. Firestore is still authoritative, and recovery is blocked if the saved server revision changed.
 

@@ -2,9 +2,9 @@
 
 The EFBI Admin Studio is a separate, local-only application for trusted operators. It is not a route in the student website and must never be deployed to Firebase Hosting, GitHub Pages, or another public host.
 
-## Current Phase 13 boundary
+## Current Phase 14 boundary
 
-Phase 13 keeps course and lesson publishing available in the localhost Admin Studio, while the protected AI Foundations route can read compatible release snapshots. Practice questions remain browser-only learning checks, not assessment evidence.
+Phase 14 keeps course and lesson publishing available in the localhost Admin Studio, while adding read-only access to the immutable content history. Practice questions remain browser-only learning checks, not assessment evidence.
 
 - the server binds to `127.0.0.1` on port `5174`;
 - the interface blocks non-local hostnames;
@@ -13,8 +13,9 @@ Phase 13 keeps course and lesson publishing available in the localhost Admin Stu
 - Courses can be created, edited, previewed, marked ready, and published;
 - every accepted course change and publication writes a linked audit event in the same atomic batch;
 - published releases are immutable snapshots;
-- Reviews, Certificates, and the Audit Log interface remain intentionally locked;
-- learner submissions, files, lessons, questions, certificates, and public enrollment remain outside this phase.
+- Lessons and browser-only practice questions can be drafted and published as immutable releases;
+- Audit History shows the newest 250 course and lesson events with local filters and no mutation controls;
+- Reviews, learner submissions, files, certificates, and public enrollment remain outside this phase.
 
 The local interface reduces exposure, while Firebase claims and Firestore rules provide the actual authorization boundary.
 
@@ -52,7 +53,7 @@ npm run manage:roles -- set --email "owner@example.com" --role admin --value tru
 
 6. Sign out and sign in again so Firebase issues a fresh ID token.
 
-No role has been granted as part of Phases 9, 10, 11, 12, or 13. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
+No role has been granted as part of Phases 9 through 14. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
 
 ## Remove access
 
@@ -92,6 +93,13 @@ Firestore remains the source of truth. Do not edit `courseDrafts`, `courseReleas
 
 Lesson drafts stay private to administrators. They are not connected to the student learning route until a later migration phase proves ordering, progress compatibility, and release behavior.
 
+## Audit History workflow
+
+1. Open **Audit history** to load the newest 250 immutable content events.
+2. Filter by course or lesson, action, content ID, actor ID, or release ID.
+3. Use the event and release IDs during a documented investigation to connect an edit to its exact operation.
+4. Never treat this browser view as a backup or edit the records manually. Firestore is the source of truth, and security rules deny audit updates and deletion.
+
 ## Security rules
 
 - Never commit `.env.local`, `.env.development.local`, App Check debug tokens, refresh tokens, service-account JSON, private keys, student exports, or passwords.
@@ -106,6 +114,6 @@ Lesson drafts stay private to administrators. They are not connected to the stud
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 14 gate
+## Phase 15 gate
 
-Phase 14 may add an administrator-facing audit/history view only if it remains read-only, local-only, and covered by existing immutable audit rules. Public enrollment, project submissions, file uploads, reviewed assessments, and certificate issuance remain outside that phase.
+Phase 15 may begin the text-and-evidence-link submission workflow only after its exact learner ownership, consent, state transitions, reviewer assignment, retention behavior, and emulator tests are approved together. File uploads, certificate issuance, public enrollment, and production deployment remain outside that phase.
