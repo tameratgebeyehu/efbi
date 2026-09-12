@@ -221,7 +221,7 @@ service cloud.firestore {
       return data.keys().hasOnly([
           'versionId', 'courseId', 'courseTitle', 'courseVersion',
           'assessmentVersion', 'assessmentType', 'lessonIds',
-          'publishedAt', 'publishedBy'
+          'publishedAt', 'publishedBy', 'auditId'
         ])
         && data.versionId == versionId
         && validCourseId(data.courseId)
@@ -237,7 +237,10 @@ service cloud.firestore {
         && data.assessmentType in ['practice-only', 'project']
         && validLessonIdList(data.lessonIds)
         && data.publishedAt == request.time
-        && data.publishedBy == request.auth.uid;
+        && data.publishedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180;
     }
 
     function validActiveCourse(data, courseId) {
@@ -245,7 +248,7 @@ service cloud.firestore {
       return data.keys().hasOnly([
           'courseId', 'versionId', 'courseVersion', 'courseTitle',
           'lessonCount', 'assessmentVersion', 'assessmentType',
-          'activatedAt', 'activatedBy'
+          'activatedAt', 'activatedBy', 'auditId'
         ])
         && data.courseId == courseId
         && validCourseId(courseId)
@@ -260,7 +263,8 @@ service cloud.firestore {
         && data.assessmentVersion == version.assessmentVersion
         && data.assessmentType == version.assessmentType
         && data.activatedAt == request.time
-        && data.activatedBy == request.auth.uid;
+        && data.activatedBy == request.auth.uid
+        && data.auditId == version.auditId;
     }
 
     function validVersionedProgress(data, courseId) {
@@ -466,8 +470,8 @@ service cloud.firestore {
           'revision', 'releaseId', 'createdAt'
         ])
         && data.eventId == eventId
-        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published', 'lesson.draft.created', 'lesson.draft.updated', 'lesson.release.published']
-        && data.entityType in ['courseDraft', 'courseRelease', 'lessonDraft', 'lessonRelease']
+        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published', 'course.version.activated', 'lesson.draft.created', 'lesson.draft.updated', 'lesson.release.published']
+        && data.entityType in ['courseDraft', 'courseRelease', 'courseVersion', 'lessonDraft', 'lessonRelease']
         && validCourseId(data.entityId)
         && data.actorUid == request.auth.uid
         && data.revision is int
@@ -486,6 +490,7 @@ service cloud.firestore {
         && event.actorUid == request.auth.uid
         && event.revision == revision
         && event.releaseId == releaseId
+        && event.createdAt == request.time
         && event.createdAt == request.time;
     }
 
@@ -547,6 +552,17 @@ service cloud.firestore {
           && draft.revision == data.revision
           && draft.latestReleaseId == data.releaseId
           && draft.updatedBy == request.auth.uid
+        )
+        || (
+          data.entityType == 'courseVersion'
+          && data.action == 'course.version.activated'
+          && getAfter(/databases/$(database)/documents/courseVersions/$(data.releaseId)).data.courseId == data.entityId
+          && getAfter(/databases/$(database)/documents/courseVersions/$(data.releaseId)).data.courseVersion == data.revision
+          && getAfter(/databases/$(database)/documents/courseVersions/$(data.releaseId)).data.auditId == eventId
+          && getAfter(/databases/$(database)/documents/courseVersions/$(data.releaseId)).data.publishedBy == request.auth.uid
+          && getAfter(/databases/$(database)/documents/activeCourses/$(data.entityId)).data.versionId == data.releaseId
+          && getAfter(/databases/$(database)/documents/activeCourses/$(data.entityId)).data.auditId == eventId
+          && getAfter(/databases/$(database)/documents/activeCourses/$(data.entityId)).data.activatedBy == request.auth.uid
         )
         || (
           data.entityType == 'courseRelease'
@@ -1442,13 +1458,31 @@ service cloud.firestore {
     // a narrow pointer that lets new progress records lock to one reviewed version.
     match /courseVersions/{versionId} {
       allow get, list: if verified();
-      allow create: if admin() && validCourseVersion(request.resource.data, versionId);
+      allow create: if admin()
+        && validCourseVersion(request.resource.data, versionId)
+        && linkedAuditIsValid(
+          request.resource.data.auditId,
+          'course.version.activated',
+          'courseVersion',
+          request.resource.data.courseId,
+          request.resource.data.courseVersion,
+          versionId
+        );
       allow update, delete: if false;
     }
 
     match /activeCourses/{courseId} {
       allow get, list: if verified();
-      allow create, update: if admin() && validActiveCourse(request.resource.data, courseId);
+      allow create, update: if admin()
+        && validActiveCourse(request.resource.data, courseId)
+        && linkedAuditIsValid(
+          request.resource.data.auditId,
+          'course.version.activated',
+          'courseVersion',
+          courseId,
+          request.resource.data.courseVersion,
+          request.resource.data.versionId
+        );
       allow delete: if false;
     }
 

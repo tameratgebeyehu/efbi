@@ -432,7 +432,7 @@ See `SAFE_PREVIEW.md` and `LAUNCH_ROADMAP.md`.
 
 ## Phase 23 status
 
-The first two multi-course checkpoints are complete in the development codebase:
+The first three multi-course checkpoints are complete in the development codebase:
 
 1. Immutable `courseVersions` records hold a reviewed course title, version, assessment mode, and ordered lesson IDs.
 2. A narrow `activeCourses` pointer determines which immutable version a new learner starts.
@@ -448,8 +448,12 @@ The first two multi-course checkpoints are complete in the development codebase:
 12. New course progress sends the locked version fields required by the security rules, while the AI pilot keeps its compatible record shape.
 13. Invalid, incomplete, and unpublished course IDs fail closed with a clear course-unavailable screen.
 14. The updated learner lint and production build pass. No development or production rules were deployed, no synthetic record left the emulator, and enrollment remains closed.
+15. Admin Studio now has a separate Activation workspace that requires a matching course release and 1–12 matching lesson releases in unique continuous order.
+16. Activation creates the immutable course version, changes the active-course pointer, and creates its immutable audit event in one atomic batch.
+17. Firestore rules reject unaudited activation and require the linked audit event to be created in the same operation, so an old event cannot be reused to reactivate a version.
+18. Admin Studio lint and build pass, and all seventy-six Firestore authorization and lifecycle tests still pass after the audit rules were strengthened.
 
-Remaining Phase 23 work: build the authenticated multi-course catalog/detail experience and activation workflow, then generalize submissions, reviews, certificates, and deletion inventory while retaining the tested pilot compatibility path.
+Remaining Phase 23 work: build the authenticated multi-course catalog/detail experience, then generalize submissions, reviews, certificates, and deletion inventory while retaining the tested pilot compatibility path.
 
 
 ## Recovery commands

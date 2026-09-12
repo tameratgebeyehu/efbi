@@ -2,7 +2,7 @@
 
 The EFBI Admin Studio is a separate, local-only application for trusted operators. It is not a route in the student website and must never be deployed to Firebase Hosting, GitHub Pages, or another public host.
 
-## Current Phase 20 boundary
+## Current Phase 23 boundary
 
 Phase 20 adds an internal privacy operations queue, 14-day request targets, 30-day hold reviews, and immutable confirmation after the separate Firebase Authentication deletion. Certificate evidence and immutable audit history remain protected.
 
@@ -14,6 +14,7 @@ Phase 20 adds an internal privacy operations queue, 14-day request targets, 30-d
 - every accepted course change and publication writes a linked audit event in the same atomic batch;
 - published releases are immutable snapshots;
 - Lessons and browser-only practice questions can be drafted and published as immutable releases;
+- Activation locks one matching course-and-lesson release set into an immutable learner version and records the action atomically;
 - Audit History shows the newest 250 course and lesson events with local filters and no mutation controls;
 - Administrators can read submitted projects, never private drafts, and create one immutable reviewer assignment;
 - Reviewers can read only their own assignments and linked submitted projects;
@@ -58,7 +59,7 @@ npm run manage:roles -- set --email "owner@example.com" --role admin --value tru
 
 6. Sign out and sign in again so Firebase issues a fresh ID token.
 
-No role has been granted as part of Phases 9 through 19. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
+The verified owner account now has its server-issued administrator claim. The owner must still use a fresh private sign-in session and replace the temporary setup password. The role tool is hard-limited to `efbi-academy-dev-doha`, preserves unrelated claims, refuses unverified accounts, and never stores a service-account key.
 
 ## Remove access
 
@@ -97,6 +98,7 @@ npm run manage:roles -- set --email "reviewer@example.com" --role reviewer --val
 4. Review the safe preview, then choose **Mark ready for review**.
 5. Confirm the exact preview and choose **Publish release**.
 6. Publication creates an immutable release and advances the draft's release number in one atomic operation.
+7. Publishing does not make the release active for learners. Complete the matching lesson releases, then use the separate **Activation** workflow.
 
 The browser keeps a best-effort recovery copy of unsaved course text. After a power cut, the studio offers **Restore** or **Discard**. Recovery is refused when the server revision changed in the meantime. It is not a backup and never overrides Firestore.
 
@@ -109,7 +111,21 @@ Firestore remains the source of truth. Do not edit `courseDrafts`, `courseReleas
 4. Add up to three practice questions. These are learner practice only and do not create certificate evidence.
 5. Save as draft, or mark the lesson review ready.
 
-Lesson drafts stay private to administrators. They are not connected to the student learning route until a later migration phase proves ordering, progress compatibility, and release behavior.
+Lesson drafts stay private to administrators. Published lesson releases reach the protected learner route only after the administrator activates a complete matching course version.
+
+## Course activation workflow
+
+1. Publish the reviewed course release and every lesson release first.
+2. In the current Phase 23 model, use the same release number for the course and every lesson included in that version.
+3. Open **Activation**, choose the course, and choose the matching release version.
+4. Confirm that the readiness panel shows 1–12 unique lessons in continuous order starting at 1.
+5. Choose whether the version uses practice only or a final project, and confirm the assessment version.
+6. Read the protected-action boundary and check the confirmation box only after reviewing the exact lesson list.
+7. Choose **Activate version**. The immutable course version, active pointer, and audit event are written together or not at all.
+8. New learners start the active version. Existing learners stay on the version already saved in their progress.
+9. Do not try to reuse an old version. Publish and activate a new version for the next release.
+
+Activation does not open public enrollment and does not publish Admin Studio. The multi-course public catalog, assessments, certificates, and deletion workflow still require the remaining Phase 23 work.
 
 ## Review assignment workflow
 
@@ -157,7 +173,7 @@ Never place an Admin SDK or service-account credential in the Studio to automate
 
 ## Audit History workflow
 
-1. Open **Audit history** to load the newest 250 immutable content events.
+1. Open **Audit history** to load the newest 250 immutable content and activation events.
 2. Filter by course or lesson, action, content ID, actor ID, or release ID.
 3. Use the event and release IDs during a documented investigation to connect an edit to its exact operation.
 4. Never treat this browser view as a backup or edit the records manually. Firestore is the source of truth, and security rules deny audit updates and deletion.
@@ -176,6 +192,6 @@ Never place an Admin SDK or service-account credential in the Studio to automate
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 20 status
+## Phase 23 status
 
-The privacy readiness queue and Authentication-removal confirmation are implemented and tested in the development environment. The provisional schedule still requires Ethiopian legal and safeguarding approval. Automatic expiry remains intentionally inactive because safe scheduled execution requires a trusted billed backend. Appeals, file uploads, public enrollment, public Hosting deployment, and production privacy operations remain outside Phase 20.
+The local course activation workflow and its matching Firestore authorization rules are implemented and tested in development. The privacy readiness queue and Authentication-removal confirmation also remain available. The provisional retention schedule still requires Ethiopian legal and safeguarding approval. Automatic expiry remains intentionally inactive because safe scheduled execution requires a trusted billed backend. Multi-course assessments and certificates, appeals, file uploads, public enrollment, public Hosting deployment, and production privacy operations remain outside this checkpoint.

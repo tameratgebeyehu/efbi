@@ -9,6 +9,7 @@ import AuditLog from './AuditLog'
 import ReviewManager, { type StudioRole } from './ReviewManager'
 import RetentionManager from './RetentionManager'
 import EnrollmentManager from './EnrollmentManager'
+import CourseActivationManager from './CourseActivationManager'
 
 type AccessState = 'loading' | 'signed-out' | 'denied' | 'admin' | 'reviewer' | 'error'
 
@@ -54,15 +55,16 @@ function SignIn({ onError }: { onError: (message: string) => void }) {
 }
 
 function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; signOut: () => Promise<void> }) {
-  const [section, setSection] = useState<'overview' | 'enrollment' | 'courses' | 'lessons' | 'reviews' | 'certificates' | 'audit' | 'retention'>(role === 'reviewer' ? 'reviews' : 'overview')
+  const [section, setSection] = useState<'overview' | 'enrollment' | 'courses' | 'lessons' | 'activation' | 'reviews' | 'certificates' | 'audit' | 'retention'>(role === 'reviewer' ? 'reviews' : 'overview')
   const areas = [
     { number: '01', title: 'Courses', detail: 'Create, review, preview, and publish versioned course records.', status: 'Available' },
     { number: '02', title: 'Lessons & questions', detail: 'Draft lessons and browser-only practice checks with audited saves.', status: 'Available' },
-    { number: '03', title: 'Reviews & assignments', detail: 'Assign immutable submissions and give reviewers narrow read access.', status: 'Available' },
-    { number: '04', title: 'Certificates', detail: 'Issue, revoke, or replace a credential through atomic audited actions.', status: 'Available' },
-    { number: '05', title: 'Audit history', detail: 'Read the immutable history of course and lesson operations.', status: 'Available' },
+    { number: '03', title: 'Course activation', detail: 'Lock matching course and lesson releases into one audited version for new learners.', status: 'Available' },
+    { number: '04', title: 'Reviews & assignments', detail: 'Assign immutable submissions and give reviewers narrow read access.', status: 'Available' },
+    { number: '05', title: 'Certificates', detail: 'Issue, revoke, or replace a credential through atomic audited actions.', status: 'Available' },
+    { number: '06', title: 'Audit history', detail: 'Read the immutable history of course, lesson, and activation operations.', status: 'Available' },
     { number: '07', title: 'Enrollment', detail: 'Keep learner profile creation closed until the public launch gates are approved.', status: 'Closed by default' },
-    { number: '06', title: 'Privacy & retention', detail: 'Process deletion requests with documented holds and protected credential evidence.', status: 'Available' },
+    { number: '08', title: 'Privacy & retention', detail: 'Process deletion requests with documented holds and protected credential evidence.', status: 'Available' },
   ]
 
   return (
@@ -74,6 +76,7 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
           {role === 'admin' && <button className={section === 'enrollment' ? 'active' : ''} onClick={() => setSection('enrollment')}>Enrollment</button>}
           {role === 'admin' && <button className={section === 'courses' ? 'active' : ''} onClick={() => setSection('courses')}>Courses</button>}
           {role === 'admin' && <button className={section === 'lessons' ? 'active' : ''} onClick={() => setSection('lessons')}>Lessons</button>}
+          {role === 'admin' && <button className={section === 'activation' ? 'active' : ''} onClick={() => setSection('activation')}>Activation</button>}
           <button className={section === 'reviews' ? 'active' : ''} onClick={() => setSection('reviews')}>Reviews</button>
           {role === 'admin' && <button className={section === 'certificates' ? 'active' : ''} onClick={() => setSection('certificates')}>Certificates</button>}
           {role === 'admin' && <button className={section === 'audit' ? 'active' : ''} onClick={() => setSection('audit')}>Audit history</button>}
@@ -82,7 +85,7 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
         <div className="operator"><small>{role === 'admin' ? 'Verified administrator' : 'Verified reviewer'}</small><strong>{user.email}</strong><button onClick={() => void signOut()}>Sign out</button></div>
       </aside>
       <main className="workspace">
-        {section === 'enrollment' && role === 'admin' ? <EnrollmentManager user={user} /> : section === 'courses' && role === 'admin' ? <CourseManager user={user} /> : section === 'lessons' && role === 'admin' ? <LessonManager user={user} /> : section === 'reviews' ? <ReviewManager user={user} role={role} /> : section === 'certificates' && role === 'admin' ? <CertificateManager user={user} /> : section === 'audit' && role === 'admin' ? <AuditLog /> : section === 'retention' && role === 'admin' ? <RetentionManager user={user} /> : <>
+        {section === 'enrollment' && role === 'admin' ? <EnrollmentManager user={user} /> : section === 'courses' && role === 'admin' ? <CourseManager user={user} /> : section === 'lessons' && role === 'admin' ? <LessonManager user={user} /> : section === 'activation' && role === 'admin' ? <CourseActivationManager user={user} /> : section === 'reviews' ? <ReviewManager user={user} role={role} /> : section === 'certificates' && role === 'admin' ? <CertificateManager user={user} /> : section === 'audit' && role === 'admin' ? <AuditLog /> : section === 'retention' && role === 'admin' ? <RetentionManager user={user} /> : <>
         <header><div><p className="eyebrow">Phase 22 workspace</p><h1>Good morning, builder.</h1><p>Content, review, privacy, and launch controls are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
         <section className="safety-grid" aria-label="Security status">
           <article><small>Network</small><strong>Localhost only</strong><p>Not published with the student website.</p></article>

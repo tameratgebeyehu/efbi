@@ -264,7 +264,11 @@ function fourLessonProgressRecord() {
   }
 }
 
-function courseVersionRecord({ versionId, courseId, courseTitle, lessonIds, courseVersion = 1, assessmentVersion = 1, assessmentType = 'practice-only' }) {
+function activationAuditId({ courseId, courseVersion = 1 }) {
+  return `audit-activate-${courseId}-v${courseVersion}-0001`
+}
+
+function courseVersionRecord({ versionId, courseId, courseTitle, lessonIds, courseVersion = 1, assessmentVersion = 1, assessmentType = 'practice-only', auditId = activationAuditId({ courseId, courseVersion }) }) {
   return {
     versionId,
     courseId,
@@ -275,10 +279,11 @@ function courseVersionRecord({ versionId, courseId, courseTitle, lessonIds, cour
     lessonIds,
     publishedAt: serverTimestamp(),
     publishedBy: 'admin-user',
+    auditId,
   }
 }
 
-function activeCourseRecord({ versionId, courseId, courseTitle, lessonIds, courseVersion = 1, assessmentVersion = 1, assessmentType = 'practice-only' }) {
+function activeCourseRecord({ versionId, courseId, courseTitle, lessonIds, courseVersion = 1, assessmentVersion = 1, assessmentType = 'practice-only', auditId = activationAuditId({ courseId, courseVersion }) }) {
   return {
     courseId,
     versionId,
@@ -289,6 +294,7 @@ function activeCourseRecord({ versionId, courseId, courseTitle, lessonIds, cours
     assessmentType,
     activatedAt: serverTimestamp(),
     activatedBy: 'admin-user',
+    auditId,
   }
 }
 
@@ -306,9 +312,18 @@ function versionedProgressRecord({ courseId, versionId, courseVersion = 1, lesso
 }
 
 async function publishCourseFoundation(db, values) {
+  const auditId = activationAuditId(values)
   const batch = writeBatch(db)
-  batch.set(doc(db, 'courseVersions', values.versionId), courseVersionRecord(values))
-  batch.set(doc(db, 'activeCourses', values.courseId), activeCourseRecord(values))
+  batch.set(doc(db, 'courseVersions', values.versionId), courseVersionRecord({ ...values, auditId }))
+  batch.set(doc(db, 'activeCourses', values.courseId), activeCourseRecord({ ...values, auditId }))
+  batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+    eventId: auditId,
+    action: 'course.version.activated',
+    entityType: 'courseVersion',
+    entityId: values.courseId,
+    revision: values.courseVersion ?? 1,
+    releaseId: values.versionId,
+  }))
   await batch.commit()
 }
 
@@ -515,6 +530,17 @@ test('administrators publish immutable course versions while public and unverifi
     courseTitle: 'Duplicate Lesson Course',
     lessonIds: ['same-lesson', 'same-lesson'],
   })))
+
+  const unaudited = {
+    versionId: 'unaudited-course--v1',
+    courseId: 'unaudited-course',
+    courseTitle: 'Unaudited Course Version',
+    lessonIds: ['first-lesson'],
+  }
+  const unauditedBatch = writeBatch(admin)
+  unauditedBatch.set(doc(admin, 'courseVersions', unaudited.versionId), courseVersionRecord(unaudited))
+  unauditedBatch.set(doc(admin, 'activeCourses', unaudited.courseId), activeCourseRecord(unaudited))
+  await assertFails(unauditedBatch.commit())
 })
 
 test('two courses keep progress isolated and reject skipped or foreign lessons', async () => {
@@ -590,9 +616,18 @@ test('activating a new course version does not rewrite progress already locked t
     courseVersion: 2,
     lessonIds: ['web-introduction-v2', 'html-foundations-v2', 'publish-a-page'],
   }
+  const versionTwoAuditId = activationAuditId(versionTwo)
   const activation = writeBatch(admin)
-  activation.set(doc(admin, 'courseVersions', versionTwo.versionId), courseVersionRecord(versionTwo))
-  activation.set(doc(admin, 'activeCourses', versionTwo.courseId), activeCourseRecord(versionTwo))
+  activation.set(doc(admin, 'courseVersions', versionTwo.versionId), courseVersionRecord({ ...versionTwo, auditId: versionTwoAuditId }))
+  activation.set(doc(admin, 'activeCourses', versionTwo.courseId), activeCourseRecord({ ...versionTwo, auditId: versionTwoAuditId }))
+  activation.set(doc(admin, 'adminAudit', versionTwoAuditId), auditEvent({
+    eventId: versionTwoAuditId,
+    action: 'course.version.activated',
+    entityType: 'courseVersion',
+    entityId: versionTwo.courseId,
+    revision: versionTwo.courseVersion,
+    releaseId: versionTwo.versionId,
+  }))
   await assertSucceeds(activation.commit())
 
   await assertSucceeds(setDoc(aliceReference, versionedProgressRecord({

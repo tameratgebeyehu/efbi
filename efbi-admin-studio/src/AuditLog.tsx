@@ -18,6 +18,7 @@ const actionOptions = [
   { value: 'course.draft.created', label: 'Course draft created' },
   { value: 'course.draft.updated', label: 'Course draft updated' },
   { value: 'course.release.published', label: 'Course release published' },
+  { value: 'course.version.activated', label: 'Course version activated' },
   { value: 'lesson.draft.created', label: 'Lesson draft created' },
   { value: 'lesson.draft.updated', label: 'Lesson draft updated' },
   { value: 'lesson.release.published', label: 'Lesson release published' },
@@ -163,7 +164,7 @@ export default function AuditLog() {
         {!loading && !error && filteredEvents.length === 0 && <div className="audit-empty"><strong>{events.length ? 'No events match these filters.' : 'No audit events yet.'}</strong><p>{events.length ? 'Clear one or more filters to see additional history.' : 'Events will appear after an administrator saves or publishes content.'}</p></div>}
         {!loading && filteredEvents.map((event) => (
           <article className="audit-event" key={event.eventId}>
-            <div className={`audit-event__mark ${event.action.includes('published') ? 'audit-event__mark--published' : ''}`} aria-hidden="true" />
+            <div className={`audit-event__mark ${event.action.includes('published') || event.action.includes('activated') ? 'audit-event__mark--published' : ''}`} aria-hidden="true" />
             <div className="audit-event__main">
               <div className="audit-event__title"><div><span>{actionLabel(event.action)}</span><small>{recordLabel(event.entityType)} · revision {event.revision}</small></div><time>{readableDate(event.createdAt)}</time></div>
               <dl>
