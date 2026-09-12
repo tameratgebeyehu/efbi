@@ -6,10 +6,12 @@ This checklist supports a professional review; it is not legal advice and does n
 
 ## Decisions that must be signed off
 
-- [ ] Identify the EFBI legal entity or responsible individual acting as data controller.
-- [ ] Publish a working privacy contact and escalation contact.
+- [x] Record the accountable EFBI owner: Tamerat Gebeyehu, CEO and Founder. External review must still confirm the final legal controller name and capacity.
+- [x] Record the working privacy contact: efbi.academy@gmail.com.
+- [ ] Name a safeguarding contact, backup contact, and escalation route.
 - [ ] Confirm the lawful basis for account, progress, project, review, certificate, security, and audit processing.
-- [ ] Decide whether learners under 18 may enroll. If they may, approve age-appropriate notices, consent/guardian rules, safeguarding escalation, and minimum-data design before collecting age information.
+- [x] Record the audience decision: EFBI intends to accept learners under 16 and learners aged 16 or older.
+- [ ] Approve the under-16 parent/guardian/tutor authorization, age-verification, safeguarding escalation, and minimum-data design before account creation.
 - [ ] Approve the `efbi-retention-v1` periods or replace them with reviewed periods.
 - [ ] Approve the narrow certificate-verification retention purpose and duration, including revoked and replaced credentials.
 - [ ] Approve when legal, safety, fraud, or integrity holds may be used and who reviews them every 30 days.
@@ -28,6 +30,8 @@ The 14-day request target shown in Admin Studio is an internal EFBI service targ
 
 The reviewer should receive:
 
+- `PRIVACY_DECISIONS.md`
+- `PRIVACY_NOTICE_DRAFT.md`
 - `RETENTION_AND_DELETION.md`
 - `RETENTION_EXECUTOR_DESIGN.md`
 - `BACKEND_FOUNDATION.md`
@@ -39,11 +43,11 @@ The reviewer should receive:
 
 ## Approval record
 
-Do not fill this section without the real reviewer.
+Do not fill reviewer decisions without the real reviewer. The accountable owner entry below records the founder's instruction, not external approval.
 
 - Privacy/legal reviewer: _pending_
 - Safeguarding reviewer: _pending_
-- EFBI accountable owner: _pending_
+- EFBI accountable owner: Tamerat Gebeyehu, CEO and Founder
 - Approved policy version: _pending_
 - Decision date: _pending_
 - Conditions or expiry: _pending_

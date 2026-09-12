@@ -387,16 +387,28 @@ The technical readiness checkpoint is complete in the development codebase; exte
 
 See `RETENTION_AND_DELETION.md`, `RETENTION_EXECUTOR_DESIGN.md`, `PREPRODUCTION_PRIVACY_GATE.md`, `APP_CHECK.md`, and `../ADMIN_STUDIO.md`.
 
-## Next implementation phase
+## Phase 21 status
 
-Phase 21 should close the owner-supplied and external-review gates before any launch work:
+Owner decision intake is recorded; implementation and external review remain in progress:
 
-1. Record EFBI's accountable controller identity, privacy contact, safeguarding contact, and intended learner age range.
+1. Tamerat Gebeyehu, CEO and Founder, is recorded as the accountable EFBI owner.
+2. `efbi.academy@gmail.com` is recorded as the privacy and deletion contact.
+3. EFBI intends to serve learners under 16 and learners aged 16 or older.
+4. The official proclamation's under-16 boundary and guardian-authorization requirements are documented in `PRIVACY_DECISIONS.md`.
+5. A plain-language learner notice exists as `PRIVACY_NOTICE_DRAFT.md`, clearly marked unapproved and not for publication.
+6. Ordinary under-16 self-registration and all public enrollment remain blocked.
+
+## Remaining Phase 21 work
+
+Phase 21 should close the remaining owner-supplied and external-review gates before any launch work:
+
+1. Confirm the recorded accountable owner (Tamerat Gebeyehu, CEO and Founder), privacy contact (efbi.academy@gmail.com), under-16 and 16+ audience decision, final legal controller capacity, and a named safeguarding contact.
 2. Obtain real Ethiopian privacy/legal and safeguarding review and complete the approval record without inventing sign-off.
 3. Produce the final learner privacy notice and age-appropriate consent flow from those approved decisions.
 4. Manually review App Check metrics for Firestore and Authentication, name a rollback owner, and test development Firestore enforcement only if the evidence supports it.
 5. Run browser accessibility and responsive QA for every learner privacy state and administrator queue state.
 6. Keep automatic retention, billing, file uploads, public enrollment, production deployment, and the Admin Studio off public Hosting until separately approved.
+
 ## Recovery commands
 
 From this directory:
