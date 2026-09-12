@@ -44,3 +44,23 @@
 .retention-locked p, .retention-boundary p { margin: 5px 0 0; }
 @media (max-width: 1100px) { .retention-layout { grid-template-columns: 210px minmax(0, 1fr); } .retention-actions { position: static; grid-column: 1 / -1; } }
 @media (max-width: 700px) { .retention-layout { grid-template-columns: 1fr; } .retention-list { position: static; display: flex; overflow-x: auto; } .retention-list > div, .retention-list > button { min-width: 190px; } .retention-record { padding: 20px 16px; } .retention-record > header { flex-direction: column; } .retention-record > dl { grid-template-columns: 1fr; } .retention-actions { grid-column: auto; } }
+.retention-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0 0 14px; }
+.retention-summary article { display: grid; gap: 4px; padding: 15px; border: 1px solid var(--line); background: #fff; }
+.retention-summary small { color: var(--muted); font-size: .62rem; font-weight: 850; letter-spacing: .05em; text-transform: uppercase; }
+.retention-summary strong { color: var(--deep); font-size: 1.35rem; }
+.retention-summary span { color: var(--muted); font-size: .67rem; }
+.retention-policy-note { display: flex; gap: 12px; align-items: start; margin: 0 0 22px; padding: 13px 15px; border: 1px solid #c9ddea; background: #f1f8fc; }
+.retention-policy-note strong { flex: 0 0 auto; color: #2f5b7a; font-size: .72rem; }
+.retention-policy-note span { color: #526b7c; font-size: .7rem; line-height: 1.5; }
+.attention { width: max-content; padding: 4px 8px; color: #315f45 !important; background: #eaf7ee; font-size: .6rem !important; font-weight: 850; text-transform: uppercase; }
+.attention--due { color: #7d5d11 !important; background: #fff6d9; }
+.attention--overdue { color: #8e3030 !important; background: #fff0f0; }
+.attention--complete { color: #5f6963 !important; background: #edf0ee; }
+.retention-attention { margin: 20px 0 0; padding: 14px; border: 1px solid #cfe2d5; background: #f2f8f4; }
+.retention-attention strong { color: var(--deep); font-size: .76rem; }
+.retention-attention p { margin: 5px 0 0; color: var(--muted); font-size: .7rem; line-height: 1.5; }
+.retention-attention--due { border-color: #ead8a6; background: #fffaf0; }
+.retention-attention--overdue { border-color: #efc9c9; background: #fff4f4; }
+.retention-attention--complete { border-color: #dce3de; background: #f5f7f5; }
+@media (max-width: 900px) { .retention-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .retention-summary { grid-template-columns: 1fr; } .retention-policy-note { flex-direction: column; } }

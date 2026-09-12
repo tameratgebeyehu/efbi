@@ -1,12 +1,14 @@
 # EFBI retention and deletion operations
 
-Phase 19 policy version: `efbi-retention-v1`
+Phase 20 operating policy version: `efbi-retention-v1`
 
 This is a development operating policy, not legal advice. It follows data-minimization, retention-transparency, erasure, and processing-restriction principles in Ethiopia's Personal Data Protection Proclamation No. 1321/2024. A qualified Ethiopian privacy adviser and EFBI safeguarding lead must approve the periods, lawful bases, notices, and exception handling before public enrollment.
 
 ## Provisional retention schedule
 
 These are pre-production defaults, not an automated deletion service:
+
+- Active deletion requests have a 14-day internal response target measured from their latest activation. This is an EFBI operating target, not a statutory deadline.
 
 - Active learner profile and progress: keep while the account is active; review after 12 months without sign-in or learning activity.
 - Unsubmitted project drafts: remove after 90 days without a learner update, after advance notice where contact is permitted.
@@ -16,7 +18,7 @@ These are pre-production defaults, not an automated deletion service:
 - Deletion completion and retention audit records: keep for 24 months as minimal evidence that EFBI handled the request, then review for deletion. These records contain identifiers, status, actors, reasons, and timestamps but never copy deleted learning content.
 - An active documented hold pauses the applicable period only for the records necessary for the stated legal, safety, fraud, or integrity purpose. Review each hold every 30 days.
 
-No schedule above runs automatically in Phase 19. Production enrollment remains blocked until EFBI has an approved notice, a trusted scheduled deletion process, hold review ownership, and recovery monitoring. Firestore time-to-live must not be enabled on certificate or audit collections without a separately reviewed design.
+No schedule above runs automatically in Phase 20. Production enrollment remains blocked until EFBI has an approved notice, a trusted scheduled deletion process, hold review ownership, and recovery monitoring. Firestore time-to-live must not be enabled on certificate or audit collections without a separately reviewed design.
 
 ## Learner workflow
 
@@ -38,6 +40,7 @@ No schedule above runs automatically in Phase 19. Production enrollment remains 
 7. If a certificate claim exists, the workflow removes the profile and course progress but preserves certificate-linked projects, reviews, certificate request, issuance, public record, status, claim, and audit.
 8. After Firestore completion, delete only the same UID from **Firebase Console → Authentication → Users**. The browser studio intentionally has no Firebase Admin credential and cannot delete Authentication users.
 9. Confirm that the learner can no longer sign in and that any issued credential still verifies with its accurate status.
+10. Return to **Privacy & retention**, type the same UID, and record the permanent Authentication-removal confirmation. This confirmation records the operator's statement; it does not itself perform or technically verify the Console deletion.
 
 ## Security invariants
 
@@ -48,7 +51,8 @@ No schedule above runs automatically in Phase 19. Production enrollment remains 
 - Completion requires the profile and pilot progress record to be absent after the batch.
 - Without a certificate, both fixed pilot submission versions, their public/private reviews, assignments, and certificate request must also be absent.
 - With a certificate claim, browser deletion of certificate-linked evidence is denied.
-- Completion records, retention audit records, certificate records, issuance evidence, claims, and status history are immutable.
+- Completion records, Authentication-removal confirmations, retention audit records, certificate records, issuance evidence, claims, and status history are immutable.
+- A completed Firestore request remains visibly pending until the separate Authentication-removal confirmation is recorded.
 - Reviewers and learners cannot read private holds or retention audits.
 - The workflow never stores passwords, Authentication tokens, deleted content, or service-account keys.
 
@@ -56,7 +60,7 @@ No schedule above runs automatically in Phase 19. Production enrollment remains 
 
 The deletion executor knows only the current AI Foundations pilot's fixed paths. Before adding another course, project version, appeal, upload, or nested learner collection, update the deletion inventory, Admin Studio batch, security rules, tests, and this document together. A new collection must not ship without an explicit deletion or retention decision.
 
-The Firestore operation does not delete email or credentials held by Firebase Authentication; that is the required manual console step. It also cannot delete data held by external processors such as YouTube or email providers. EFBI's production privacy notice must name those systems and provide a contact method for requests.
+The Firestore operation does not delete email or credentials held by Firebase Authentication; that is the required manual console step. Confirmation is stored at `authenticationRemovals/{uid}` with no email address or copied learner content. It also cannot delete data held by external processors such as YouTube or email providers. EFBI's production privacy notice must name those systems and provide a contact method for requests.
 
 ## Required checks before a rule release
 
@@ -70,5 +74,7 @@ cd "..\efbi-admin-studio"
 npm run lint
 npm run build
 ```
+
+The trusted scheduled design is documented in RETENTION_EXECUTOR_DESIGN.md. Firestore TTL is not used because it is billed, non-transactional, and cannot enforce EFBI cross-collection certificate and hold checks.
 
 Deploy Firestore rules only to `efbi-academy-dev-doha` until the production privacy and safeguarding gates are approved. Do not deploy the Admin Studio or the student Hosting build as part of this operation.

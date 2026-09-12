@@ -366,16 +366,37 @@ Implementation is complete in the development codebase:
 
 See `RETENTION_AND_DELETION.md` and `../ADMIN_STUDIO.md` for the policy, scope limits, and exact operating procedure.
 
+## Phase 20 status
+
+The technical readiness checkpoint is complete in the development codebase; external approval gates remain blocked:
+
+1. The localhost Privacy & retention workspace now ranks requests by operational attention.
+2. Requested records use a 14-day internal EFBI response target measured from their latest activation. The interface clearly says this is not a statutory deadline.
+3. Active holds show a 30-day review countdown and an overdue warning during the final seven days and after the target.
+4. Completed Firestore deletions remain visible until the separate Firebase Authentication removal is confirmed.
+5. Authentication-removal confirmation requires the exact UID, an explicit operator statement, and a matching immutable audit event. It cannot perform or technically verify the Console deletion.
+6. A sparse-account edge case discovered by the Phase 20 exercise was fixed: the executor always includes every fixed pilot path, so absent documents are safe no-op deletes and the security proof remains within Firestore limits.
+7. A complete emulator exercise used dedicated synthetic learner, reviewer, and administrator identities for request, hold, release, deletion, reviewer denial, Authentication confirmation, and immutability. Emulator cleanup removed all synthetic records.
+8. Seventy-two Firestore authorization and lifecycle tests pass.
+9. Learner and Admin Studio builds and lint checks pass.
+10. Firestore TTL was rejected for this workflow because it is billed, non-transactional, and cannot enforce the hold and certificate package. Scheduled Cloud Functions also require a billed path. The future trusted executor is designed but not deployed.
+11. Firebase CLI still exposes App Check debug-token management but not request-category metrics. Enforcement remains off until a project owner reviews the Console metrics and names a rollback owner.
+12. The privacy/legal and safeguarding gate is explicitly blocked pending real reviewers, controller/contact information, learner-age policy, lawful-basis decisions, transfer review, and approval of retention and certificate exceptions.
+13. The tested Phase 20 rules are deployed only to `efbi-academy-dev-doha`.
+14. No public Hosting release, live learner data, live Authentication removal, operator role grant, billing upgrade, TTL policy, scheduled function, or production operation was created.
+
+See `RETENTION_AND_DELETION.md`, `RETENTION_EXECUTOR_DESIGN.md`, `PREPRODUCTION_PRIVACY_GATE.md`, `APP_CHECK.md`, and `../ADMIN_STUDIO.md`.
+
 ## Next implementation phase
 
-Phase 20 should prepare controlled pre-production operations without opening public enrollment:
+Phase 21 should close the owner-supplied and external-review gates before any launch work:
 
-1. Obtain Ethiopian privacy and safeguarding review of the notice, retention periods, lawful bases, child-safety handling, and certificate exception.
-2. Design a trusted scheduled retention executor and monitoring path; do not place server credentials in either browser application.
-3. Add overdue-request and 30-day hold-review indicators without exposing private reasons to learners.
-4. Run an end-to-end development exercise with dedicated learner, reviewer, and administrator test accounts, then delete every synthetic record.
-5. Review App Check monitoring and incident recovery before any enforcement decision.
-6. Keep file uploads, public enrollment, production deployment, and the Admin Studio off public Hosting.
+1. Record EFBI's accountable controller identity, privacy contact, safeguarding contact, and intended learner age range.
+2. Obtain real Ethiopian privacy/legal and safeguarding review and complete the approval record without inventing sign-off.
+3. Produce the final learner privacy notice and age-appropriate consent flow from those approved decisions.
+4. Manually review App Check metrics for Firestore and Authentication, name a rollback owner, and test development Firestore enforcement only if the evidence supports it.
+5. Run browser accessibility and responsive QA for every learner privacy state and administrator queue state.
+6. Keep automatic retention, billing, file uploads, public enrollment, production deployment, and the Admin Studio off public Hosting until separately approved.
 ## Recovery commands
 
 From this directory:

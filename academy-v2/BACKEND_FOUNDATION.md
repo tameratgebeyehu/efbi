@@ -178,6 +178,12 @@ deletionCompletions/{uid}
   deletedCategories
   auditId
 
+authenticationRemovals/{uid}
+  learnerUid
+  method                    # firebase-console-manual
+  confirmedAt
+  confirmedBy
+  auditId
 retentionAudit/{eventId}    # administrator-only and immutable
   eventId
   action
@@ -187,7 +193,7 @@ retentionAudit/{eventId}    # administrator-only and immutable
   createdAt
 ```
 
-The learner may create, cancel, or reopen their own request. A requested, held, or completed state blocks new learning and assessment writes. Administrators may hold, release, or complete only through linked atomic operations. Firestore completion does not remove the Firebase Authentication user; the operator must delete the exact UID separately in Firebase Console. See RETENTION_AND_DELETION.md.
+The learner may create, cancel, or reopen their own request. A requested, held, or completed state blocks new learning and assessment writes. Administrators may hold, release, or complete only through linked atomic operations. Firestore completion does not remove the Firebase Authentication user; the operator must delete the exact UID separately in Firebase Console and then create one immutable Authentication-removal confirmation with a linked audit event. See RETENTION_AND_DELETION.md.
 ## Development environment
 
 - Firebase project: `efbi-academy-dev-doha`

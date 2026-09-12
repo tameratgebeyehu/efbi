@@ -1069,6 +1069,18 @@ service cloud.firestore {
         && data.auditId.size() <= 180;
     }
 
+    function validAuthenticationRemoval(data, uid) {
+      return data.keys().hasOnly([
+          'learnerUid', 'method', 'confirmedAt', 'confirmedBy', 'auditId'
+        ])
+        && data.learnerUid == uid
+        && data.method == 'firebase-console-manual'
+        && data.confirmedAt == request.time
+        && data.confirmedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180;
+    }
     function validRetentionAudit(data, eventId) {
       return data.keys().hasOnly([
           'eventId', 'action', 'learnerUid', 'actorUid', 'reason', 'createdAt'
@@ -1077,7 +1089,8 @@ service cloud.firestore {
         && eventId.size() >= 16
         && eventId.size() <= 180
         && data.action in [
-          'retention.hold.created', 'retention.hold.released', 'deletion.completed'
+          'retention.hold.created', 'retention.hold.released', 'deletion.completed',
+          'authentication.removal.confirmed'
         ]
         && data.learnerUid is string
         && data.learnerUid.size() >= 1
@@ -1108,6 +1121,13 @@ service cloud.firestore {
         || (
           data.action == 'deletion.completed'
           && completion.auditId == eventId
+          && deletionRequest.status == 'completed'
+          && completion.learnerUid == data.learnerUid
+        )
+        || (
+          data.action == 'authentication.removal.confirmed'
+          && getAfter(/databases/$(database)/documents/authenticationRemovals/$(data.learnerUid)).data.auditId == eventId
+          && getAfter(/databases/$(database)/documents/authenticationRemovals/$(data.learnerUid)).data.learnerUid == data.learnerUid
           && deletionRequest.status == 'completed'
           && completion.learnerUid == data.learnerUid
         );
@@ -1259,6 +1279,20 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /authenticationRemovals/{uid} {
+      allow get: if owns(uid) || admin();
+      allow list: if admin();
+      allow create: if admin()
+        && validAuthenticationRemoval(request.resource.data, uid)
+        && get(/databases/$(database)/documents/deletionRequests/$(uid)).data.status == 'completed'
+        && get(/databases/$(database)/documents/deletionCompletions/$(uid)).data.learnerUid == uid
+        && validRetentionAudit(
+          getAfter(/databases/$(database)/documents/retentionAudit/$(request.resource.data.auditId)).data,
+          request.resource.data.auditId
+        )
+        && getAfter(/databases/$(database)/documents/retentionAudit/$(request.resource.data.auditId)).data.action == 'authentication.removal.confirmed';
+      allow update, delete: if false;
+    }
     match /retentionAudit/{eventId} {
       allow get, list: if admin();
       allow create: if admin()
@@ -1671,7 +1705,11 @@ service cloud.firestore {
           getAfter(/databases/$(database)/documents/users/$(request.resource.data.learnerUid)/reviewResults/$(resultId)).data
         );
       allow update: if false;
-      allow delete: if evidenceDeletionAllowed(resource.data.learnerUid);
+      allow delete: if admin()
+        && (
+          !exists(/databases/$(database)/documents/reviewResults/$(resultId))
+          || evidenceDeletionAllowed(resource.data.learnerUid)
+        );
     }
 
     match /reviewAssignments/{assignmentId} {
@@ -1681,7 +1719,11 @@ service cloud.firestore {
         && learnerWritesAllowed(request.resource.data.learnerUid)
         && validReviewAssignment(request.resource.data, assignmentId);
       allow update: if false;
-      allow delete: if evidenceDeletionAllowed(resource.data.learnerUid);
+      allow delete: if admin()
+        && (
+          !exists(/databases/$(database)/documents/reviewAssignments/$(assignmentId))
+          || evidenceDeletionAllowed(resource.data.learnerUid)
+        );
     }
 
     match /adminAudit/{eventId} {

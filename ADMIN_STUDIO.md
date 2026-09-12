@@ -2,9 +2,9 @@
 
 The EFBI Admin Studio is a separate, local-only application for trusted operators. It is not a route in the student website and must never be deployed to Firebase Hosting, GitHub Pages, or another public host.
 
-## Current Phase 19 boundary
+## Current Phase 20 boundary
 
-Phase 19 adds learner-controlled deletion requests, administrator-only documented holds, and atomic deletion of eligible Firestore data. Certificate evidence and immutable audit history remain protected.
+Phase 20 adds an internal privacy operations queue, 14-day request targets, 30-day hold reviews, and immutable confirmation after the separate Firebase Authentication deletion. Certificate evidence and immutable audit history remain protected.
 
 - the server binds to `127.0.0.1` on port `5174`;
 - the interface blocks non-local hostnames;
@@ -151,6 +151,7 @@ See academy-v2/CERTIFICATE_OPERATIONS.md for fields, privacy boundaries, and per
 6. The atomic Firestore batch deletes eligible records and creates immutable completion and audit evidence. It either succeeds completely or changes nothing.
 7. When a certificate exists, profile and progress are removed but certificate-linked work and all credential history remain.
 8. After Firestore completion, delete only the matching UID from Firebase Authentication in the Firebase Console and confirm sign-in no longer works.
+9. Return to the Studio, type the same UID, confirm the manual removal, and create its immutable audit record. The Studio records the operator's confirmation but cannot inspect Authentication directly.
 
 Never place an Admin SDK or service-account credential in the Studio to automate the Authentication step. See `academy-v2/RETENTION_AND_DELETION.md` for the provisional schedule, legal-review gate, and full record inventory.
 
@@ -175,6 +176,6 @@ Never place an Admin SDK or service-account credential in the Studio to automate
 
 The root Google Apps Script and spreadsheet backend is retired. Its browser scripts are no longer loaded by the maintenance page, default credentials are removed, and its request handlers return a retired response. The Google Apps Script owner must still open **Deploy > Manage deployments** and archive any old deployment; a read-only endpoint check did not return a successful response but cannot prove that every historical deployment is archived.
 
-## Phase 19 status
+## Phase 20 status
 
-The controlled deletion and retention-hold workflow is implemented and tested in the development environment. The provisional schedule still requires Ethiopian legal and safeguarding approval, and automated expiry is not active. Appeals, file uploads, public enrollment, public Hosting deployment, and production privacy operations remain outside Phase 19.
+The privacy readiness queue and Authentication-removal confirmation are implemented and tested in the development environment. The provisional schedule still requires Ethiopian legal and safeguarding approval. Automatic expiry remains intentionally inactive because safe scheduled execution requires a trusted billed backend. Appeals, file uploads, public enrollment, public Hosting deployment, and production privacy operations remain outside Phase 20.

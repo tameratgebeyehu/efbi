@@ -2077,3 +2077,86 @@ test('a certificate deletion preserves credential evidence while removing basic 
   await assertFails(deleteDoc(doc(admin, 'certificateClaims', 'alice--ai-foundations')))
   await assertFails(deleteDoc(doc(admin, 'users', 'alice', 'submissions', 'ai-foundations-project')))
 })
+
+test('Phase 20 synthetic learner, reviewer, and administrator complete the privacy lifecycle safely', async () => {
+  const uid = 'phase20-learner'
+  const adminUid = 'phase20-admin'
+  const learner = verifiedUser(uid)
+  const reviewer = verifiedUser('phase20-reviewer', { reviewer: true })
+  const admin = verifiedUser(adminUid, { admin: true })
+  await seedPrivacyRecords(uid, false)
+  await assertSucceeds(setDoc(doc(learner, 'deletionRequests', uid), dataDeletionRequest(uid)))
+
+  const holdAuditId = 'phase20-retention-hold-created-0001'
+  const hold = writeBatch(admin)
+  hold.set(doc(admin, 'retentionHolds', uid), {
+    holdId: uid, learnerUid: uid, status: 'active', reason: 'Synthetic Phase 20 exercise for the documented hold pathway.',
+    createdAt: serverTimestamp(), createdBy: adminUid, updatedAt: serverTimestamp(), updatedBy: adminUid, auditId: holdAuditId,
+  })
+  hold.update(doc(admin, 'deletionRequests', uid), { status: 'held', updatedAt: serverTimestamp() })
+  hold.set(doc(admin, 'retentionAudit', holdAuditId), {
+    eventId: holdAuditId, action: 'retention.hold.created', learnerUid: uid, actorUid: adminUid,
+    reason: 'Synthetic Phase 20 exercise for the documented hold pathway.', createdAt: serverTimestamp(),
+  })
+  await assertSucceeds(hold.commit())
+  await assertFails(getDoc(doc(reviewer, 'retentionHolds', uid)))
+
+  const releaseAuditId = 'phase20-retention-hold-released-0002'
+  const release = writeBatch(admin)
+  release.update(doc(admin, 'retentionHolds', uid), {
+    status: 'released', reason: 'Synthetic review finished and the temporary hold is no longer required.',
+    updatedAt: serverTimestamp(), updatedBy: adminUid, auditId: releaseAuditId,
+  })
+  release.update(doc(admin, 'deletionRequests', uid), { status: 'requested', updatedAt: serverTimestamp() })
+  release.set(doc(admin, 'retentionAudit', releaseAuditId), {
+    eventId: releaseAuditId, action: 'retention.hold.released', learnerUid: uid, actorUid: adminUid,
+    reason: 'Synthetic review finished and the temporary hold is no longer required.', createdAt: serverTimestamp(),
+  })
+  await assertSucceeds(release.commit())
+
+  const deletionAuditId = 'phase20-retention-deletion-completed-0003'
+  const deletion = writeBatch(admin)
+  deletion.delete(doc(admin, 'users', uid))
+  deletion.delete(doc(admin, 'users', uid, 'progress', 'ai-foundations'))
+  deletion.delete(doc(admin, 'users', uid, 'certificateRequests', 'ai-foundations'))
+  for (const submissionId of ['ai-foundations-project', 'ai-foundations-project-revision-1']) {
+    const resultId = uid + '--' + submissionId
+    deletion.delete(doc(admin, 'users', uid, 'submissions', submissionId))
+    deletion.delete(doc(admin, 'users', uid, 'reviewResults', resultId))
+    deletion.delete(doc(admin, 'reviewResults', resultId))
+    deletion.delete(doc(admin, 'reviewAssignments', resultId))
+  }
+  deletion.update(doc(admin, 'deletionRequests', uid), {
+    status: 'completed', updatedAt: serverTimestamp(), completedAt: serverTimestamp(), certificateEvidenceRetained: false,
+  })
+  deletion.set(doc(admin, 'deletionCompletions', uid), deletionCompletion(uid, deletionAuditId, false))
+  deletion.set(doc(admin, 'retentionAudit', deletionAuditId), {
+    eventId: deletionAuditId, action: 'deletion.completed', learnerUid: uid, actorUid: adminUid,
+    reason: 'Synthetic eligible learner data deleted with no certificate evidence required.', createdAt: serverTimestamp(),
+  })
+  await assertSucceeds(deletion.commit())
+
+  const removalAuditId = 'phase20-authentication-removal-confirmed-0004'
+  const removalRecord = {
+    learnerUid: uid, method: 'firebase-console-manual', confirmedAt: serverTimestamp(), confirmedBy: adminUid, auditId: removalAuditId,
+  }
+  const reviewerAttempt = writeBatch(reviewer)
+  reviewerAttempt.set(doc(reviewer, 'authenticationRemovals', uid), removalRecord)
+  reviewerAttempt.set(doc(reviewer, 'retentionAudit', removalAuditId), {
+    eventId: removalAuditId, action: 'authentication.removal.confirmed', learnerUid: uid, actorUid: 'phase20-reviewer',
+    reason: 'Reviewer must not confirm Authentication account removal.', createdAt: serverTimestamp(),
+  })
+  await assertFails(reviewerAttempt.commit())
+
+  const removal = writeBatch(admin)
+  removal.set(doc(admin, 'authenticationRemovals', uid), removalRecord)
+  removal.set(doc(admin, 'retentionAudit', removalAuditId), {
+    eventId: removalAuditId, action: 'authentication.removal.confirmed', learnerUid: uid, actorUid: adminUid,
+    reason: 'Administrator confirmed the exact synthetic UID was removed from Authentication.', createdAt: serverTimestamp(),
+  })
+  await assertSucceeds(removal.commit())
+  await assertSucceeds(getDoc(doc(learner, 'authenticationRemovals', uid)))
+  await assertFails(getDoc(doc(reviewer, 'authenticationRemovals', uid)))
+  await assertFails(updateDoc(doc(admin, 'authenticationRemovals', uid), { method: 'changed' }))
+  await assertFails(deleteDoc(doc(admin, 'authenticationRemovals', uid)))
+})

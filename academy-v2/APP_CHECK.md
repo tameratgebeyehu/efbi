@@ -56,6 +56,11 @@ On 2026-09-11, Firebase Console access was attempted again through the approved 
 
 Authentication and Firestore enforcement remain off. The live Phase 8 REST test did not attach an App Check token, so its synthetic traffic may appear as unverified. Enforcement requires a later manual Console review of normal hosted browser traffic and a named rollback owner.
 
+## Phase 20 monitoring review
+
+On 2026-09-12, the installed Firebase CLI was checked again. Its App Check surface exposes debug-token management only; it still does not expose verified, outdated, unknown-origin, or invalid request metrics. Firebase's current official guidance requires reviewing those categories in **Firebase Console → Security → App Check → APIs** before enforcement when legitimate traffic could be disrupted.
+
+No enforcement change was made. The v2 learner platform is not publicly launched, and there is still no representative hosted browser traffic or recorded rollback owner. Before Phase 21 closes this gate, a project owner must manually inspect both Cloud Firestore and Authentication metrics, capture the date and category distribution without learner identifiers, name the rollback owner, and test Firestore enforcement first with the registered hosted domains and local debug token. Authentication enforcement remains a separate later decision.
 ## Authentication email note
 
 The development project display name is EFBI Academy Development Doha, so Firebase default verification and reset subjects still identify EFBI. A direct template-branding update was rejected by Identity Toolkit with EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED. Keep the safe default templates for development and retry branding through the Firebase console when the production domain and action URL are configured.
