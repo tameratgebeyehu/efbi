@@ -396,7 +396,9 @@ Owner decision intake is recorded; implementation and external review remain in 
 3. EFBI intends to serve learners under 16 and learners aged 16 or older.
 4. The official proclamation's under-16 boundary and guardian-authorization requirements are documented in `PRIVACY_DECISIONS.md`.
 5. A plain-language learner notice exists as `PRIVACY_NOTICE_DRAFT.md`, clearly marked unapproved and not for publication.
-6. Ordinary under-16 self-registration and all public enrollment remain blocked.
+6. `PRIVACY_REVIEW_WORKSHEET.md` maps all eleven gates to owner, technical, and external-review actions and required evidence.
+7. `DPIA_DRAFT.md` documents the current data flow, necessity assessment, eleven initial risks, existing safeguards, required mitigations, and a high launch-blocking residual-risk conclusion.
+8. Ordinary under-16 self-registration and all public enrollment remain blocked.
 
 ## Remaining Phase 21 work
 
