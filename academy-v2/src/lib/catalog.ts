@@ -33,9 +33,7 @@ type LessonReleaseRecord = {
   durationMinutes: number
   videoYoutubeId: string
   bodyMarkdown: string
-  question1: ReleaseQuestion
-  question2: ReleaseQuestion
-  question3: ReleaseQuestion
+  questions: ReleaseQuestion[]
   version: number
 }
 
@@ -127,6 +125,9 @@ function asLessonRelease(id: string, data: Record<string, unknown>, expectedCour
   const lessonId = safeString(data.lessonId)
   const courseId = safeString(data.courseId)
   if (courseId !== expectedCourseId || !validLessonId(lessonId)) return null
+  const questions = Array.isArray(data.questions)
+    ? data.questions.slice(0, 3) as ReleaseQuestion[]
+    : [data.question1, data.question2, data.question3].map((question) => (question ?? {}) as ReleaseQuestion)
   return {
     releaseId: id,
     lessonId,
@@ -137,9 +138,7 @@ function asLessonRelease(id: string, data: Record<string, unknown>, expectedCour
     durationMinutes: safeNumber(data.durationMinutes),
     videoYoutubeId: safeString(data.videoYoutubeId),
     bodyMarkdown: safeString(data.bodyMarkdown),
-    question1: (data.question1 ?? {}) as ReleaseQuestion,
-    question2: (data.question2 ?? {}) as ReleaseQuestion,
-    question3: (data.question3 ?? {}) as ReleaseQuestion,
+    questions,
     version: safeNumber(data.version),
   }
 }
@@ -202,7 +201,7 @@ function releaseVersionById(records: LessonReleaseRecord[], lessonIds: string[],
 }
 
 function normalizeQuestion(question: ReleaseQuestion, lessonId: string, index: number): KnowledgeCheckQuestion | null {
-  if (question.enabled !== true) return null
+  if (question.enabled === false) return null
   const prompt = safeString(question.prompt)
   const options = Array.isArray(question.options) ? question.options.map(safeString).slice(0, 3) : []
   const correctOption = safeNumber(question.correctOption)
@@ -245,7 +244,7 @@ function compatibleBackendCatalog(
     const lessonRelease = release!
     const fallback = courseId === aiCourseId ? curriculum.find((lesson) => lesson.slug === lessonRelease.lessonId) : undefined
     const sections = markdownToSections(lessonRelease.bodyMarkdown)
-    const knowledgeCheck = [lessonRelease.question1, lessonRelease.question2, lessonRelease.question3]
+    const knowledgeCheck = lessonRelease.questions
       .map((question, questionIndex) => normalizeQuestion(question, lessonRelease.lessonId, questionIndex))
       .filter((question): question is KnowledgeCheckQuestion => Boolean(question))
     const detail = lessonRelease.summary || fallback?.detail || `Learn and practice ${lessonRelease.title.toLowerCase()}.`

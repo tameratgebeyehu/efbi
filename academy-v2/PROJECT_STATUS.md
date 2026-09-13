@@ -484,6 +484,21 @@ The first three multi-course checkpoints are complete in the development codebas
 
 Phase 23 implementation is complete in the development codebase. Production configuration, final browser QA, development deployment, and release approval remain separate launch steps.
 
+## Phase 24 status
+
+The first content-operations checkpoint is implemented in the development codebase:
+
+1. The lesson editor now uses an ordered practice-question list instead of three permanently visible enabled/disabled slots.
+2. The owner can add, remove, move up, and move down questions, with a launch limit of three fully structured checks per lesson.
+3. New lesson drafts and releases store the ordered `questions` list. Existing `question1`–`question3` drafts and immutable releases remain readable and authorized.
+4. Editing an old draft converts only its enabled questions during a deliberate audited save; no published release is rewritten.
+5. The learner catalog safely reads both question formats and rejects incomplete question content before display.
+6. Firestore validates every prompt, answer option, correct-answer index, explanation, list limit, lesson binding, release binding, and atomic audit link.
+7. The shared content audit validator now dispatches to the exact course or lesson operation instead of evaluating unrelated branches; every prior authorization condition remains present.
+8. The Firestore suite includes valid empty and three-question lists plus oversized and unknown-field attacks. No rules or Hosting deployment was performed.
+
+Remaining Phase 24 work: structured program/category management, blog draft/preview/publish/unpublish/revision controls, and owner preview links for complete launch content.
+
 
 ## Recovery commands
 

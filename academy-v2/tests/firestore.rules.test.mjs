@@ -220,6 +220,31 @@ function addLessonCreation(batch, db, lessonId, overrides = {}) {
   }))
   return auditId
 }
+
+function questionV2(overrides = {}) {
+  return {
+    prompt: 'What should a learner do before trusting an AI answer?',
+    options: ['Check it with a reliable source.', 'Copy it immediately.', 'Share private information first.'],
+    correctOption: 0,
+    explanation: 'Important answers should be checked before they are used.',
+    ...overrides,
+  }
+}
+
+function addFlexibleLessonCreation(batch, db, lessonId, questions) {
+  const auditId = `audit-create-${lessonId}-0001`
+  const legacy = lessonRecord({ lessonId, auditId })
+  const { question1: _question1, question2: _question2, question3: _question3, ...content } = legacy
+  batch.set(doc(db, 'lessonDrafts', lessonId), { ...content, questions })
+  batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+    eventId: auditId,
+    action: 'lesson.draft.created',
+    entityType: 'lessonDraft',
+    entityId: lessonId,
+    revision: 1,
+  }))
+  return auditId
+}
 function progressRecord() {
   return {
     courseId: 'ai-foundations',
@@ -2297,6 +2322,25 @@ test('completion without deleting the profile and deletion during an active hold
   addDeletionCompletion(blocked, admin)
   await assertFails(blocked.commit())
   assert.equal((await getDoc(doc(admin, 'deletionCompletions', 'alice'))).exists(), false)
+})
+
+test('flexible lessons accept zero to three questions and reject malformed or oversized lists', async () => {
+  const db = verifiedUser('admin-user', { admin: true })
+  const validBatch = writeBatch(db)
+  addFlexibleLessonCreation(validBatch, db, 'flexible-questions', Array.from({ length: 3 }, (_, index) => questionV2({ prompt: `Which careful action belongs in practice question number ${index + 1}?` })))
+  await assertSucceeds(validBatch.commit())
+
+  const emptyBatch = writeBatch(db)
+  addFlexibleLessonCreation(emptyBatch, db, 'no-practice-check', [])
+  await assertSucceeds(emptyBatch.commit())
+
+  const oversizedBatch = writeBatch(db)
+  addFlexibleLessonCreation(oversizedBatch, db, 'too-many-checks', Array.from({ length: 4 }, () => questionV2()))
+  await assertFails(oversizedBatch.commit())
+
+  const malformedBatch = writeBatch(db)
+  addFlexibleLessonCreation(malformedBatch, db, 'bad-flexible-check', [questionV2({ enabled: true })])
+  await assertFails(malformedBatch.commit())
 })
 
 test('an administrator can inventory private drafts only while deletion is active', async () => {

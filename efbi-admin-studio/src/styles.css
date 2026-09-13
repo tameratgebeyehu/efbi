@@ -267,10 +267,20 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 
 .lesson-layout-admin { grid-template-columns: 245px minmax(430px, 1fr) minmax(300px, .7fr); }
 .lesson-editor .lesson-body-input { min-height: 320px; }
+.question-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-top: 8px; }
+.question-heading > div { display: grid; gap: 4px; }
+.question-heading strong { color: var(--deep); font-size: .86rem; }
+.question-heading span { color: var(--muted); font-size: .68rem; }
+.question-heading button, .question-editor legend button { min-height: 36px; padding: 0 12px; border: 1px solid #cbd7ce; color: var(--green); background: #fff; font: inherit; font-size: .7rem; font-weight: 800; cursor: pointer; }
+.question-heading button:disabled { color: #9aa39d; cursor: not-allowed; }
+.question-empty { margin: 0; padding: 16px; border: 1px dashed #cdd8d0; color: var(--muted); background: #fafcfa; font-size: .74rem; line-height: 1.55; }
 .question-editor { display: grid; gap: 14px; margin: 0; padding: 18px; border: 1px solid #dce2dc; background: #f8faf8; }
-.question-editor legend { padding: 0 6px; color: var(--deep); font-size: .78rem; font-weight: 850; }
-.question-editor legend label { display: inline-flex; grid-template-columns: none; align-items: center; gap: 8px; }
-.question-editor legend input { width: 16px; height: 16px; min-height: auto; accent-color: var(--green); }
+.question-editor legend { width: calc(100% - 12px); padding: 0 6px; color: var(--deep); font-size: .78rem; font-weight: 850; }
+.question-editor legend { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.question-order { display: inline-flex; gap: 5px; }
+.question-order button { min-height: 30px; }
+.question-order button:last-child { color: #873b34; border-color: #e4c8c4; }
+.question-order button:disabled { opacity: .38; cursor: not-allowed; }
 .question-editor label { min-width: 0; }
 .lesson-preview .preview-description { max-height: 420px; overflow: auto; }
 .lesson-preview .release-panel article { align-items: start; }
@@ -282,6 +292,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 
 @media (max-width: 620px) {
   .lesson-layout-admin { grid-template-columns: 1fr; }
+  .question-heading { align-items: stretch; flex-direction: column; }
   .question-editor { padding: 15px; }
 }
 

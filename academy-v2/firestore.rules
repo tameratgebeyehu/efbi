@@ -191,6 +191,38 @@ service cloud.firestore {
         );
     }
 
+    function validPracticeQuestionV2(data) {
+      return data.keys().hasOnly(['prompt', 'options', 'correctOption', 'explanation'])
+        && data.prompt is string
+        && data.prompt.size() >= 12
+        && data.prompt.size() <= 240
+        && data.options is list
+        && data.options.size() == 3
+        && data.options[0] is string
+        && data.options[0].size() >= 1
+        && data.options[0].size() <= 160
+        && data.options[1] is string
+        && data.options[1].size() >= 1
+        && data.options[1].size() <= 160
+        && data.options[2] is string
+        && data.options[2].size() >= 1
+        && data.options[2].size() <= 160
+        && data.correctOption is int
+        && data.correctOption >= 0
+        && data.correctOption <= 2
+        && data.explanation is string
+        && data.explanation.size() >= 12
+        && data.explanation.size() <= 300;
+    }
+
+    function validPracticeQuestionList(questions) {
+      return questions is list
+        && questions.size() <= 3
+        && (questions.size() < 1 || validPracticeQuestionV2(questions[0]))
+        && (questions.size() < 2 || validPracticeQuestionV2(questions[1]))
+        && (questions.size() < 3 || validPracticeQuestionV2(questions[2]));
+    }
+
     function validLessonId(lessonId) {
       return lessonId is string
         && lessonId.size() >= 3
@@ -320,7 +352,7 @@ service cloud.firestore {
         && data.lastLessonId == version.lessonIds[previous.completedLessonIds.size()];
     }
 
-    function validLessonContent(data) {
+    function validLegacyLessonContent(data) {
       return validCourseId(data.courseId)
         && validLessonId(data.lessonId)
         && data.order is int
@@ -345,29 +377,54 @@ service cloud.firestore {
         && validPracticeQuestion(data.question3);
     }
 
+    function validVersionedLessonContent(data) {
+      return validCourseId(data.courseId)
+        && validLessonId(data.lessonId)
+        && data.order is int
+        && data.order >= 1
+        && data.order <= 50
+        && data.title is string
+        && data.title.size() >= 5
+        && data.title.size() <= 100
+        && data.summary is string
+        && data.summary.size() >= 20
+        && data.summary.size() <= 240
+        && data.durationMinutes is int
+        && data.durationMinutes >= 5
+        && data.durationMinutes <= 300
+        && data.videoYoutubeId is string
+        && (data.videoYoutubeId == '' || data.videoYoutubeId.matches('[A-Za-z0-9_-]{11}'))
+        && data.bodyMarkdown is string
+        && data.bodyMarkdown.size() >= 100
+        && data.bodyMarkdown.size() <= 12000
+        && validPracticeQuestionList(data.questions);
+    }
+
+    function validLessonContent(data) {
+      return data.keys().hasAll(['questions'])
+        ? validVersionedLessonContent(data)
+        : validLegacyLessonContent(data);
+    }
+
+    function validLessonDraftKeys(data) {
+      return data.keys().hasAll(['questions'])
+        ? data.keys().hasOnly([
+            'lessonId', 'courseId', 'order', 'title', 'summary',
+            'durationMinutes', 'videoYoutubeId', 'bodyMarkdown', 'questions',
+            'status', 'revision', 'latestReleaseNumber', 'latestReleaseId',
+            'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'lastAuditId'
+          ])
+        : data.keys().hasOnly([
+            'lessonId', 'courseId', 'order', 'title', 'summary',
+            'durationMinutes', 'videoYoutubeId', 'bodyMarkdown', 'question1',
+            'question2', 'question3', 'status', 'revision',
+            'latestReleaseNumber', 'latestReleaseId', 'createdAt', 'createdBy',
+            'updatedAt', 'updatedBy', 'lastAuditId'
+          ]);
+    }
+
     function validLessonDraft(data, lessonId) {
-      return data.keys().hasOnly([
-          'lessonId',
-          'courseId',
-          'order',
-          'title',
-          'summary',
-          'durationMinutes',
-          'videoYoutubeId',
-          'bodyMarkdown',
-          'question1',
-          'question2',
-          'question3',
-          'status',
-          'revision',
-          'latestReleaseNumber',
-          'latestReleaseId',
-          'createdAt',
-          'createdBy',
-          'updatedAt',
-          'updatedBy',
-          'lastAuditId'
-        ])
+      return validLessonDraftKeys(data)
         && data.lessonId == lessonId
         && validLessonContent(data)
         && data.status in ['draft', 'ready', 'published']
@@ -388,13 +445,7 @@ service cloud.firestore {
     }
 
     function validLessonPublishDraft(data, lessonId) {
-      return data.keys().hasOnly([
-          'lessonId', 'courseId', 'order', 'title', 'summary',
-          'durationMinutes', 'videoYoutubeId', 'bodyMarkdown', 'question1',
-          'question2', 'question3', 'status', 'revision', 'latestReleaseNumber',
-          'latestReleaseId', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy',
-          'lastAuditId'
-        ])
+      return validLessonDraftKeys(data)
         && data.lessonId == lessonId
         && data.status == 'published'
         && data.revision is int
@@ -421,17 +472,39 @@ service cloud.firestore {
         && request.resource.data.durationMinutes == resource.data.durationMinutes
         && request.resource.data.videoYoutubeId == resource.data.videoYoutubeId
         && request.resource.data.bodyMarkdown == resource.data.bodyMarkdown
-        && request.resource.data.question1 == resource.data.question1
-        && request.resource.data.question2 == resource.data.question2
-        && request.resource.data.question3 == resource.data.question3;
+        && (
+          (
+            request.resource.data.keys().hasAll(['questions'])
+            && resource.data.keys().hasAll(['questions'])
+            && request.resource.data.questions == resource.data.questions
+          )
+          || (
+            !request.resource.data.keys().hasAll(['questions'])
+            && !resource.data.keys().hasAll(['questions'])
+            && request.resource.data.question1 == resource.data.question1
+            && request.resource.data.question2 == resource.data.question2
+            && request.resource.data.question3 == resource.data.question3
+          )
+        );
     }
+
+    function validLessonReleaseKeys(data) {
+      return data.keys().hasAll(['questions'])
+        ? data.keys().hasOnly([
+            'releaseId', 'lessonId', 'courseId', 'order', 'title', 'summary',
+            'durationMinutes', 'videoYoutubeId', 'bodyMarkdown', 'questions',
+            'version', 'draftRevision', 'publishedAt', 'publishedBy', 'auditId'
+          ])
+        : data.keys().hasOnly([
+            'releaseId', 'lessonId', 'courseId', 'order', 'title', 'summary',
+            'durationMinutes', 'videoYoutubeId', 'bodyMarkdown', 'question1',
+            'question2', 'question3', 'version', 'draftRevision',
+            'publishedAt', 'publishedBy', 'auditId'
+          ]);
+    }
+
     function validLessonRelease(data, releaseId) {
-      return data.keys().hasOnly([
-          'releaseId', 'lessonId', 'courseId', 'order', 'title', 'summary',
-          'durationMinutes', 'videoYoutubeId', 'bodyMarkdown', 'question1',
-          'question2', 'question3', 'version', 'draftRevision', 'publishedAt',
-          'publishedBy', 'auditId'
-        ])
+      return validLessonReleaseKeys(data)
         && data.releaseId == releaseId
         && releaseId.size() >= 16
         && releaseId.size() <= 120
@@ -460,9 +533,20 @@ service cloud.firestore {
         && draft.durationMinutes == data.durationMinutes
         && draft.videoYoutubeId == data.videoYoutubeId
         && draft.bodyMarkdown == data.bodyMarkdown
-        && draft.question1 == data.question1
-        && draft.question2 == data.question2
-        && draft.question3 == data.question3;
+        && (
+          (
+            draft.keys().hasAll(['questions'])
+            && data.keys().hasAll(['questions'])
+            && draft.questions == data.questions
+          )
+          || (
+            !draft.keys().hasAll(['questions'])
+            && !data.keys().hasAll(['questions'])
+            && draft.question1 == data.question1
+            && draft.question2 == data.question2
+            && draft.question3 == data.question3
+          )
+        );
     }
     function validAuditEvent(data, eventId) {
       return data.keys().hasOnly([
@@ -542,60 +626,77 @@ service cloud.firestore {
         && draft.estimatedMinutes == data.estimatedMinutes;
     }
 
-    function auditLinksToCourseOperation(data, eventId) {
+    function auditLinksToCourseDraft(data, eventId) {
       let draft = getAfter(/databases/$(database)/documents/courseDrafts/$(data.entityId)).data;
+      return data.action in ['course.draft.created', 'course.draft.updated']
+        && draft.lastAuditId == eventId
+        && draft.revision == data.revision
+        && draft.latestReleaseId == data.releaseId
+        && draft.updatedBy == request.auth.uid;
+    }
+
+    function auditLinksToCourseVersion(data, eventId) {
+      let version = getAfter(/databases/$(database)/documents/courseVersions/$(data.releaseId)).data;
+      let active = getAfter(/databases/$(database)/documents/activeCourses/$(data.entityId)).data;
+      return data.action == 'course.version.activated'
+        && version.courseId == data.entityId
+        && version.courseVersion == data.revision
+        && version.auditId == eventId
+        && version.publishedBy == request.auth.uid
+        && active.versionId == data.releaseId
+        && active.auditId == eventId
+        && active.activatedBy == request.auth.uid;
+    }
+
+    function auditLinksToCourseRelease(data, eventId) {
+      let draft = getAfter(/databases/$(database)/documents/courseDrafts/$(data.entityId)).data;
+      let release = getAfter(/databases/$(database)/documents/courseReleases/$(data.releaseId)).data;
+      return data.action == 'course.release.published'
+        && draft.status == 'published'
+        && draft.lastAuditId == eventId
+        && draft.revision == data.revision
+        && draft.latestReleaseId == data.releaseId
+        && draft.updatedBy == request.auth.uid
+        && release.auditId == eventId
+        && release.courseId == data.entityId
+        && release.publishedBy == request.auth.uid;
+    }
+
+    function auditLinksToLessonDraft(data, eventId) {
       let lesson = getAfter(/databases/$(database)/documents/lessonDrafts/$(data.entityId)).data;
-      return (
-          data.entityType == 'courseDraft'
-          && data.action in ['course.draft.created', 'course.draft.updated']
-          && draft.lastAuditId == eventId
-          && draft.revision == data.revision
-          && draft.latestReleaseId == data.releaseId
-          && draft.updatedBy == request.auth.uid
-        )
-        || (
-          data.entityType == 'courseVersion'
-          && data.action == 'course.version.activated'
-          && getAfter(/databases/$(database)/documents/courseVersions/$(data.releaseId)).data.courseId == data.entityId
-          && getAfter(/databases/$(database)/documents/courseVersions/$(data.releaseId)).data.courseVersion == data.revision
-          && getAfter(/databases/$(database)/documents/courseVersions/$(data.releaseId)).data.auditId == eventId
-          && getAfter(/databases/$(database)/documents/courseVersions/$(data.releaseId)).data.publishedBy == request.auth.uid
-          && getAfter(/databases/$(database)/documents/activeCourses/$(data.entityId)).data.versionId == data.releaseId
-          && getAfter(/databases/$(database)/documents/activeCourses/$(data.entityId)).data.auditId == eventId
-          && getAfter(/databases/$(database)/documents/activeCourses/$(data.entityId)).data.activatedBy == request.auth.uid
-        )
-        || (
-          data.entityType == 'courseRelease'
-          && data.action == 'course.release.published'
-          && draft.status == 'published'
-          && draft.lastAuditId == eventId
-          && draft.revision == data.revision
-          && draft.latestReleaseId == data.releaseId
-          && draft.updatedBy == request.auth.uid
-          && getAfter(/databases/$(database)/documents/courseReleases/$(data.releaseId)).data.auditId == eventId
-          && getAfter(/databases/$(database)/documents/courseReleases/$(data.releaseId)).data.courseId == data.entityId
-          && getAfter(/databases/$(database)/documents/courseReleases/$(data.releaseId)).data.publishedBy == request.auth.uid
-        )
-        || (
-          data.entityType == 'lessonDraft'
-          && data.action in ['lesson.draft.created', 'lesson.draft.updated']
-          && lesson.lastAuditId == eventId
-          && lesson.revision == data.revision
-          && lesson.updatedBy == request.auth.uid
-          && data.releaseId == ''
-        )
-        || (
-          data.entityType == 'lessonRelease'
-          && data.action == 'lesson.release.published'
-          && lesson.status == 'published'
-          && lesson.lastAuditId == eventId
-          && lesson.revision == data.revision
-          && lesson.latestReleaseId == data.releaseId
-          && lesson.updatedBy == request.auth.uid
-          && getAfter(/databases/$(database)/documents/lessonReleases/$(data.releaseId)).data.auditId == eventId
-          && getAfter(/databases/$(database)/documents/lessonReleases/$(data.releaseId)).data.lessonId == data.entityId
-          && getAfter(/databases/$(database)/documents/lessonReleases/$(data.releaseId)).data.publishedBy == request.auth.uid
-        );
+      return data.action in ['lesson.draft.created', 'lesson.draft.updated']
+        && lesson.lastAuditId == eventId
+        && lesson.revision == data.revision
+        && lesson.updatedBy == request.auth.uid
+        && data.releaseId == '';
+    }
+
+    function auditLinksToLessonRelease(data, eventId) {
+      let lesson = getAfter(/databases/$(database)/documents/lessonDrafts/$(data.entityId)).data;
+      let release = getAfter(/databases/$(database)/documents/lessonReleases/$(data.releaseId)).data;
+      return data.action == 'lesson.release.published'
+        && lesson.status == 'published'
+        && lesson.lastAuditId == eventId
+        && lesson.revision == data.revision
+        && lesson.latestReleaseId == data.releaseId
+        && lesson.updatedBy == request.auth.uid
+        && release.auditId == eventId
+        && release.lessonId == data.entityId
+        && release.publishedBy == request.auth.uid;
+    }
+
+    function auditLinksToCourseOperation(data, eventId) {
+      return data.entityType == 'courseDraft'
+        ? auditLinksToCourseDraft(data, eventId)
+        : data.entityType == 'courseVersion'
+          ? auditLinksToCourseVersion(data, eventId)
+          : data.entityType == 'courseRelease'
+            ? auditLinksToCourseRelease(data, eventId)
+            : data.entityType == 'lessonDraft'
+              ? auditLinksToLessonDraft(data, eventId)
+              : data.entityType == 'lessonRelease'
+                ? auditLinksToLessonRelease(data, eventId)
+                : false;
     }
 
     function validLegacySubmissionId(submissionId) {

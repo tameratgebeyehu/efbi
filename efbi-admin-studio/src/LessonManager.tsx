@@ -31,16 +31,22 @@ function safeNumber(value: unknown) {
 }
 
 function safeQuestion(value: unknown): PracticeQuestion {
-  if (!value || typeof value !== 'object') return { enabled: false, prompt: '', options: ['', '', ''], correctOption: 0, explanation: '' }
+  if (!value || typeof value !== 'object') return { prompt: '', options: ['', '', ''], correctOption: 0, explanation: '' }
   const candidate = value as Record<string, unknown>
   const options = Array.isArray(candidate.options) ? candidate.options.map(safeString) : []
   return {
-    enabled: candidate.enabled === true,
     prompt: safeString(candidate.prompt),
     options: [options[0] ?? '', options[1] ?? '', options[2] ?? ''],
     correctOption: safeNumber(candidate.correctOption),
     explanation: safeString(candidate.explanation),
   }
+}
+
+function safeQuestions(data: Record<string, unknown>) {
+  if (Array.isArray(data.questions)) return data.questions.slice(0, 3).map(safeQuestion)
+  return [data.question1, data.question2, data.question3]
+    .filter((value) => Boolean(value && typeof value === 'object' && (value as Record<string, unknown>).enabled === true))
+    .map(safeQuestion)
 }
 
 function asCourseDraft(id: string, data: Record<string, unknown>): CourseDraft {
@@ -75,9 +81,7 @@ function asLessonDraft(id: string, data: Record<string, unknown>): LessonDraft {
     durationMinutes: safeNumber(data.durationMinutes),
     videoYoutubeId: safeString(data.videoYoutubeId),
     bodyMarkdown: safeString(data.bodyMarkdown),
-    question1: safeQuestion(data.question1),
-    question2: safeQuestion(data.question2),
-    question3: safeQuestion(data.question3),
+    questions: safeQuestions(data),
     status: safeString(data.status) as LessonStatus,
     revision: safeNumber(data.revision),
     latestReleaseNumber: safeNumber(data.latestReleaseNumber),
@@ -102,9 +106,7 @@ function asLessonRelease(id: string, data: Record<string, unknown>): LessonRelea
     durationMinutes: safeNumber(data.durationMinutes),
     videoYoutubeId: safeString(data.videoYoutubeId),
     bodyMarkdown: safeString(data.bodyMarkdown),
-    question1: safeQuestion(data.question1),
-    question2: safeQuestion(data.question2),
-    question3: safeQuestion(data.question3),
+    questions: safeQuestions(data),
     version: safeNumber(data.version),
     draftRevision: safeNumber(data.draftRevision),
     publishedAt: data.publishedAt,
@@ -126,7 +128,8 @@ function readRecovery(): LessonRecovery | null {
     const value = JSON.parse(raw) as Partial<LessonRecovery>
     if (typeof value.selectedId !== 'string' || typeof value.savedAt !== 'string' || typeof value.form !== 'object' || value.form === null) return null
     if (value.selectedId !== 'new' && !validLessonId(value.selectedId)) return null
-    return { selectedId: value.selectedId, form: value.form as LessonFormValues, baseRevision: typeof value.baseRevision === 'number' ? value.baseRevision : null, savedAt: value.savedAt }
+    const recoveredForm = value.form as unknown as Record<string, unknown>
+    return { selectedId: value.selectedId, form: { ...recoveredForm, questions: safeQuestions(recoveredForm) } as LessonFormValues, baseRevision: typeof value.baseRevision === 'number' ? value.baseRevision : null, savedAt: value.savedAt }
   } catch {
     return null
   }
@@ -149,7 +152,7 @@ function StatusPill({ status }: { status: LessonStatus }) {
   return <span className={`status-pill status-pill--${status}`}>{status === 'ready' ? 'Review ready' : status}</span>
 }
 
-function QuestionEditor({ label, question, onChange }: { label: string; question: PracticeQuestion; onChange: (question: PracticeQuestion) => void }) {
+function QuestionEditor({ label, question, onChange, onRemove, onMoveUp, onMoveDown, first, last }: { label: string; question: PracticeQuestion; onChange: (question: PracticeQuestion) => void; onRemove: () => void; onMoveUp: () => void; onMoveDown: () => void; first: boolean; last: boolean }) {
   function updateOption(index: number, value: string) {
     const options: [string, string, string] = [...question.options] as [string, string, string]
     options[index] = value
@@ -159,14 +162,14 @@ function QuestionEditor({ label, question, onChange }: { label: string; question
 
   return (
     <fieldset className="question-editor">
-      <legend><label><input type="checkbox" checked={question.enabled} onChange={(event) => onChange({ ...question, enabled: event.target.checked })} />{label}</label></legend>
-      <label>Question prompt<input value={question.prompt} onChange={(event) => onChange({ ...question, prompt: event.target.value })} disabled={!question.enabled} maxLength={240} /></label>
+      <legend><span>{label}</span><span className="question-order"><button type="button" onClick={onMoveUp} disabled={first} aria-label={`Move ${label.toLowerCase()} up`}>Up</button><button type="button" onClick={onMoveDown} disabled={last} aria-label={`Move ${label.toLowerCase()} down`}>Down</button><button type="button" onClick={onRemove} aria-label={`Remove ${label.toLowerCase()}`}>Remove</button></span></legend>
+      <label>Question prompt<input value={question.prompt} onChange={(event) => onChange({ ...question, prompt: event.target.value })} maxLength={240} /></label>
       <div className="field-grid">
-        {question.options.map((option, index) => <label key={index}>Option {index + 1}<input value={option} onChange={(event) => updateOption(index, event.target.value)} disabled={!question.enabled} maxLength={160} /></label>)}
+        {question.options.map((option, index) => <label key={index}>Option {index + 1}<input value={option} onChange={(event) => updateOption(index, event.target.value)} maxLength={160} /></label>)}
       </div>
       <div className="field-grid">
-        <label>Correct answer<select value={question.correctOption} onChange={(event) => onChange({ ...question, correctOption: Number(event.target.value) })} disabled={!question.enabled}><option value={0}>Option 1</option><option value={1}>Option 2</option><option value={2}>Option 3</option></select></label>
-        <label>Short explanation<input value={question.explanation} onChange={(event) => onChange({ ...question, explanation: event.target.value })} disabled={!question.enabled} maxLength={300} /></label>
+        <label>Correct answer<select value={question.correctOption} onChange={(event) => onChange({ ...question, correctOption: Number(event.target.value) })}><option value={0}>Option 1</option><option value={1}>Option 2</option><option value={2}>Option 3</option></select></label>
+        <label>Short explanation<input value={question.explanation} onChange={(event) => onChange({ ...question, explanation: event.target.value })} maxLength={300} /></label>
       </div>
     </fieldset>
   )
@@ -236,6 +239,27 @@ export default function LessonManager({ user }: { user: User }) {
       storeRecovery({ selectedId, form: next, baseRevision: selected?.revision ?? null, savedAt: new Date().toISOString() })
       return next
     })
+  }
+
+  function addQuestion() {
+    if (form.questions.length >= 3) return
+    updateField('questions', [...form.questions, { prompt: '', options: ['', '', ''], correctOption: 0, explanation: '' }])
+  }
+
+  function updateQuestion(index: number, question: PracticeQuestion) {
+    updateField('questions', form.questions.map((item, itemIndex) => itemIndex === index ? question : item))
+  }
+
+  function removeQuestion(index: number) {
+    updateField('questions', form.questions.filter((_, itemIndex) => itemIndex !== index))
+  }
+
+  function moveQuestion(index: number, direction: -1 | 1) {
+    const destination = index + direction
+    if (destination < 0 || destination >= form.questions.length) return
+    const questions = [...form.questions]
+    ;[questions[index], questions[destination]] = [questions[destination], questions[index]]
+    updateField('questions', questions)
   }
 
   function chooseLesson(lessonId: string) {
@@ -401,7 +425,7 @@ export default function LessonManager({ user }: { user: User }) {
   return (
     <section className="course-workspace lesson-workspace">
       <header className="workspace-title">
-        <div><p className="eyebrow">Phase 12 · Lesson releases</p><h1>Lesson workspace</h1><p>Write lessons, publish immutable releases, and keep practice checks browser-only.</p></div>
+        <div><p className="eyebrow">Phase 24 · Content operations</p><h1>Lesson workspace</h1><p>Write lessons, add or remove practice checks, and publish immutable releases.</p></div>
         <button className="primary-action" onClick={startNew}>New lesson</button>
       </header>
 
@@ -430,9 +454,9 @@ export default function LessonManager({ user }: { user: User }) {
             <label>YouTube video ID<span>Optional 11-character ID only</span><input value={form.videoYoutubeId} onChange={(event) => updateField('videoYoutubeId', event.target.value.trim())} maxLength={11} /></label>
           </div>
           <label>Written lesson<span>{form.bodyMarkdown.length}/12000 · plain text or simple Markdown</span><textarea className="lesson-body-input" value={form.bodyMarkdown} onChange={(event) => updateField('bodyMarkdown', event.target.value)} minLength={100} maxLength={12000} required /></label>
-          <QuestionEditor label="Practice question 1" question={form.question1} onChange={(question) => updateField('question1', question)} />
-          <QuestionEditor label="Practice question 2" question={form.question2} onChange={(question) => updateField('question2', question)} />
-          <QuestionEditor label="Practice question 3" question={form.question3} onChange={(question) => updateField('question3', question)} />
+          <div className="question-heading"><div><strong>Practice questions</strong><span>{form.questions.length}/3 · checked in the learner’s browser</span></div><button type="button" onClick={addQuestion} disabled={form.questions.length >= 3}>Add question</button></div>
+          {form.questions.length === 0 && <p className="question-empty">No practice questions yet. Add one when the lesson needs a knowledge check.</p>}
+          {form.questions.map((question, index) => <QuestionEditor key={index} label={`Practice question ${index + 1}`} question={question} onChange={(next) => updateQuestion(index, next)} onRemove={() => removeQuestion(index)} onMoveUp={() => moveQuestion(index, -1)} onMoveDown={() => moveQuestion(index, 1)} first={index === 0} last={index === form.questions.length - 1} />)}
           {normalized.errors.length > 0 && <div className="validation-list"><strong>Before saving</strong><ul>{normalized.errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
           <div className="editor-actions"><button type="button" onClick={() => void saveLesson(undefined, 'draft')} disabled={busy || normalized.errors.length > 0 || (selected?.status === 'draft' && !hasUnsavedChanges)}>{busy ? 'Saving...' : 'Save draft'}</button><button className="primary-action" type="button" onClick={() => void saveLesson(undefined, 'ready')} disabled={selectedId === 'new' || busy || normalized.errors.length > 0 || (selected?.status === 'ready' && !hasUnsavedChanges)}>{busy ? 'Saving...' : 'Mark review ready'}</button></div>
         </form>
@@ -445,7 +469,7 @@ export default function LessonManager({ user }: { user: User }) {
             <p>{normalized.content.summary || 'A short lesson summary will appear here.'}</p>
             <div className="preview-description">{normalized.content.bodyMarkdown || 'The written lesson will appear here.'}</div>
           </div>
-          <div className="release-panel"><div className="release-panel__heading"><strong>Practice checks</strong><span>{[normalized.content.question1, normalized.content.question2, normalized.content.question3].filter((question) => question.enabled).length}</span></div>{[normalized.content.question1, normalized.content.question2, normalized.content.question3].map((question, index) => question.enabled ? <article key={index}><span>{question.prompt || `Question ${index + 1}`}</span><small>Answer {question.correctOption + 1}</small></article> : null)}</div>
+          <div className="release-panel"><div className="release-panel__heading"><strong>Practice checks</strong><span>{normalized.content.questions.length}</span></div>{normalized.content.questions.length === 0 && <p>No practice checks in this lesson.</p>}{normalized.content.questions.map((question, index) => <article key={index}><span>{question.prompt || `Question ${index + 1}`}</span><small>Answer {question.correctOption + 1}</small></article>)}</div>
           {selected && <div className="release-panel"><div className="release-panel__heading"><strong>Lesson releases</strong><span>{selectedReleases.length}</span></div>{selectedReleases.length === 0 && <p>No lesson releases published.</p>}{selectedReleases.map((release) => <article key={release.releaseId}><span>Release {release.version}</span><small>{readableDate(release.publishedAt)}</small></article>)}</div>}
           {selected?.status === 'ready' && <div className="publish-panel"><strong>Ready to publish</strong><p>Publishing creates an immutable lesson release. The lesson cannot change during the publish transaction.</p>{hasUnsavedChanges && <p className="publish-warning">Save or discard unsaved edits before publishing.</p>}{!hasUnsavedChanges && <label className="confirm-check"><input type="checkbox" checked={confirmPublish} onChange={(event) => setConfirmPublish(event.target.checked)} />I reviewed this exact lesson preview and want to publish it.</label>}<button className="publish-action" type="button" disabled={busy || hasUnsavedChanges || !confirmPublish} onClick={() => void publishLesson()}>{busy ? 'Publishing...' : `Publish release ${selected.latestReleaseNumber + 1}`}</button></div>}
         </aside>
