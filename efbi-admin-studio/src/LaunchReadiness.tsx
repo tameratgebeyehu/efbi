@@ -10,12 +10,12 @@ const collectionNames = [
 ] as const
 
 const manualChecks = [
-  ['Responsive pages', 'Test every public route on phone, tablet, and desktop.'],
-  ['Keyboard & screen reader', 'Check focus order, visible focus, labels, headings, and useful announcements.'],
-  ['Slow or interrupted use', 'Test failed videos, slow connections, interrupted saves, and recovery after restart.'],
-  ['Account journeys', 'Test join, verification, sign-in, password reset, sign-out, and deletion from a clean account.'],
-  ['Firebase operations', 'Review App Check metrics, authorized domains, operator roles, quotas, and recovery access.'],
-  ['Security review', 'Run the final rules suite, browser checks, synthetic lifecycle, and controlled external review.'],
+  ['Responsive pages', 'Inspect the exact release visually on real phone, tablet, and desktop hardware.', '58 automated checks pass'],
+  ['Keyboard & screen reader', 'Check real focus order, visible focus, labels, headings, and useful spoken announcements.', 'Human check open'],
+  ['Slow or interrupted use', 'Confirm the tested video fallback and editor recovery once on the owner computer and real connection.', 'Automated recovery passes'],
+  ['Account journeys', 'Confirm the real inbox and operator-console steps with a dedicated pilot account before enrollment.', 'Synthetic lifecycle passes'],
+  ['Firebase operations', 'Review App Check metrics, authorized domains, operator roles, quotas, and recovery access.', 'Operations review open'],
+  ['Security review', 'Repeat the final rules, browser, and lifecycle gates on the release commit, then obtain controlled external review.', 'External review open'],
 ] as const
 
 function text(value: unknown) { return typeof value === 'string' ? value : '' }
@@ -114,7 +114,7 @@ export default function LaunchReadiness() {
     <aside className={`launch-readiness-state ${contentBlocked ? 'launch-readiness-state--blocked' : ''}`}><div><strong>{loading ? 'Checking protected content…' : contentBlocked ? 'Content is not ready for launch.' : 'Automated content checks pass.'}</strong><p>Automated checks do not replace device, accessibility, account-flow, operational, or external safeguarding review.</p></div><span>{loading ? 'Checking' : contentBlocked ? 'Blocked' : 'Manual checks remain'}</span></aside>
     <section className="launch-inventory-grid" aria-label="Launch content inventory">{cards.map(([label, value, state, detail]) => <article key={label} className={`launch-inventory-card launch-inventory-card--${state}`}><small>{label}</small><strong>{loading ? '—' : value}</strong><p>{detail}</p><span>{state === 'ready' ? 'Ready' : state === 'blocked' ? 'Needs attention' : 'Information'}</span></article>)}</section>
     {(analysis.issues.length > 0 || analysis.placeholderHits.length > 0) && <section className="launch-findings"><div><p className="eyebrow">Automated findings</p><h2>Review these exact records.</h2></div>{analysis.issues.length > 0 && <article><strong>Release integrity</strong><ul>{analysis.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul></article>}{analysis.placeholderHits.length > 0 && <article><strong>Possible placeholder text</strong><ul>{analysis.placeholderHits.map((hit) => <li key={hit}>{hit}</li>)}</ul></article>}</section>}
-    <section className="manual-launch-checks"><div className="section-heading"><div><p className="eyebrow">Human verification</p><h2>These checks cannot be guessed by software.</h2></div><p>Complete them against the exact release candidate. Record evidence outside this page before approval.</p></div><div>{manualChecks.map(([title, detail], index) => <article key={title}><span>{String(index + 1).padStart(2, '0')}</span><div><h3>{title}</h3><p>{detail}</p></div><small>Open</small></article>)}</div></section>
+    <section className="manual-launch-checks"><div className="section-heading"><div><p className="eyebrow">Human verification</p><h2>These checks cannot be guessed by software.</h2></div><p>Complete them against the exact release candidate. Record evidence outside this page before approval.</p></div><div>{manualChecks.map(([title, detail, evidence], index) => <article key={title}><span>{String(index + 1).padStart(2, '0')}</span><div><h3>{title}</h3><p>{detail}</p></div><small>{evidence}</small></article>)}</div></section>
     <aside className="safety-boundary"><strong>Read-only boundary</strong><p>This page reads protected and public content but never publishes, activates, edits, or deletes it. Passing automated checks is not permission to deploy or open enrollment.</p></aside>
   </section>
 }

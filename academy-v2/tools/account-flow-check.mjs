@@ -180,6 +180,18 @@ try {
   await click(client, 'form.account-form button.button--primary')
   await waitForPage(client, (state) => state.pathname === '/account' && state.text.includes('Email verified'), 'Returning learner sign-in')
   console.log('✓ sign-out, privacy-safe reset response, and returning sign-in passed')
+
+  await client.send('Page.navigate', { url: `${baseUrl}/privacy#deletion` })
+  await waitForPage(client, (state) => state.pathname === '/privacy' && state.text.includes('Request deletion of your learning data.'), 'Learner deletion controls')
+  await click(client, '.privacy-panel__action input[type="checkbox"]')
+  await click(client, '.privacy-panel__action button')
+  await waitForPage(client, (state) => state.text.includes('Your learning data is now restricted.'), 'Active deletion request')
+  await click(client, '.privacy-panel--pending .text-button')
+  await waitForPage(client, (state) => state.text.includes('Reopen deletion request'), 'Cancelled deletion request')
+  await click(client, '.privacy-panel__action input[type="checkbox"]')
+  await click(client, '.privacy-panel__action button')
+  await waitForPage(client, (state) => state.text.includes('Your learning data is now restricted.'), 'Reopened deletion request')
+  console.log('✓ learner deletion request, cancellation, and deliberate reopening passed')
   console.log('✓ isolated learner account journey passed without production data')
 } finally {
   if (client) {

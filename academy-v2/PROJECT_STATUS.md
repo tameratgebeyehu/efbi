@@ -703,6 +703,24 @@ The automated account and media-failure checkpoint is complete in the developmen
 
 Phase 27 remains in progress. Manual interrupted-editor recovery, learner deletion through the complete UI, visual/touch/keyboard/screen-reader checks, production Firebase operational review, real launch-content approval, and the final controlled security review remain open.
 
+## Phase 27F — recovery and deletion rehearsal
+
+The recovery and complete deletion rehearsal is implemented in the development codebase:
+
+1. The synthetic learner journey now requests deletion, cancels it, and deliberately reopens it through the real Privacy page.
+2. `npm run test:admin-recovery` creates only a verified emulator administrator with a server-issued test claim; no role claim is placed in browser code.
+3. The test types distinct unsaved text into the Program, Blog, Course, and Lesson editors, reloads the full Admin Studio after each edit, chooses **Restore copy**, and confirms the exact text returns.
+4. A separate synthetic learner and deletion request then pass through the real administrator UI. The Studio atomically removes eligible Firestore data, the test removes the exact emulator Authentication user, and the Studio records the permanent confirmation.
+5. Authoritative emulator reads confirm the learner profile is gone and the Authentication-removal confirmation exists; the test does not rely on Firestore's optimistic browser state.
+6. The Privacy & retention record is now a section inside the Studio's single main landmark instead of a nested second `main`.
+7. `MANUAL_RELEASE_CHECKLIST.md` gives the owner one concise real-device, keyboard, screen-reader, connection, pilot-account, Firebase-operations, and final-evidence checklist.
+8. Launch readiness now distinguishes passing automated evidence from the remaining human or operational approval instead of labeling every item simply open.
+9. The official Firebase Admin SDK is development-only and is used solely to create and remove isolated emulator identities during the test.
+10. The production dependency audit reports zero vulnerabilities. The full development audit reports ten moderate advisories inherited by the Firebase CLI/emulator toolchain; npm's suggested forced repair would replace the current CLI with a breaking older major version, so that unsafe downgrade was not applied.
+11. No Firebase rules, production identity, database content, application build, Admin Studio, or Hosting target was deployed.
+
+Phase 27 remains in progress. Human visual/touch/keyboard/screen-reader confirmation, production Firebase operational review, real launch-content approval, and the final controlled security review remain open.
+
 
 ## Recovery commands
 
@@ -716,6 +734,7 @@ npm install
 npm run dev
 npm run test:browser
 npm run test:account-flow
+npm run test:admin-recovery
 ```
 
 The first complete v2 checkpoint is commit `80a911d` on branch `codex/academy-v2`.

@@ -22,6 +22,8 @@ npm run build
 npm run lint
 ```
 
+From `../academy-v2`, `npm run test:admin-recovery` performs an emulator-only reload-and-restore check for all four content editors and a complete synthetic deletion rehearsal. It never connects to a production Firebase project.
+
 ## Non-negotiable boundary
 
 Do not deploy this directory. Do not expose its development port to the internet. Do not add an `/admin` route to the student app. Do not place service-account credentials or role-management logic in browser code.
