@@ -298,6 +298,10 @@
 .featured-post--red .featured-post-art { background: #8f3a31; }
 .blog-grid--refined .text-arrow { width: fit-content; margin-top: auto; }
 .blog-empty { margin: 0; padding: 24px; color: var(--muted); border: 1px dashed var(--line); background: var(--soft); }
+.blog-empty--launch { min-height: 260px; display: flex; justify-content: center; gap: 18px; align-items: center; text-align: left; border-style: solid; background: #fff; }
+.blog-empty--launch > svg { flex: 0 0 34px; width: 34px; color: var(--green); }
+.blog-empty--launch strong { display: block; margin-bottom: 6px; color: var(--green-dark); font-size: 1.05rem; }
+.blog-empty--launch p { max-width: 520px; margin: 0; line-height: 1.65; }
 .article-page { max-width: 900px; }
 .article-byline { display: flex; flex-wrap: wrap; gap: 10px 22px; padding-bottom: 24px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .82rem; font-weight: 700; }
 .article-body { max-width: 760px; margin: 42px auto; color: #263c31; }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { PageHero, ProgramCard, RebuildNotice, SectionHeading } from './components'
-import { blogPosts as plannedBlogPosts, buildPillars, methodology, programs as fallbackPrograms, values } from './data'
+import { buildPillars, methodology, programs as fallbackPrograms, values } from './data'
 import { Icon } from './icons'
 import { CourseAccessButton } from './auth'
 import { useAuth } from './auth-context'
@@ -70,6 +70,7 @@ export function HomePage() {
         <div className="program-grid program-grid--home">
           {programs.slice(0, 4).map((program) => <ProgramCard key={program.slug} program={program} />)}
         </div>
+        {programs.length === 0 && <div className="catalog-empty"><Icon name="book" /><div><strong>No programs are published yet.</strong><p>EFBI will list each program after its public information has been reviewed and published.</p></div></div>}
       </section>
 
       <section className="section methodology-section">
@@ -130,7 +131,7 @@ export function HomePage() {
       <section className="cta-section">
         <div className="shell cta-inner">
           <div><p className="eyebrow-label">Start exploring</p><h2>Learn something.<br />Build something.</h2></div>
-          <div><p>See what EFBI is preparing. Enrollment will reopen when the student platform is ready.</p><div className="button-row"><Link className="button button--light" to="/courses">Browse courses</Link><Link className="button button--line-light" to="/contact">Contact EFBI</Link></div></div>
+          <div><p>{learnerEnrollmentEnabled ? 'Choose a course and begin building at your own pace.' : 'See what EFBI is preparing. Enrollment will open when the student platform is ready.'}</p><div className="button-row"><Link className="button button--light" to="/courses">Browse courses</Link><Link className="button button--line-light" to="/contact">Contact EFBI</Link></div></div>
         </div>
       </section>
     </>
@@ -144,7 +145,7 @@ export function ProgramsPage() {
       <PageHero eyebrow="Programs" title="Choose what you want to learn." description="Pick a path, practice the skills, and build something you can show." className="page-hero--programs">
         <div className="page-stat"><strong>{programs.length}</strong><span>learning paths</span></div>
       </PageHero>
-      <section className="section shell"><div className="program-grid">{programs.map((program) => <ProgramCard key={program.slug} program={program} />)}</div></section>
+      <section className="section shell"><div className="program-grid">{programs.map((program) => <ProgramCard key={program.slug} program={program} />)}</div>{programs.length === 0 && <div className="catalog-empty"><Icon name="book" /><div><strong>No programs are published yet.</strong><p>EFBI will list each program only after its information has been reviewed and published.</p></div></div>}</section>
       <section className="outcome-band"><div className="shell"><SectionHeading light eyebrow="What you will do" title="Learn it. Practice it. Build it." /><div className="outcome-grid"><article><strong>01</strong><h3>Understand</h3><p>Learn the idea in clear language.</p></article><article><strong>02</strong><h3>Practice</h3><p>Use it in guided exercises.</p></article><article><strong>03</strong><h3>Build</h3><p>Create work you can share.</p></article></div></div></section>
     </>
   )
@@ -166,7 +167,7 @@ export function ProgramDetailPage() {
           <p className="eyebrow-label">Your goal</p><h2>What you’ll build toward</h2><p className="large-copy">{program.outcome}</p>
           <div className="detail-points"><div><Icon name="book" /><span><strong>Short lessons</strong>Clear notes and examples.</span></div><div><Icon name="code" /><span><strong>Real practice</strong>Small tasks that build confidence.</span></div><div><Icon name="spark" /><span><strong>A finished project</strong>Work you can explain and share.</span></div></div>
         </div>
-        <aside className="enrollment-card"><span className="status-tag">In development</span><h2>Enrollment is not open yet.</h2><p>We’re finishing the lessons and testing the student platform first.</p><Link className="button button--primary" to="/contact">Ask about this program</Link></aside>
+        <aside className="enrollment-card"><span className="status-tag">Course availability</span><h2>See what is ready to learn.</h2><p>EFBI opens each course only after its lessons and learning tools have been reviewed.</p><Link className="button button--primary" to="/courses">Browse available courses</Link></aside>
       </section>
     </>
   )
@@ -301,18 +302,16 @@ export function BlogPage() {
   const normalizedQuery = query.trim().toLowerCase()
   const featured = normalizedQuery ? undefined : posts.find((post) => post.featured) ?? posts[0]
   const filtered = useMemo(() => posts.filter((post) => post.postId !== featured?.postId && `${post.title} ${post.category} ${post.excerpt}`.toLowerCase().includes(normalizedQuery)), [featured?.postId, normalizedQuery, posts])
-  const plannedFeatured = plannedBlogPosts[0]
   return (
     <>
       <PageHero eyebrow="EFBI blog" title="Ideas for learning and building." description="Simple guides, project lessons, and scholarship advice." className="page-hero--blog" />
       <section className="section shell">
         {!loaded && <p className="catalog-loading" role="status">Loading articles…</p>}
         {loaded && featured && <article className={`featured-post featured-post--${featured.tone}`}><div className="featured-post-art"><span>FEATURED / {String(featured.version).padStart(2, '0')}</span><strong>{featured.title}</strong><Icon name="spark" /></div><div><span className="article-tag">{featured.category}</span><p className="article-status">{featured.readingMinutes} min read</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><Link className="text-arrow" to={`/blog/${featured.postId}`}>Read article <Icon name="arrow" /></Link></div></article>}
-        {loaded && posts.length === 0 && !normalizedQuery && <article className="featured-post"><div className="featured-post-art"><span>FROM THE EFBI DESK</span><strong>Useful ideas are on the way.</strong><Icon name="spark" /></div><div><span className="article-tag">{plannedFeatured.category}</span><p className="article-status">Editorial preview</p><h2>{plannedFeatured.title}</h2><p>{plannedFeatured.excerpt}</p><button className="text-arrow" disabled>Coming soon <Icon name="arrow" /></button></div></article>}
-        <div className="blog-toolbar"><div><p className="eyebrow-label">More from EFBI</p><h2>Latest articles</h2></div><label className="search-field"><span className="sr-only">Search articles</span><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search articles" /></label></div>
+        {loaded && posts.length === 0 && <div className="blog-empty blog-empty--launch"><Icon name="book" /><div><strong>No articles are published yet.</strong><p>EFBI will show an article here only after it has been written, reviewed, and published.</p></div></div>}
+        {posts.length > 0 && <div className="blog-toolbar"><div><p className="eyebrow-label">More from EFBI</p><h2>Latest articles</h2></div><label className="search-field"><span className="sr-only">Search articles</span><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search articles" /></label></div>}
         {loaded && posts.length > 0 && filtered.length === 0 && <p className="blog-empty">{query ? 'No published article matches that search.' : 'More published articles will appear here.'}</p>}
         {loaded && posts.length > 0 && <div className="blog-grid blog-grid--refined">{filtered.map((post, index) => <article key={post.postId}><div className={`post-number post-number--${index + 2}`}>{String(index + 2).padStart(2, '0')}</div><span className="article-tag">{post.category}</span><h3>{post.title}</h3><p>{post.excerpt}</p><small>{post.readingMinutes} min read</small><Link className="text-arrow" to={`/blog/${post.postId}`}>Read article <Icon name="arrow" /></Link></article>)}</div>}
-        {loaded && posts.length === 0 && <div className="blog-grid blog-grid--refined">{plannedBlogPosts.slice(1).filter((post) => `${post.title} ${post.category} ${post.excerpt}`.toLowerCase().includes(query.toLowerCase())).map((post, index) => <article key={post.title}><div className={`post-number post-number--${index + 2}`}>{String(index + 2).padStart(2, '0')}</div><span className="article-tag">{post.category}</span><h3>{post.title}</h3><p>{post.excerpt}</p><small>{post.status}</small></article>)}</div>}
       </section>
     </>
   )
@@ -365,19 +364,11 @@ export function ContactPage() {
     <>
       <PageHero eyebrow="Contact EFBI" title="Let’s talk." description="Ask about courses, mentoring, partnerships, or the platform." className="page-hero--contact" />
       <section className="section shell contact-grid">
-        <div><SectionHeading eyebrow="Get in touch" title="Choose what works for you" description="Our contact form is being rebuilt, so reach us directly." /><div className="contact-cards"><a href="mailto:efbi.academy@gmail.com"><Icon name="mail" /><span><small>Email</small><strong>efbi.academy@gmail.com</strong></span><Icon name="external" /></a><a href="tel:+251725520306"><Icon name="phone" /><span><small>Phone</small><strong>+251 725 520 306</strong></span><Icon name="external" /></a><a href="https://t.me/EFBI_Academy" target="_blank" rel="noreferrer"><Icon name="send" /><span><small>Telegram</small><strong>@EFBI_Academy</strong></span><Icon name="external" /></a><a href="https://t.me/+HhBFWhYdfChhYTlk" target="_blank" rel="noreferrer"><Icon name="users" /><span><small>Community</small><strong>Join the student group</strong></span><Icon name="external" /></a><Link to="/privacy"><Icon name="shield" /><span><small>Learner help</small><strong>Privacy & support</strong></span><Icon name="arrow" /></Link></div></div>
+        <div><SectionHeading eyebrow="Get in touch" title="Choose what works for you" description="Reach EFBI directly through any of these channels." /><div className="contact-cards"><a href="mailto:efbi.academy@gmail.com"><Icon name="mail" /><span><small>Email</small><strong>efbi.academy@gmail.com</strong></span><Icon name="external" /></a><a href="tel:+251725520306"><Icon name="phone" /><span><small>Phone</small><strong>+251 725 520 306</strong></span><Icon name="external" /></a><a href="https://t.me/EFBI_Academy" target="_blank" rel="noreferrer"><Icon name="send" /><span><small>Telegram</small><strong>@EFBI_Academy</strong></span><Icon name="external" /></a><a href="https://t.me/+HhBFWhYdfChhYTlk" target="_blank" rel="noreferrer"><Icon name="users" /><span><small>Community</small><strong>Join the student group</strong></span><Icon name="external" /></a><Link to="/privacy"><Icon name="shield" /><span><small>Learner help</small><strong>Privacy & support</strong></span><Icon name="arrow" /></Link></div></div>
         <aside className="contact-side contact-side--refined"><div className="contact-side-mark"><span><Icon name="users" /></span><div><small>EFBI Academy</small><strong>Addis Ababa, Ethiopia</strong></div></div><h2>Want to build with us?</h2><p>We’d like to hear from educators, mentors, community leaders, and partners who care about practical learning.</p><a className="button button--primary" href="mailto:efbi.academy@gmail.com?subject=EFBI%20Collaboration">Propose a collaboration</a></aside>
       </section>
     </>
   )
-}
-
-export function JoinPage() { return <AccessPage kind="join" /> }
-export function SignInPage() { return <AccessPage kind="signin" /> }
-
-function AccessPage({ kind }: { kind: 'join' | 'signin' }) {
-  const joining = kind === 'join'
-  return <section className="access-page"><div className="access-panel"><Link className="brand-alone" to="/"><img src="/efbi-icon.png" alt="" /> EFBI Academy</Link><p className="eyebrow-label">{joining ? 'Join EFBI' : 'Student portal'}</p><h1>{joining ? 'Enrollment will reopen soon.' : 'Sign-in is paused for now.'}</h1><p>{joining ? 'We’re finishing the new student platform before accepting applications.' : 'We’re replacing the old sign-in system with a safer one.'}</p><RebuildNotice /><div className="access-actions"><Link className="button button--primary" to="/courses">Explore courses</Link><Link className="button button--outline" to="/contact">Contact EFBI</Link></div></div></section>
 }
 
 export function NotFoundPage() {

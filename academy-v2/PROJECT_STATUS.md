@@ -635,6 +635,21 @@ The first launch-quality checkpoint is implemented in the development codebase:
 
 Phase 27 remains in progress. Real launch content entry and correction, manual browser/device/accessibility tests, failure and recovery exercises, Firebase operational review, and the final controlled security check remain.
 
+The second launch-quality checkpoint is also implemented in the development codebase:
+
+1. The fallback program catalog now contains only the four owner-approved areas: Artificial Intelligence, AI-Assisted App Development, Web Development, and Mobile App Development.
+2. Unpublished editorial drafts and planned articles are no longer rendered on the public Blog page.
+3. An empty Blog shows one honest reviewed-publication message instead of invented article cards.
+4. Enrollment-enabled builds show only programs actually published through Admin Studio; development and read-only preview may still use the four approved fallback descriptions.
+5. Empty published-program collections have clear learner-facing states instead of silent blank sections.
+6. Rebuild notices disappear from enrollment-enabled builds, and homepage enrollment wording follows the real site mode.
+7. Program details point to currently available courses instead of making a hard-coded enrollment claim.
+8. Obsolete duplicate Join and Sign-in page components and their stale messaging are removed; the protected account implementation remains the only routed flow.
+9. Learner lint, read-only preview build, and enrollment-enabled build pass.
+10. No Firestore rules, database content, application build, Admin Studio, or Hosting target was deployed.
+
+Phase 27 remains in progress. The real published inventory must still be checked in Admin Studio and corrected by the owner. Public pre-registration discovery for every activated course, manual browser/device/accessibility tests, failure and recovery exercises, Firebase operational review, and the final controlled security check remain.
+
 
 ## Recovery commands
 

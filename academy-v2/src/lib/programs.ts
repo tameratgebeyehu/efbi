@@ -1,6 +1,7 @@
 import { programs as fallbackPrograms } from '../data'
 import type { Program } from '../data'
 import { getFirebaseFirestore } from './firebase'
+import { learnerEnrollmentEnabled } from '../site-mode'
 
 type PublishedProgram = {
   programId?: unknown
@@ -54,13 +55,14 @@ export function loadPublishedPrograms() {
   publishedProgramsPromise = (async () => {
     try {
       const services = await getFirebaseFirestore()
-      if (!services) return fallbackPrograms
+      if (!services) return learnerEnrollmentEnabled ? [] : fallbackPrograms
       const { collection, getDocs } = services.firestoreSdk
       const snapshot = await getDocs(collection(services.db, 'publishedPrograms'))
       const records = snapshot.docs
         .map((item) => asProgram(item.id, item.data()))
         .filter((item): item is { program: Program; order: number } => Boolean(item))
         .sort((left, right) => left.order - right.order || left.program.title.localeCompare(right.program.title))
+      if (learnerEnrollmentEnabled) return records.map((item) => item.program)
       if (records.length === 0) return fallbackPrograms
       const managedIds = new Set(records.map((item) => item.program.slug))
       return [

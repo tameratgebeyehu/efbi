@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { Program } from './data'
 import { Icon } from './icons'
+import { learnerEnrollmentEnabled } from './site-mode'
 
 export function SectionHeading({ eyebrow, title, description, light = false }: { eyebrow: string; title: string; description?: string; light?: boolean }) {
   return (
@@ -18,10 +19,6 @@ function ProgramIcon({ slug }: { slug: string }) {
     'artificial-intelligence': <Icon name="brain" />,
     'ai-assisted-app-development': <Icon name="spark" />,
     'web-development': <Icon name="code" />,
-    'programming-foundations': <Icon name="book" />,
-    'entrepreneurship': <Icon name="spark" />,
-    'leadership-development': <Icon name="compass" />,
-    'career-readiness': <Icon name="users" />,
   }
 
   if (slug === 'mobile-app-development') {
@@ -71,6 +68,7 @@ export function PageHero({ eyebrow, title, description, children, className = ''
 }
 
 export function RebuildNotice({ compact = false }: { compact?: boolean }) {
+  if (learnerEnrollmentEnabled) return null
   return (
     <div className={compact ? 'rebuild-notice rebuild-notice--compact' : 'rebuild-notice'} role="status">
       <span className="pulse" aria-hidden="true" />

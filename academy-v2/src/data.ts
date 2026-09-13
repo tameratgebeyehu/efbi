@@ -50,48 +50,7 @@ export const programs: Program[] = [
     outcome: 'Test and present a focused mobile app prototype.',
     accent: 'red',
   },
-  {
-    slug: 'programming-foundations',
-    title: 'Programming Foundations',
-    shortTitle: 'Code',
-    level: 'Beginner',
-    duration: '6 weeks',
-    description: 'Learn programming logic and solve problems with Python and JavaScript.',
-    outcome: 'Build small programs and explain how they work.',
-    accent: 'green',
-  },
-  {
-    slug: 'entrepreneurship',
-    title: 'Entrepreneurship',
-    shortTitle: 'Venture',
-    level: 'Beginner',
-    duration: '6 weeks',
-    description: 'Turn a useful idea into a simple plan, model, and pitch.',
-    outcome: 'Present a clear problem, solution, and plan.',
-    accent: 'gold',
-  },
-  {
-    slug: 'leadership-development',
-    title: 'Leadership Development',
-    shortTitle: 'Lead',
-    level: 'Beginner',
-    duration: '4 weeks',
-    description: 'Practice communication, teamwork, decision-making, and community leadership.',
-    outcome: 'Lead a small team project and reflect on what you learned.',
-    accent: 'blue',
-  },
-  {
-    slug: 'career-readiness',
-    title: 'Career Readiness',
-    shortTitle: 'Career',
-    level: 'Beginner',
-    duration: '4 weeks',
-    description: 'Build your portfolio, CV, interview skills, and application plan.',
-    outcome: 'Finish with stronger application materials and a clear next step.',
-    accent: 'red',
-  },
 ]
-
 export const values = [
   { number: '01', title: 'Innovation', description: 'We try new ideas and use technology to solve real problems.' },
   { number: '02', title: 'Leadership', description: 'We take responsibility and use our skills to help others.' },
@@ -439,23 +398,3 @@ export const curriculum: CourseLesson[] = [
   },
 ]
 
-export const blogPosts = [
-  {
-    category: 'Scholarships',
-    title: 'How a Strong Project Portfolio Can Support Scholarship Applications',
-    excerpt: 'A practical guide to documenting initiative, community impact, technical growth, and honest evidence in your application story.',
-    status: 'Editorial draft',
-  },
-  {
-    category: 'Artificial Intelligence',
-    title: 'Getting Started with Machine Learning: A Student Guide',
-    excerpt: 'A plain-language introduction to models, data, evaluation, and responsible experimentation for new learners.',
-    status: 'Planned article',
-  },
-  {
-    category: 'Coding',
-    title: 'From an Idea to a Useful First Prototype',
-    excerpt: 'How to narrow a problem, choose a small first version, test it with people, and improve through evidence.',
-    status: 'Planned article',
-  },
-]

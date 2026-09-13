@@ -90,6 +90,8 @@ Exit check: there are no critical accessibility, security, content, or account-f
 
 Phase 27A development checkpoint complete: Admin Studio now includes a protected, read-only Launch readiness workspace. It inventories public programs and articles, active courses and referenced lessons, validates active course-version-release links, flags likely placeholder text, counts unfinished private drafts separately, and keeps device, accessibility, failure, account, Firebase, and security checks visibly open for human evidence.
 
+Phase 27B development checkpoint complete: the learner site no longer presents unpublished article drafts as content, its fallback catalog matches the four approved program areas, and enrollment-enabled builds use only program records actually published through Admin Studio. Preview/rebuild messages now follow the real site mode, stale duplicate access-page code is removed, and empty program or article collections produce honest public states.
+
 ## Phase 28 — controlled internet launch
 
 1. Deploy the tested build to development Hosting with enrollment still closed.
