@@ -10,6 +10,7 @@ import {
   formFromDraft,
   levelOptions,
   normalizeCourseForm,
+  validCourseCategory,
   validCourseId,
 } from './courseModel'
 import type { CourseDraft, CourseFormValues, CourseRelease, CourseStatus } from './courseModel'
@@ -42,7 +43,7 @@ function readCourseRecovery(): CourseRecovery | null {
       || typeof candidate.description !== 'string'
       || typeof candidate.language !== 'string'
       || typeof candidate.estimatedMinutes !== 'string'
-      || !categoryOptions.some((option) => option.value === candidate.category)
+      || !validCourseCategory(candidate.category as string)
       || !levelOptions.includes(candidate.level as CourseFormValues['level'])) return null
     return {
       selectedId: value.selectedId,
@@ -167,6 +168,7 @@ function StatusPill({ status }: { status: CourseStatus }) {
 export default function CourseManager({ user }: { user: User }) {
   const [drafts, setDrafts] = useState<CourseDraft[]>([])
   const [releases, setReleases] = useState<CourseRelease[]>([])
+  const [programOptions, setProgramOptions] = useState<Array<{ value: string; label: string }>>([...categoryOptions])
   const [selectedId, setSelectedId] = useState<string>('new')
   const [newCourseId, setNewCourseId] = useState('')
   const [form, setForm] = useState<CourseFormValues>({ ...emptyCourseForm })
@@ -188,6 +190,7 @@ export default function CourseManager({ user }: { user: User }) {
     let active = true
     let stopDrafts: () => void = () => undefined
     let stopReleases: () => void = () => undefined
+    let stopPrograms: () => void = () => undefined
     void getAdminFirebase().then((services) => {
       if (!active || !services) return
       const { collection, onSnapshot } = services.firestoreSdk
@@ -209,13 +212,24 @@ export default function CourseManager({ user }: { user: User }) {
       }, () => {
         if (active) setNotice({ kind: 'error', message: 'Release history could not be loaded.' })
       })
+      stopPrograms = onSnapshot(collection(services.db, 'programDrafts'), (snapshot) => {
+        if (!active || snapshot.empty) return
+        const managed = snapshot.docs
+          .map((item) => ({ value: item.id, label: safeString(item.data().title) || item.id, order: safeNumber(item.data().order) }))
+          .sort((left, right) => left.order - right.order || left.label.localeCompare(right.label))
+          .map(({ value, label }) => ({ value, label }))
+        const managedIds = new Set(managed.map((option) => option.value))
+        setProgramOptions([...managed, ...categoryOptions.filter((option) => !managedIds.has(option.value))])
+      }, () => {
+        if (active) setNotice({ kind: 'error', message: 'Program categories could not be loaded; built-in categories remain available.' })
+      })
     }).catch(() => {
       if (active) {
         setNotice({ kind: 'error', message: 'Firebase could not start for the course workspace.' })
         setLoading(false)
       }
     })
-    return () => { active = false; stopDrafts(); stopReleases() }
+    return () => { active = false; stopDrafts(); stopReleases(); stopPrograms() }
   }, [])
 
   useEffect(() => {
@@ -501,7 +515,7 @@ export default function CourseManager({ user }: { user: User }) {
           <label>Short summary<span>{form.summary.length}/240 · shown in course listings</span><textarea className="textarea--short" value={form.summary} onChange={(event) => updateField('summary', event.target.value)} minLength={20} maxLength={240} required /></label>
           <label>Full description<span>{form.description.length}/4000 · explain the learner outcome</span><textarea value={form.description} onChange={(event) => updateField('description', event.target.value)} minLength={40} maxLength={4000} required /></label>
           <div className="field-grid">
-            <label>Program category<select value={form.category} onChange={(event) => updateField('category', event.target.value as CourseFormValues['category'])}>{categoryOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+            <label>Program category<select value={form.category} onChange={(event) => updateField('category', event.target.value as CourseFormValues['category'])}>{programOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
             <label>Level<select value={form.level} onChange={(event) => updateField('level', event.target.value as CourseFormValues['level'])}>{levelOptions.map((level) => <option key={level} value={level}>{level[0].toUpperCase() + level.slice(1)}</option>)}</select></label>
             <label>Language<input value={form.language} onChange={(event) => updateField('language', event.target.value)} minLength={2} maxLength={40} required /></label>
             <label>Learning time (minutes)<input type="number" value={form.estimatedMinutes} onChange={(event) => updateField('estimatedMinutes', event.target.value)} min={15} max={20000} step={1} required /></label>

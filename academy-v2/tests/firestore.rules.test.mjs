@@ -221,6 +221,50 @@ function addLessonCreation(batch, db, lessonId, overrides = {}) {
   return auditId
 }
 
+function programContent(overrides = {}) {
+  return {
+    title: 'Scholarship Readiness',
+    shortTitle: 'Scholarships',
+    description: 'Learn how to research opportunities and prepare a clear, honest application.',
+    outcome: 'Build a complete scholarship plan and a reusable application evidence folder.',
+    level: 'beginner',
+    durationWeeks: 6,
+    accent: 'gold',
+    order: 2,
+    ...overrides,
+  }
+}
+
+function programDraftRecord({ programId, auditId, actorUid = 'admin-user', ...overrides }) {
+  return {
+    programId,
+    ...programContent(),
+    status: 'draft',
+    revision: 1,
+    latestReleaseNumber: 0,
+    latestReleaseId: '',
+    createdAt: serverTimestamp(),
+    createdBy: actorUid,
+    updatedAt: serverTimestamp(),
+    updatedBy: actorUid,
+    lastAuditId: auditId,
+    ...overrides,
+  }
+}
+
+function addProgramCreation(batch, db, programId, overrides = {}) {
+  const auditId = `audit-program-create-${programId}-0001`
+  batch.set(doc(db, 'programDrafts', programId), programDraftRecord({ programId, auditId, ...overrides }))
+  batch.set(doc(db, 'adminAudit', auditId), auditEvent({
+    eventId: auditId,
+    action: 'program.draft.created',
+    entityType: 'programDraft',
+    entityId: programId,
+    revision: 1,
+  }))
+  return auditId
+}
+
 function questionV2(overrides = {}) {
   return {
     prompt: 'What should a learner do before trusting an AI answer?',
@@ -524,6 +568,129 @@ test('completed progress cannot be reset or have its creation time rewritten', a
     createdAt: finalProgress.data().createdAt,
   }))
   await assertFails(setDoc(reference, fourLessonProgressRecord()))
+})
+
+test('program drafts are private, audited, and become valid course categories', async () => {
+  const admin = verifiedUser('admin-user', { admin: true })
+  const createProgram = writeBatch(admin)
+  addProgramCreation(createProgram, admin, 'scholarship-readiness')
+  await assertSucceeds(createProgram.commit())
+
+  await assertSucceeds(getDoc(doc(admin, 'programDrafts', 'scholarship-readiness')))
+  await assertFails(getDoc(doc(verifiedUser('alice'), 'programDrafts', 'scholarship-readiness')))
+  await assertFails(getDoc(doc(environment.unauthenticatedContext().firestore(), 'programDrafts', 'scholarship-readiness')))
+
+  const createCourse = writeBatch(admin)
+  addDraftCreation(createCourse, admin, 'scholarship-planning', { category: 'scholarship-readiness' })
+  await assertSucceeds(createCourse.commit())
+
+  const missingAudit = programDraftRecord({
+    programId: 'career-exploration',
+    auditId: 'audit-program-create-career-exploration-0001',
+  })
+  await assertFails(setDoc(doc(admin, 'programDrafts', 'career-exploration'), missingAudit))
+})
+
+test('program publication atomically creates an immutable release and public snapshot', async () => {
+  const admin = verifiedUser('admin-user', { admin: true })
+  const programId = 'scholarship-readiness'
+  const draftRef = doc(admin, 'programDrafts', programId)
+
+  const createProgram = writeBatch(admin)
+  addProgramCreation(createProgram, admin, programId)
+  await assertSucceeds(createProgram.commit())
+
+  const readyAuditId = 'audit-program-ready-scholarship-readiness-0001'
+  const ready = writeBatch(admin)
+  ready.update(draftRef, {
+    status: 'ready',
+    revision: 2,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'admin-user',
+    lastAuditId: readyAuditId,
+  })
+  ready.set(doc(admin, 'adminAudit', readyAuditId), auditEvent({
+    eventId: readyAuditId,
+    action: 'program.draft.updated',
+    entityType: 'programDraft',
+    entityId: programId,
+    revision: 2,
+  }))
+  await assertSucceeds(ready.commit())
+
+  const releaseId = 'release-program-scholarship-readiness-v1-0001'
+  const publishAuditId = 'audit-program-publish-scholarship-readiness-v1-0001'
+  const content = programContent()
+  const publish = writeBatch(admin)
+  publish.update(draftRef, {
+    status: 'published',
+    revision: 3,
+    latestReleaseNumber: 1,
+    latestReleaseId: releaseId,
+    updatedAt: serverTimestamp(),
+    updatedBy: 'admin-user',
+    lastAuditId: publishAuditId,
+  })
+  publish.set(doc(admin, 'programReleases', releaseId), {
+    releaseId,
+    programId,
+    ...content,
+    version: 1,
+    draftRevision: 3,
+    publishedAt: serverTimestamp(),
+    publishedBy: 'admin-user',
+    auditId: publishAuditId,
+  })
+  publish.set(doc(admin, 'publishedPrograms', programId), {
+    programId,
+    ...content,
+    releaseId,
+    version: 1,
+    publishedAt: serverTimestamp(),
+    publishedBy: 'admin-user',
+    auditId: publishAuditId,
+  })
+  publish.set(doc(admin, 'adminAudit', publishAuditId), auditEvent({
+    eventId: publishAuditId,
+    action: 'program.release.published',
+    entityType: 'programRelease',
+    entityId: programId,
+    revision: 3,
+    releaseId,
+  }))
+  await assertSucceeds(publish.commit())
+
+  const visitor = environment.unauthenticatedContext().firestore()
+  await assertSucceeds(getDoc(doc(visitor, 'publishedPrograms', programId)))
+  await assertSucceeds(getDocs(collection(visitor, 'publishedPrograms')))
+  await assertFails(getDoc(doc(visitor, 'programReleases', releaseId)))
+  await assertFails(updateDoc(doc(admin, 'programReleases', releaseId), { title: 'Changed release' }))
+  await assertFails(updateDoc(doc(verifiedUser('alice'), 'publishedPrograms', programId), { title: 'Forged program' }))
+})
+
+test('program schemas reject malformed drafts and incomplete publication batches', async () => {
+  const admin = verifiedUser('admin-user', { admin: true })
+  const malformed = writeBatch(admin)
+  addProgramCreation(malformed, admin, 'invalid-program', { accent: 'purple' })
+  await assertFails(malformed.commit())
+
+  const programId = 'career-readiness-v2'
+  const createProgram = writeBatch(admin)
+  addProgramCreation(createProgram, admin, programId)
+  await assertSucceeds(createProgram.commit())
+  const readyAuditId = 'audit-program-ready-career-readiness-v2-0001'
+  const ready = writeBatch(admin)
+  ready.update(doc(admin, 'programDrafts', programId), { status: 'ready', revision: 2, updatedAt: serverTimestamp(), updatedBy: 'admin-user', lastAuditId: readyAuditId })
+  ready.set(doc(admin, 'adminAudit', readyAuditId), auditEvent({ eventId: readyAuditId, action: 'program.draft.updated', entityType: 'programDraft', entityId: programId, revision: 2 }))
+  await assertSucceeds(ready.commit())
+
+  const releaseId = 'release-program-career-readiness-v2-v1-0001'
+  const auditId = 'audit-program-publish-career-readiness-v2-v1-0001'
+  const incomplete = writeBatch(admin)
+  incomplete.update(doc(admin, 'programDrafts', programId), { status: 'published', revision: 3, latestReleaseNumber: 1, latestReleaseId: releaseId, updatedAt: serverTimestamp(), updatedBy: 'admin-user', lastAuditId: auditId })
+  incomplete.set(doc(admin, 'programReleases', releaseId), { releaseId, programId, ...programContent(), version: 1, draftRevision: 3, publishedAt: serverTimestamp(), publishedBy: 'admin-user', auditId })
+  incomplete.set(doc(admin, 'adminAudit', auditId), auditEvent({ eventId: auditId, action: 'program.release.published', entityType: 'programRelease', entityId: programId, revision: 3, releaseId }))
+  await assertFails(incomplete.commit())
 })
 
 test('administrators publish immutable course versions while public and unverified access stays closed', async () => {

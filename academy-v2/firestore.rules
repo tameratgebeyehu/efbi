@@ -96,7 +96,7 @@ service cloud.firestore {
         && data.description is string
         && data.description.size() >= 40
         && data.description.size() <= 4000
-        && data.category in ['artificial-intelligence', 'app-development', 'web-development', 'mobile-development']
+        && validCourseCategory(data.category)
         && data.level in ['beginner', 'intermediate', 'advanced']
         && data.language is string
         && data.language.size() >= 2
@@ -189,6 +189,71 @@ service cloud.firestore {
             && data.explanation.size() <= 300
           )
         );
+    }
+
+    function validProgramId(programId) {
+      return programId is string
+        && programId.size() >= 3
+        && programId.size() <= 64
+        && programId.matches('[a-z0-9]+(-[a-z0-9]+)*');
+    }
+
+    function validCourseCategory(category) {
+      return category in ['artificial-intelligence', 'app-development', 'web-development', 'mobile-development']
+        || (
+          validProgramId(category)
+          && exists(/databases/$(database)/documents/programDrafts/$(category))
+        );
+    }
+
+    function validProgramContent(data) {
+      return data.title is string
+        && data.title.size() >= 3
+        && data.title.size() <= 80
+        && data.shortTitle is string
+        && data.shortTitle.size() >= 2
+        && data.shortTitle.size() <= 16
+        && data.description is string
+        && data.description.size() >= 20
+        && data.description.size() <= 500
+        && data.outcome is string
+        && data.outcome.size() >= 20
+        && data.outcome.size() <= 300
+        && data.level in ['beginner', 'intermediate', 'advanced']
+        && data.durationWeeks is int
+        && data.durationWeeks >= 1
+        && data.durationWeeks <= 52
+        && data.accent in ['green', 'gold', 'blue', 'red']
+        && data.order is int
+        && data.order >= 1
+        && data.order <= 50;
+    }
+
+    function validProgramDraft(data, programId) {
+      return data.keys().hasOnly([
+          'programId', 'title', 'shortTitle', 'description', 'outcome',
+          'level', 'durationWeeks', 'accent', 'order', 'status', 'revision',
+          'latestReleaseNumber', 'latestReleaseId', 'createdAt', 'createdBy',
+          'updatedAt', 'updatedBy', 'lastAuditId'
+        ])
+        && validProgramId(programId)
+        && data.programId == programId
+        && validProgramContent(data)
+        && data.status in ['draft', 'ready', 'published']
+        && data.revision is int
+        && data.revision >= 1
+        && data.latestReleaseNumber is int
+        && data.latestReleaseNumber >= 0
+        && data.latestReleaseId is string
+        && data.latestReleaseId.size() <= 120
+        && data.createdAt is timestamp
+        && data.createdBy is string
+        && data.createdBy.size() > 0
+        && data.updatedAt == request.time
+        && data.updatedBy == request.auth.uid
+        && data.lastAuditId is string
+        && data.lastAuditId.size() >= 16
+        && data.lastAuditId.size() <= 180;
     }
 
     function validPracticeQuestionV2(data) {
@@ -554,8 +619,8 @@ service cloud.firestore {
           'revision', 'releaseId', 'createdAt'
         ])
         && data.eventId == eventId
-        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published', 'course.version.activated', 'lesson.draft.created', 'lesson.draft.updated', 'lesson.release.published']
-        && data.entityType in ['courseDraft', 'courseRelease', 'courseVersion', 'lessonDraft', 'lessonRelease']
+        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published', 'course.version.activated', 'lesson.draft.created', 'lesson.draft.updated', 'lesson.release.published', 'program.draft.created', 'program.draft.updated', 'program.release.published']
+        && data.entityType in ['courseDraft', 'courseRelease', 'courseVersion', 'lessonDraft', 'lessonRelease', 'programDraft', 'programRelease']
         && validCourseId(data.entityId)
         && data.actorUid == request.auth.uid
         && data.revision is int
@@ -626,6 +691,94 @@ service cloud.firestore {
         && draft.estimatedMinutes == data.estimatedMinutes;
     }
 
+    function sameProgramContent() {
+      return request.resource.data.title == resource.data.title
+        && request.resource.data.shortTitle == resource.data.shortTitle
+        && request.resource.data.description == resource.data.description
+        && request.resource.data.outcome == resource.data.outcome
+        && request.resource.data.level == resource.data.level
+        && request.resource.data.durationWeeks == resource.data.durationWeeks
+        && request.resource.data.accent == resource.data.accent
+        && request.resource.data.order == resource.data.order;
+    }
+
+    function validProgramRelease(data, releaseId) {
+      return data.keys().hasOnly([
+          'releaseId', 'programId', 'title', 'shortTitle', 'description',
+          'outcome', 'level', 'durationWeeks', 'accent', 'order', 'version',
+          'draftRevision', 'publishedAt', 'publishedBy', 'auditId'
+        ])
+        && data.releaseId == releaseId
+        && releaseId.size() >= 16
+        && releaseId.size() <= 120
+        && validProgramId(data.programId)
+        && validProgramContent(data)
+        && data.version is int
+        && data.version >= 1
+        && data.draftRevision is int
+        && data.draftRevision >= 2
+        && data.publishedAt == request.time
+        && data.publishedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180;
+    }
+
+    function programReleaseMatchesDraft(data, releaseId) {
+      let draft = getAfter(/databases/$(database)/documents/programDrafts/$(data.programId)).data;
+      return draft.status == 'published'
+        && draft.latestReleaseId == releaseId
+        && draft.latestReleaseNumber == data.version
+        && draft.revision == data.draftRevision
+        && draft.lastAuditId == data.auditId
+        && draft.title == data.title
+        && draft.shortTitle == data.shortTitle
+        && draft.description == data.description
+        && draft.outcome == data.outcome
+        && draft.level == data.level
+        && draft.durationWeeks == data.durationWeeks
+        && draft.accent == data.accent
+        && draft.order == data.order;
+    }
+
+    function validPublishedProgram(data, programId) {
+      return data.keys().hasOnly([
+          'programId', 'title', 'shortTitle', 'description', 'outcome',
+          'level', 'durationWeeks', 'accent', 'order', 'releaseId', 'version',
+          'publishedAt', 'publishedBy', 'auditId'
+        ])
+        && data.programId == programId
+        && validProgramId(programId)
+        && validProgramContent(data)
+        && data.releaseId is string
+        && data.releaseId.size() >= 16
+        && data.releaseId.size() <= 120
+        && data.version is int
+        && data.version >= 1
+        && data.publishedAt == request.time
+        && data.publishedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180;
+    }
+
+    function publishedProgramMatchesRelease(data, programId) {
+      let release = getAfter(/databases/$(database)/documents/programReleases/$(data.releaseId)).data;
+      return release.programId == programId
+        && release.version == data.version
+        && release.auditId == data.auditId
+        && release.publishedAt == data.publishedAt
+        && release.publishedBy == data.publishedBy
+        && release.title == data.title
+        && release.shortTitle == data.shortTitle
+        && release.description == data.description
+        && release.outcome == data.outcome
+        && release.level == data.level
+        && release.durationWeeks == data.durationWeeks
+        && release.accent == data.accent
+        && release.order == data.order;
+    }
+
     function auditLinksToCourseDraft(data, eventId) {
       let draft = getAfter(/databases/$(database)/documents/courseDrafts/$(data.entityId)).data;
       return data.action in ['course.draft.created', 'course.draft.updated']
@@ -685,6 +838,33 @@ service cloud.firestore {
         && release.publishedBy == request.auth.uid;
     }
 
+    function auditLinksToProgramDraft(data, eventId) {
+      let draft = getAfter(/databases/$(database)/documents/programDrafts/$(data.entityId)).data;
+      return data.action in ['program.draft.created', 'program.draft.updated']
+        && draft.lastAuditId == eventId
+        && draft.revision == data.revision
+        && draft.latestReleaseId == data.releaseId
+        && draft.updatedBy == request.auth.uid;
+    }
+
+    function auditLinksToProgramRelease(data, eventId) {
+      let draft = getAfter(/databases/$(database)/documents/programDrafts/$(data.entityId)).data;
+      let release = getAfter(/databases/$(database)/documents/programReleases/$(data.releaseId)).data;
+      let published = getAfter(/databases/$(database)/documents/publishedPrograms/$(data.entityId)).data;
+      return data.action == 'program.release.published'
+        && draft.status == 'published'
+        && draft.lastAuditId == eventId
+        && draft.revision == data.revision
+        && draft.latestReleaseId == data.releaseId
+        && draft.updatedBy == request.auth.uid
+        && release.auditId == eventId
+        && release.programId == data.entityId
+        && release.publishedBy == request.auth.uid
+        && published.auditId == eventId
+        && published.releaseId == data.releaseId
+        && published.publishedBy == request.auth.uid;
+    }
+
     function auditLinksToCourseOperation(data, eventId) {
       return data.entityType == 'courseDraft'
         ? auditLinksToCourseDraft(data, eventId)
@@ -696,7 +876,11 @@ service cloud.firestore {
               ? auditLinksToLessonDraft(data, eventId)
               : data.entityType == 'lessonRelease'
                 ? auditLinksToLessonRelease(data, eventId)
-                : false;
+                : data.entityType == 'programDraft'
+                  ? auditLinksToProgramDraft(data, eventId)
+                  : data.entityType == 'programRelease'
+                    ? auditLinksToProgramRelease(data, eventId)
+                    : false;
     }
 
     function validLegacySubmissionId(submissionId) {
@@ -2661,6 +2845,117 @@ service cloud.firestore {
           )
         );
       allow update, delete: if false;
+    }
+
+    // Program drafts remain private. Publishing atomically creates an immutable
+    // release, refreshes the public program snapshot, and records one audit event.
+    match /programDrafts/{programId} {
+      allow get, list: if admin();
+      allow create: if admin()
+        && validProgramDraft(request.resource.data, programId)
+        && request.resource.data.status == 'draft'
+        && request.resource.data.revision == 1
+        && request.resource.data.latestReleaseNumber == 0
+        && request.resource.data.latestReleaseId == ''
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid
+        && linkedAuditIsValid(
+          request.resource.data.lastAuditId,
+          'program.draft.created',
+          'programDraft',
+          programId,
+          1,
+          ''
+        );
+      allow update: if admin()
+        && validProgramDraft(request.resource.data, programId)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.revision == resource.data.revision + 1
+        && (
+          (
+            request.resource.data.status in ['draft', 'ready']
+            && (request.resource.data.status != resource.data.status || !sameProgramContent())
+            && request.resource.data.latestReleaseNumber == resource.data.latestReleaseNumber
+            && request.resource.data.latestReleaseId == resource.data.latestReleaseId
+            && linkedAuditIsValid(
+              request.resource.data.lastAuditId,
+              'program.draft.updated',
+              'programDraft',
+              programId,
+              request.resource.data.revision,
+              request.resource.data.latestReleaseId
+            )
+          )
+          || (
+            resource.data.status == 'ready'
+            && request.resource.data.status == 'published'
+            && sameProgramContent()
+            && request.resource.data.latestReleaseNumber == resource.data.latestReleaseNumber + 1
+            && request.resource.data.latestReleaseId != ''
+            && request.resource.data.latestReleaseId != resource.data.latestReleaseId
+            && linkedAuditIsValid(
+              request.resource.data.lastAuditId,
+              'program.release.published',
+              'programRelease',
+              programId,
+              request.resource.data.revision,
+              request.resource.data.latestReleaseId
+            )
+            && getAfter(/databases/$(database)/documents/programReleases/$(request.resource.data.latestReleaseId)).data.programId == programId
+            && getAfter(/databases/$(database)/documents/programReleases/$(request.resource.data.latestReleaseId)).data.auditId == request.resource.data.lastAuditId
+            && getAfter(/databases/$(database)/documents/publishedPrograms/$(programId)).data.releaseId == request.resource.data.latestReleaseId
+            && getAfter(/databases/$(database)/documents/publishedPrograms/$(programId)).data.auditId == request.resource.data.lastAuditId
+          )
+        );
+      allow delete: if false;
+    }
+
+    match /programReleases/{releaseId} {
+      allow get, list: if admin();
+      allow create: if admin()
+        && validProgramRelease(request.resource.data, releaseId)
+        && linkedAuditIsValid(
+          request.resource.data.auditId,
+          'program.release.published',
+          'programRelease',
+          request.resource.data.programId,
+          request.resource.data.draftRevision,
+          releaseId
+        )
+        && programReleaseMatchesDraft(request.resource.data, releaseId)
+        && getAfter(/databases/$(database)/documents/publishedPrograms/$(request.resource.data.programId)).data.releaseId == releaseId;
+      allow update, delete: if false;
+    }
+
+    match /publishedPrograms/{programId} {
+      allow get, list: if true;
+      allow create: if admin()
+        && validPublishedProgram(request.resource.data, programId)
+        && request.resource.data.version == 1
+        && publishedProgramMatchesRelease(request.resource.data, programId)
+        && linkedAuditIsValid(
+          request.resource.data.auditId,
+          'program.release.published',
+          'programRelease',
+          programId,
+          getAfter(/databases/$(database)/documents/programReleases/$(request.resource.data.releaseId)).data.draftRevision,
+          request.resource.data.releaseId
+        );
+      allow update: if admin()
+        && validPublishedProgram(request.resource.data, programId)
+        && request.resource.data.version == resource.data.version + 1
+        && request.resource.data.releaseId != resource.data.releaseId
+        && publishedProgramMatchesRelease(request.resource.data, programId)
+        && linkedAuditIsValid(
+          request.resource.data.auditId,
+          'program.release.published',
+          'programRelease',
+          programId,
+          getAfter(/databases/$(database)/documents/programReleases/$(request.resource.data.releaseId)).data.draftRevision,
+          request.resource.data.releaseId
+        );
+      allow delete: if false;
     }
 
     // Drafts remain private. Every accepted change requires a linked immutable

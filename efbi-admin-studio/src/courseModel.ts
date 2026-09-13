@@ -7,7 +7,7 @@ export const categoryOptions = [
 
 export const levelOptions = ['beginner', 'intermediate', 'advanced'] as const
 
-export type CourseCategory = typeof categoryOptions[number]['value']
+export type CourseCategory = string
 export type CourseLevel = typeof levelOptions[number]
 export type CourseStatus = 'draft' | 'ready' | 'published'
 
@@ -84,7 +84,7 @@ export function normalizeCourseForm(values: CourseFormValues) {
   if (content.title.length < 5 || content.title.length > 100) errors.push('Title must be 5–100 characters.')
   if (content.summary.length < 20 || content.summary.length > 240) errors.push('Summary must be 20–240 characters.')
   if (content.description.length < 40 || content.description.length > 4000) errors.push('Description must be 40–4,000 characters.')
-  if (!categoryOptions.some((option) => option.value === content.category)) errors.push('Choose a supported program category.')
+  if (!validCourseCategory(content.category)) errors.push('Choose a valid program category.')
   if (!levelOptions.includes(content.level)) errors.push('Choose a supported level.')
   if (content.language.length < 2 || content.language.length > 40) errors.push('Language must be 2–40 characters.')
   if (!Number.isInteger(content.estimatedMinutes) || content.estimatedMinutes < 15 || content.estimatedMinutes > 20000) {
@@ -97,6 +97,10 @@ export function validCourseId(value: string) {
   return value.length >= 3
     && value.length <= 64
     && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)
+}
+
+export function validCourseCategory(value: string) {
+  return validCourseId(value)
 }
 
 export function courseContentMatches(draft: CourseDraft, content: CourseContent) {

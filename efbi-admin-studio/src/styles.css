@@ -286,6 +286,17 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .lesson-preview .release-panel article { align-items: start; }
 .lesson-preview .release-panel article span { overflow-wrap: anywhere; line-height: 1.45; }
 
+.program-admin-preview { position: relative; overflow: hidden; display: grid; gap: 12px; padding: 26px; border: 1px solid var(--line); border-top: 5px solid var(--green); background: #fff; }
+.program-admin-preview.accent-gold { border-top-color: #d69a13; }
+.program-admin-preview.accent-blue { border-top-color: #2774ae; }
+.program-admin-preview.accent-red { border-top-color: #c7493a; }
+.program-admin-preview__short { width: fit-content; min-width: 54px; padding: 9px 12px; background: var(--deep); color: #fff; font-size: .72rem; font-weight: 900; letter-spacing: .08em; text-align: center; }
+.program-admin-preview small { color: var(--muted); font-size: .68rem; font-weight: 800; text-transform: capitalize; }
+.program-admin-preview h2, .program-admin-preview p { margin: 0; }
+.program-admin-preview h2 { font-size: 1.35rem; line-height: 1.2; }
+.program-admin-preview p { color: var(--muted); font-size: .78rem; line-height: 1.65; }
+.program-admin-preview > strong { padding-top: 8px; border-top: 1px solid var(--line); color: var(--deep); font-size: .72rem; }
+
 @media (max-width: 900px) {
   .lesson-layout-admin { grid-template-columns: 190px minmax(0, 1fr); }
 }

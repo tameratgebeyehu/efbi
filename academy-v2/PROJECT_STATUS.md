@@ -497,7 +497,19 @@ The first content-operations checkpoint is implemented in the development codeba
 7. The shared content audit validator now dispatches to the exact course or lesson operation instead of evaluating unrelated branches; every prior authorization condition remains present.
 8. The Firestore suite includes valid empty and three-question lists plus oversized and unknown-field attacks. No rules or Hosting deployment was performed.
 
-Remaining Phase 24 work: structured program/category management, blog draft/preview/publish/unpublish/revision controls, and owner preview links for complete launch content.
+The second content-operations checkpoint is also implemented in the development codebase:
+
+1. Admin Studio now has a Programs workspace for permanent program IDs, titles, card labels, descriptions, learner outcomes, levels, durations, accent colors, and display order.
+2. Program drafts move through draft, review-ready, and published states with local unsaved-text recovery and an exact owner preview.
+3. Publication atomically updates the private draft, creates an immutable release, refreshes one public program snapshot, and records the linked immutable audit event.
+4. The Home, Programs, Program Detail, and Courses pages load validated published programs. Each published record replaces its matching built-in card while unpublished built-in cards remain as a safe migration and offline fallback.
+5. The Course workspace loads owner-managed program IDs as categories while preserving the four legacy category values for existing records.
+6. Anonymous visitors can read only published program snapshots. Drafts and release history remain administrator-only, and browser deletion is denied.
+7. The audit-history workspace now labels and filters program operations.
+8. Eighty-nine Firestore authorization and lifecycle tests pass, including private draft access, audited creation, dynamic course categories, atomic publishing, public reads, immutable releases, malformed schemas, and incomplete publication rejection.
+9. Learner and Admin Studio lint and production builds pass. No Firestore rules, program data, Admin Studio, or learner Hosting build was deployed.
+
+Remaining Phase 24 work: blog draft/preview/publish/unpublish/revision controls and owner preview links for complete launch content.
 
 
 ## Recovery commands

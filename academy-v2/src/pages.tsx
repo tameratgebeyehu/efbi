@@ -1,14 +1,28 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { PageHero, ProgramCard, RebuildNotice, SectionHeading } from './components'
-import { blogPosts, buildPillars, methodology, programs, values } from './data'
+import { blogPosts, buildPillars, methodology, programs as fallbackPrograms, values } from './data'
 import { Icon } from './icons'
 import { CourseAccessButton } from './auth'
 import { useAuth } from './auth-context'
 import { getFallbackCatalog, loadActiveCourseSummaries, loadCourseCatalog, type ActiveCourseSummary, type CourseCatalog } from './lib/catalog'
+import { loadPublishedPrograms } from './lib/programs'
 
 import { learnerEnrollmentEnabled } from './site-mode'
+
+function useProgramCatalog() {
+  const [programs, setPrograms] = useState(fallbackPrograms)
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    let active = true
+    void loadPublishedPrograms().then((next) => { if (active) { setPrograms(next); setLoading(false) } })
+    return () => { active = false }
+  }, [])
+  return { programs, loading }
+}
+
 export function HomePage() {
+  const { programs } = useProgramCatalog()
   return (
     <>
       <section className="home-hero">
@@ -123,10 +137,11 @@ export function HomePage() {
 }
 
 export function ProgramsPage() {
+  const { programs } = useProgramCatalog()
   return (
     <>
       <PageHero eyebrow="Programs" title="Choose what you want to learn." description="Pick a path, practice the skills, and build something you can show." className="page-hero--programs">
-        <div className="page-stat"><strong>8</strong><span>learning paths</span></div>
+        <div className="page-stat"><strong>{programs.length}</strong><span>learning paths</span></div>
       </PageHero>
       <section className="section shell"><div className="program-grid">{programs.map((program) => <ProgramCard key={program.slug} program={program} />)}</div></section>
       <section className="outcome-band"><div className="shell"><SectionHeading light eyebrow="What you will do" title="Learn it. Practice it. Build it." /><div className="outcome-grid"><article><strong>01</strong><h3>Understand</h3><p>Learn the idea in clear language.</p></article><article><strong>02</strong><h3>Practice</h3><p>Use it in guided exercises.</p></article><article><strong>03</strong><h3>Build</h3><p>Create work you can share.</p></article></div></div></section>
@@ -136,7 +151,9 @@ export function ProgramsPage() {
 
 export function ProgramDetailPage() {
   const { slug } = useParams()
+  const { programs, loading } = useProgramCatalog()
   const program = programs.find((item) => item.slug === slug)
+  if (!program && loading) return <main className="section shell" aria-live="polite">Loading program…</main>
   if (!program) return <Navigate to="/programs" replace />
   return (
     <>
@@ -156,6 +173,7 @@ export function ProgramDetailPage() {
 
 export function CoursesPage() {
   const { user } = useAuth()
+  const { programs } = useProgramCatalog()
   const [activeCourses, setActiveCourses] = useState<ActiveCourseSummary[]>([])
   const [catalogReady, setCatalogReady] = useState(false)
   const verified = user?.emailVerified === true
