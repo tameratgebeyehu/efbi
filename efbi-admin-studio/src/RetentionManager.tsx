@@ -18,15 +18,19 @@ type RetentionHold = { status: 'active' | 'released'; reason: string; updatedAt:
 type AuthenticationRemoval = { confirmedAt: unknown }
 type RequestRecord = DeletionRequest & {
   hold: RetentionHold | null
+  protectedCourseIds: string[]
   hasCertificate: boolean
   authenticationRemoval: AuthenticationRemoval | null
   authenticationRemoved: boolean
 }
 
 const policyVersion = 'efbi-retention-v1'
-const submissionIds = ['ai-foundations-project', 'ai-foundations-project-revision-1']
+const legacyCourseId = 'ai-foundations'
+const maximumDeletionDocuments = 450
 
 function safeString(value: unknown) { return typeof value === 'string' ? value : '' }
+function uniqueStrings(values: string[]) { return [...new Set(values.filter(Boolean))].sort() }
+function legacyCourseFromId(id: string) { return id.includes(legacyCourseId) ? legacyCourseId : '' }
 function readableDate(value: unknown) {
   if (!value || typeof value !== 'object') return 'Time unavailable'
   const timestamp = value as { toDate?: () => Date }
@@ -64,14 +68,16 @@ export default function RetentionManager({ user }: { user: User }) {
     let unsubscribe: () => void = () => undefined
     void getAdminFirebase().then((services) => {
       if (!active || !services) return
-      const { collection, doc, getDoc, onSnapshot } = services.firestoreSdk
+      const { collection, doc, getDoc, getDocs, onSnapshot, query, where } = services.firestoreSdk
       unsubscribe = onSnapshot(collection(services.db, 'deletionRequests'), (snapshot) => {
         void Promise.all(snapshot.docs.map(async (item) => {
           const request = asRequest(item.data())
-          const claimId = request.learnerUid + '--ai-foundations'
           const [holdSnapshot, claimSnapshot, authenticationSnapshot] = await Promise.all([
             getDoc(doc(services.db, 'retentionHolds', request.learnerUid)),
-            getDoc(doc(services.db, 'certificateClaims', claimId)),
+            getDocs(query(
+              collection(services.db, 'certificateClaims'),
+              where('learnerUid', '==', request.learnerUid),
+            )),
             getDoc(doc(services.db, 'authenticationRemovals', request.learnerUid)),
           ])
           const holdData = holdSnapshot.exists() ? holdSnapshot.data() : null
@@ -82,10 +88,12 @@ export default function RetentionManager({ user }: { user: User }) {
           const authenticationRemoval = authenticationSnapshot.exists()
             ? { confirmedAt: authenticationSnapshot.data().confirmedAt }
             : null
+          const protectedCourseIds = uniqueStrings(claimSnapshot.docs.map((claim) => safeString(claim.data().courseId)))
           return {
             ...request,
             hold,
-            hasCertificate: claimSnapshot.exists(),
+            protectedCourseIds,
+            hasCertificate: protectedCourseIds.length > 0,
             authenticationRemoval,
             authenticationRemoved: Boolean(authenticationRemoval),
           }
@@ -155,36 +163,81 @@ export default function RetentionManager({ user }: { user: User }) {
     setBusy(true); setNotice(null)
     try {
       const services = await getAdminFirebase(); if (!services) throw new Error('Firebase configuration is missing.')
-      const { doc, getDoc, serverTimestamp, writeBatch } = services.firestoreSdk
-      const uid = selected.learnerUid; const claimId = uid + '--ai-foundations'
+      const { collection, doc, getDocs, query, serverTimestamp, where, writeBatch } = services.firestoreSdk
+      const uid = selected.learnerUid
       const profileRef = doc(services.db, 'users', uid)
-      const progressRef = doc(services.db, 'users', uid, 'progress', 'ai-foundations')
-      const requestRef = doc(services.db, 'users', uid, 'certificateRequests', 'ai-foundations')
-      const evidenceRefs = submissionIds.flatMap((submissionId) => {
-        const resultId = uid + '--' + submissionId
-        return [
-          doc(services.db, 'users', uid, 'submissions', submissionId),
-          doc(services.db, 'users', uid, 'reviewResults', resultId),
-          doc(services.db, 'reviewResults', resultId),
-          doc(services.db, 'reviewAssignments', resultId),
-        ]
-      })
-      const claimSnapshot = await getDoc(doc(services.db, 'certificateClaims', claimId))
-      const hasCertificate = claimSnapshot.exists()
-      const candidates = hasCertificate ? [profileRef, progressRef] : [profileRef, progressRef, requestRef, ...evidenceRefs]
+      const [progress, submissions, learnerResults, certificateRequests, privateResults, assignments, claims] = await Promise.all([
+        getDocs(collection(services.db, 'users', uid, 'progress')),
+        getDocs(collection(services.db, 'users', uid, 'submissions')),
+        getDocs(collection(services.db, 'users', uid, 'reviewResults')),
+        getDocs(collection(services.db, 'users', uid, 'certificateRequests')),
+        getDocs(query(collection(services.db, 'reviewResults'), where('learnerUid', '==', uid))),
+        getDocs(query(collection(services.db, 'reviewAssignments'), where('learnerUid', '==', uid))),
+        getDocs(query(collection(services.db, 'certificateClaims'), where('learnerUid', '==', uid))),
+      ])
+      const protectedCourseIds = new Set(uniqueStrings(claims.docs.map((claim) => safeString(claim.data().courseId))))
+      if (claims.docs.some((claim) => !safeString(claim.data().courseId))) {
+        throw new Error('A certificate claim is missing its course ID. Stop and repair that record before deletion.')
+      }
+      const courseForEvidence = (item: { id: string; data: () => Record<string, unknown> }) => {
+        const data = item.data()
+        const courseId = safeString(data.courseId)
+          || legacyCourseFromId(item.id)
+          || legacyCourseFromId(safeString(data.submissionId))
+        if (!courseId) {
+          throw new Error('A learning record could not be matched to a course. No data was deleted.')
+        }
+        return courseId
+      }
+      const submissionCourses = new Map(submissions.docs.map((item) => [item.id, courseForEvidence(item)]))
+      const resultCourses = new Map(
+        [...learnerResults.docs, ...privateResults.docs].map((item) => [safeString(item.data().submissionId), courseForEvidence(item)]),
+      )
+      const assignmentCourse = (item: { id: string; data: () => Record<string, unknown> }) => {
+        const submissionId = safeString(item.data().submissionId)
+        const courseId = submissionCourses.get(submissionId)
+          || resultCourses.get(submissionId)
+          || legacyCourseFromId(submissionId)
+        if (!courseId) {
+          throw new Error('A review assignment could not be matched to a course. No data was deleted.')
+        }
+        return courseId
+      }
+      const evidence = [
+        ...submissions.docs.map((item) => ({ reference: item.ref, courseId: submissionCourses.get(item.id) || '' })),
+        ...learnerResults.docs.map((item) => ({ reference: item.ref, courseId: courseForEvidence(item) })),
+        ...certificateRequests.docs.map((item) => ({ reference: item.ref, courseId: courseForEvidence(item) })),
+        ...privateResults.docs.map((item) => ({ reference: item.ref, courseId: courseForEvidence(item) })),
+        ...assignments.docs.map((item) => ({ reference: item.ref, courseId: assignmentCourse(item) })),
+      ]
+      const candidates = [
+        profileRef,
+        ...progress.docs.map((item) => item.ref),
+        ...evidence.filter((item) => !protectedCourseIds.has(item.courseId)).map((item) => item.reference),
+      ]
+      const uniqueCandidates = [...new Map(candidates.map((reference) => [reference.path, reference])).values()]
+      if (uniqueCandidates.length > maximumDeletionDocuments) {
+        throw new Error('This account has too many records for one safe deletion. No data was deleted; use a trusted backend for this request.')
+      }
+      const hasCertificate = protectedCourseIds.size > 0
       const auditId = newAuditId('deletion-completed'); const timestamp = serverTimestamp()
-      const deletedCategories = hasCertificate
-        ? ['profile', 'courseProgress']
-        : ['profile', 'courseProgress', 'projectSubmissions', 'reviewRecords', 'certificateRequest']
+      const deletedCategories = ['profile', 'courseProgress', 'projectSubmissions', 'reviewRecords', 'certificateRequest']
       const batch = writeBatch(services.db)
-      candidates.forEach((reference) => batch.delete(reference))
+      uniqueCandidates.forEach((reference) => batch.delete(reference))
       batch.update(doc(services.db, 'deletionRequests', uid), { status: 'completed', updatedAt: timestamp, completedAt: timestamp, certificateEvidenceRetained: hasCertificate })
       batch.set(doc(services.db, 'deletionCompletions', uid), { completionId: uid, learnerUid: uid, policyVersion, completedAt: timestamp, certificateEvidenceRetained: hasCertificate, authenticationRemoval: 'manual-console-required', deletedCategories, auditId })
       batch.set(doc(services.db, 'retentionAudit', auditId), { eventId: auditId, action: 'deletion.completed', learnerUid: uid, actorUid: user.uid, reason: hasCertificate ? 'Eligible learner data deleted; certificate-linked evidence retained for credential integrity.' : 'Eligible learner data deleted; no certificate-linked evidence required retention.', createdAt: timestamp })
       await batch.commit()
       setTypedUid(''); setConfirmed(false)
       setNotice({ kind: 'success', message: 'Firestore deletion is complete. Now remove this exact UID from Firebase Authentication.' })
-    } catch { setNotice({ kind: 'error', message: 'Deletion was rejected. No partial completion was recorded. Refresh and recheck the request.' }) }
+    } catch (cause) {
+      setNotice({
+        kind: 'error',
+        message: cause instanceof Error
+          ? cause.message
+          : 'Deletion was rejected. No partial completion was recorded. Refresh and recheck the request.',
+      })
+    }
     finally { setBusy(false) }
   }
 
@@ -220,8 +273,8 @@ export default function RetentionManager({ user }: { user: User }) {
     <div className="retention-policy-note"><strong>Internal service targets</strong><span>Respond within 14 days of activation. Review active holds every 30 days. These are EFBI operating targets, not a statement of a statutory deadline.</span></div>
     <div className="retention-layout">
       <aside className="retention-list"><div><strong>Privacy requests</strong><span>{records.length}</span></div>{loading && <p>Loading restricted requests…</p>}{!loading && !records.length && <p>No deletion request is waiting.</p>}{records.map((item) => { const attention = retentionAttention(item); return <button key={item.learnerUid} className={selectedUid === item.learnerUid ? 'selected' : ''} onClick={() => select(item.learnerUid)}><strong>{item.learnerUid}</strong><span>Changed {readableDate(item.updatedAt)}</span><small className={'attention attention--' + attention.kind}>{attention.label}</small></button> })}</aside>
-      <main className="retention-record">{!selected ? <div className="retention-empty"><strong>Select a privacy request.</strong><p>Its status and protected actions will appear here.</p></div> : <><header><div><p className="eyebrow">Learner UID</p><h2>{selected.learnerUid}</h2><p>Last changed {readableDate(selected.updatedAt)}</p></div><span className={'retention-state retention-state--' + selected.status}>{selected.status}</span></header>{selectedAttention && <section className={'retention-attention retention-attention--' + selectedAttention.kind}><strong>{selectedAttention.label}</strong><p>{selectedAttention.detail}</p></section>}<dl><div><dt>Scope</dt><dd>Account and learning data</dd></div><div><dt>Policy</dt><dd>{policyVersion}</dd></div><div><dt>Certificate claim</dt><dd>{selected.hasCertificate ? 'Exists — proof must remain' : 'None found'}</dd></div><div><dt>Retention hold</dt><dd>{selected.hold?.status || 'None'}</dd></div><div><dt>Authentication removal</dt><dd>{selected.authenticationRemoved ? 'Confirmed ' + readableDate(selected.authenticationRemoval?.confirmedAt) : selected.status === 'completed' ? 'Manual step pending' : 'Not ready'}</dd></div></dl>{selected.hold?.status === 'active' && <section className="retention-private"><strong>Private hold reason</strong><p>{selected.hold.reason}</p></section>}{selected.status === 'completed' && <section className="retention-complete"><strong>Firestore processing complete</strong><p>{selected.authenticationRemoved ? 'The separate Authentication removal was also confirmed.' : 'Remove only this exact UID from Firebase Authentication, then record confirmation.'}</p></section>}</>}</main>
-      <aside className="retention-actions"><p className="eyebrow">Protected action</p>{!selected && <p>Choose a request to continue.</p>}{selected?.status === 'requested' && <><form onSubmit={(event) => void placeHold(event)}><h2>Place a hold</h2><p>Use only for a documented legal, safety, fraud, or record-integrity need.</p><label>Private reason<textarea value={holdReason} onChange={(event) => setHoldReason(event.target.value)} minLength={20} maxLength={500} required /></label><button className="secondary-action" disabled={busy || holdReason.trim().length < 20}>Place audited hold</button></form><form onSubmit={(event) => void completeDeletion(event)}><h2>Complete deletion</h2><p>Deletes eligible Firestore data atomically. Certificate-linked evidence remains when a credential exists.</p><label>Type the learner UID<input value={typedUid} onChange={(event) => { setTypedUid(event.target.value); setConfirmed(false) }} autoComplete="off" required /></label><label className="retention-confirm"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>I checked the exact UID, certificate status, and absence of an active hold.</span></label><button className="danger-action" disabled={busy || typedUid !== selected.learnerUid || !confirmed}>{busy ? 'Processing…' : 'Delete eligible Firestore data'}</button></form></>}{selected?.status === 'held' && <form onSubmit={(event) => void releaseHold(event)}><h2>Release the hold</h2><p>Record why the restriction is no longer needed. The request returns to processing.</p><label>Private release reason<textarea value={releaseReason} onChange={(event) => setReleaseReason(event.target.value)} minLength={20} maxLength={500} required /></label><button className="primary-action" disabled={busy || releaseReason.trim().length < 20}>{busy ? 'Releasing…' : 'Release with audit record'}</button></form>}{selected?.status === 'cancelled' && <div className="retention-locked"><strong>Learner cancelled</strong><p>No administrator action is allowed. The learner may reopen the request from their account.</p></div>}{selected?.status === 'completed' && !selected.authenticationRemoved && <form onSubmit={(event) => void confirmAuthenticationRemoval(event)}><h2>Confirm Authentication removal</h2><p>First delete the exact UID in Firebase Console. This records your confirmation; it cannot verify or perform that deletion.</p><label>Type the learner UID<input value={authTypedUid} onChange={(event) => { setAuthTypedUid(event.target.value); setAuthConfirmed(false) }} autoComplete="off" required /></label><label className="retention-confirm"><input type="checkbox" checked={authConfirmed} onChange={(event) => setAuthConfirmed(event.target.checked)} /><span>I personally removed this exact UID from Firebase Authentication and verified it is absent.</span></label><button className="danger-action" disabled={busy || authTypedUid !== selected.learnerUid || !authConfirmed}>{busy ? 'Recording…' : 'Record permanent confirmation'}</button></form>}{selected?.status === 'completed' && selected.authenticationRemoved && <div className="retention-locked"><strong>Request fully closed</strong><p>Firestore completion and manual Authentication removal are both permanently recorded.</p></div>}<div className="retention-boundary"><strong>Permanent boundary</strong><p>Certificate records, public verification, deletion completions, and audit history are never deleted by this workflow.</p></div></aside>
+      <main className="retention-record">{!selected ? <div className="retention-empty"><strong>Select a privacy request.</strong><p>Its status and protected actions will appear here.</p></div> : <><header><div><p className="eyebrow">Learner UID</p><h2>{selected.learnerUid}</h2><p>Last changed {readableDate(selected.updatedAt)}</p></div><span className={'retention-state retention-state--' + selected.status}>{selected.status}</span></header>{selectedAttention && <section className={'retention-attention retention-attention--' + selectedAttention.kind}><strong>{selectedAttention.label}</strong><p>{selectedAttention.detail}</p></section>}<dl><div><dt>Scope</dt><dd>Account and learning data</dd></div><div><dt>Policy</dt><dd>{policyVersion}</dd></div><div><dt>Protected certificates</dt><dd>{selected.hasCertificate ? selected.protectedCourseIds.length + ' course' + (selected.protectedCourseIds.length === 1 ? '' : 's') + ' — learning proof remains' : 'None found'}</dd></div><div><dt>Retention hold</dt><dd>{selected.hold?.status || 'None'}</dd></div><div><dt>Authentication removal</dt><dd>{selected.authenticationRemoved ? 'Confirmed ' + readableDate(selected.authenticationRemoval?.confirmedAt) : selected.status === 'completed' ? 'Manual step pending' : 'Not ready'}</dd></div></dl>{selected.hold?.status === 'active' && <section className="retention-private"><strong>Private hold reason</strong><p>{selected.hold.reason}</p></section>}{selected.status === 'completed' && <section className="retention-complete"><strong>Firestore processing complete</strong><p>{selected.authenticationRemoved ? 'The separate Authentication removal was also confirmed.' : 'Remove only this exact UID from Firebase Authentication, then record confirmation.'}</p></section>}</>}</main>
+      <aside className="retention-actions"><p className="eyebrow">Protected action</p>{!selected && <p>Choose a request to continue.</p>}{selected?.status === 'requested' && <><form onSubmit={(event) => void placeHold(event)}><h2>Place a hold</h2><p>Use only for a documented legal, safety, fraud, or record-integrity need.</p><label>Private reason<textarea value={holdReason} onChange={(event) => setHoldReason(event.target.value)} minLength={20} maxLength={500} required /></label><button className="secondary-action" disabled={busy || holdReason.trim().length < 20}>Place audited hold</button></form><form onSubmit={(event) => void completeDeletion(event)}><h2>Complete deletion</h2><p>Checks every course, then deletes eligible Firestore data in one step. Learning proof stays only for courses with an issued certificate.</p><label>Type the learner UID<input value={typedUid} onChange={(event) => { setTypedUid(event.target.value); setConfirmed(false) }} autoComplete="off" required /></label><label className="retention-confirm"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>I checked the exact UID, protected certificates, and absence of an active hold.</span></label><button className="danger-action" disabled={busy || typedUid !== selected.learnerUid || !confirmed}>{busy ? 'Checking every course…' : 'Delete eligible Firestore data'}</button></form></>}{selected?.status === 'held' && <form onSubmit={(event) => void releaseHold(event)}><h2>Release the hold</h2><p>Record why the restriction is no longer needed. The request returns to processing.</p><label>Private release reason<textarea value={releaseReason} onChange={(event) => setReleaseReason(event.target.value)} minLength={20} maxLength={500} required /></label><button className="primary-action" disabled={busy || releaseReason.trim().length < 20}>{busy ? 'Releasing…' : 'Release with audit record'}</button></form>}{selected?.status === 'cancelled' && <div className="retention-locked"><strong>Learner cancelled</strong><p>No administrator action is allowed. The learner may reopen the request from their account.</p></div>}{selected?.status === 'completed' && !selected.authenticationRemoved && <form onSubmit={(event) => void confirmAuthenticationRemoval(event)}><h2>Confirm Authentication removal</h2><p>First delete the exact UID in Firebase Console. This records your confirmation; it cannot verify or perform that deletion.</p><label>Type the learner UID<input value={authTypedUid} onChange={(event) => { setAuthTypedUid(event.target.value); setAuthConfirmed(false) }} autoComplete="off" required /></label><label className="retention-confirm"><input type="checkbox" checked={authConfirmed} onChange={(event) => setAuthConfirmed(event.target.checked)} /><span>I personally removed this exact UID from Firebase Authentication and verified it is absent.</span></label><button className="danger-action" disabled={busy || authTypedUid !== selected.learnerUid || !authConfirmed}>{busy ? 'Recording…' : 'Record permanent confirmation'}</button></form>}{selected?.status === 'completed' && selected.authenticationRemoved && <div className="retention-locked"><strong>Request fully closed</strong><p>Firestore completion and manual Authentication removal are both permanently recorded.</p></div>}<div className="retention-boundary"><strong>Permanent boundary</strong><p>Issued certificates, their course proof, public verification, deletion completions, and audit history are never deleted by this workflow.</p></div></aside>
     </div>
   </section>
 }

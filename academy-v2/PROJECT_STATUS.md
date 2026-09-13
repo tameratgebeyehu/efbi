@@ -1,6 +1,6 @@
 # EFBI Academy v2 — Project Status
 
-Last updated: 2026-09-12
+Last updated: 2026-09-13
 
 ## Current state
 
@@ -468,8 +468,13 @@ The first three multi-course checkpoints are complete in the development codebas
 32. Legacy and versioned authorization paths use separate direct validators so Firestore stays below its evaluation ceiling without weakening the original pilot controls.
 33. Eighty Firestore authorization and lifecycle tests pass, including valid multi-course submission and review flows plus incomplete-course, practice-only, cross-course, cross-version, and extra-revision attacks.
 34. Learner and Admin Studio lint and production builds pass. No Hosting or Firestore rules deployment was performed, enrollment remains closed, and no synthetic test data left the emulator.
+35. Privacy deletion now inventories every course-progress and assessment record instead of relying on fixed AI Foundations paths.
+36. Private draft inventory is temporarily available only to an administrator while that learner has an active deletion request and no active hold.
+37. Certificate claims protect assessment evidence course by course, so an issued credential for one course does not prevent deletion of unrelated uncertified-course evidence.
+38. The localhost Studio stops before writing if a record cannot be matched to a course or if more than 450 document deletions would be needed; eligible data, completion, and audit evidence remain one atomic package.
+39. Eighty-three Firestore authorization and lifecycle tests cover active-request draft inventory, dynamic course deletion, mixed certified and uncertified courses, hold blocking, and legacy pilot compatibility.
 
-Remaining Phase 23 work: generalize certificates and deletion inventory while retaining the tested pilot compatibility path, then prove the complete lifecycle with two synthetic courses. The new submission and review rules must not be deployed until deletion covers their dynamic records.
+Remaining Phase 23 work: generalize certificate request, issuance, and verification across activated project courses while retaining the tested pilot compatibility path, then prove the complete lifecycle with two synthetic courses. No new submission, review, deletion, or certificate rules have been deployed.
 
 
 ## Recovery commands

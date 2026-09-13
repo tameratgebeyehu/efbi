@@ -35,12 +35,13 @@ No schedule above runs automatically in Phase 20. Production enrollment remains 
 2. Select the exact learner UID. Do not identify a request by display name alone.
 3. If a narrow legal, safety, fraud, or record-integrity need exists, enter a specific private reason and place the audited hold. Do not use a hold to delay routine work.
 4. Release the hold with a separate reason as soon as it is no longer necessary.
-5. Before completion, check the exact UID, current request state, hold state, and certificate claim.
-6. Type the UID and confirm the protected action. One atomic batch removes every eligible Firestore record and writes the completion and audit evidence.
-7. If a certificate claim exists, the workflow removes the profile and course progress but preserves certificate-linked projects, reviews, certificate request, issuance, public record, status, claim, and audit.
-8. After Firestore completion, delete only the same UID from **Firebase Console → Authentication → Users**. The browser studio intentionally has no Firebase Admin credential and cannot delete Authentication users.
-9. Confirm that the learner can no longer sign in and that any issued credential still verifies with its accurate status.
-10. Return to **Privacy & retention**, type the same UID, and record the permanent Authentication-removal confirmation. This confirmation records the operator's statement; it does not itself perform or technically verify the Console deletion.
+5. Before completion, check the exact UID, current request state, hold state, and the displayed count of protected certificate courses.
+6. Type the UID and confirm the protected action. The Studio inventories every progress, submission, learner-safe review, private review, assignment, and certificate request for that learner before it writes anything.
+7. One atomic batch removes the profile, all course progress, and every eligible course record while writing the completion and audit evidence. If any record cannot be matched safely to a course, or more than 450 document deletions would be required, the operation stops without writing a partial completion.
+8. For each course with a certificate claim, the workflow preserves that course's projects, reviews, certificate request, issuance, public record, status, claim, and audit. Uncertified courses are still deleted.
+9. After Firestore completion, delete only the same UID from **Firebase Console → Authentication → Users**. The browser studio intentionally has no Firebase Admin credential and cannot delete Authentication users.
+10. Confirm that the learner can no longer sign in and that every issued credential still verifies with its accurate status.
+11. Return to **Privacy & retention**, type the same UID, and record the permanent Authentication-removal confirmation. This confirmation records the operator's statement; it does not itself perform or technically verify the Console deletion.
 
 ## Security invariants
 
@@ -48,9 +49,11 @@ No schedule above runs automatically in Phase 20. Production enrollment remains 
 - Request creation and learner cancellation use server timestamps and fixed fields.
 - Only verified administrators may hold, release, or complete a request.
 - Every hold, release, and completion requires a matching immutable audit event in the same batch.
-- Completion requires the profile and pilot progress record to be absent after the batch.
-- Without a certificate, both fixed pilot submission versions, their public/private reviews, assignments, and certificate request must also be absent.
-- With a certificate claim, browser deletion of certificate-linked evidence is denied.
+- Completion requires the learner profile to be absent after the batch.
+- The localhost Studio temporarily receives read access to private drafts only while that learner has an active deletion request and no active hold.
+- The Studio inventories all current course progress and assessment paths; it does not rely on fixed AI Foundations document names.
+- A certificate claim denies browser deletion of evidence for that exact course. Evidence for unrelated uncertified courses remains eligible for deletion.
+- Firestore rules enforce the request, hold, audit, completion, and per-course certificate boundary. Because rules cannot prove that an arbitrary collection query was exhaustive, inventory completeness depends on the trusted localhost Studio and its tests.
 - Completion records, Authentication-removal confirmations, retention audit records, certificate records, issuance evidence, claims, and status history are immutable.
 - A completed Firestore request remains visibly pending until the separate Authentication-removal confirmation is recorded.
 - Reviewers and learners cannot read private holds or retention audits.
@@ -58,7 +61,9 @@ No schedule above runs automatically in Phase 20. Production enrollment remains 
 
 ## Current scope limits
 
-The deletion executor knows only the current AI Foundations pilot's fixed paths. Before adding another course, project version, appeal, upload, or nested learner collection, update the deletion inventory, Admin Studio batch, security rules, tests, and this document together. A new collection must not ship without an explicit deletion or retention decision.
+The deletion executor covers profiles, all course-progress documents, all learner submissions including drafts, learner-safe reviews, private reviews, review assignments, and certificate requests. Certificate claims select the exact courses whose assessment evidence must remain. The atomic operation is limited to 450 document deletions so completion and audit writes remain safely below Firestore's 500-write batch limit.
+
+Before adding an appeal, upload, message, new global learner collection, or nested learner collection, update the inventory, Admin Studio batch, security rules, tests, and this document together. An unknown record that cannot be matched to a course blocks deletion. A new collection must not ship without an explicit deletion or retention decision.
 
 The Firestore operation does not delete email or credentials held by Firebase Authentication; that is the required manual console step. Confirmation is stored at `authenticationRemovals/{uid}` with no email address or copied learner content. It also cannot delete data held by external processors such as YouTube or email providers. EFBI's production privacy notice must name those systems and provide a contact method for requests.
 

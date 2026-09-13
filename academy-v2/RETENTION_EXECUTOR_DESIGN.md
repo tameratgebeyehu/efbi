@@ -11,7 +11,9 @@ The EFBI pilot uses the localhost Admin Studio queue and a trained administrator
 - TTL deletions are a billed Firestore feature.
 - Scheduled Cloud Functions use Cloud Scheduler and require a billed deployment path.
 
-EFBI must not replace the reviewed Phase 19 batch with browser timers, Apps Script, GitHub Actions containing project credentials, or a service-account key on an operator computer.
+The current localhost Studio now performs a fresh all-course inventory and one atomic deletion package. It is intentionally limited to 450 document deletions, refuses records it cannot match to a course, and preserves evidence separately for every course with a certificate claim. Firestore rules enforce the active-request, hold, completion, audit, and per-course certificate boundaries. Inventory completeness still depends on the trusted local operator application because rules cannot prove that an arbitrary query found every document.
+
+EFBI must not replace this reviewed batch with browser timers, Apps Script, GitHub Actions containing project credentials, or a service-account key on an operator computer.
 
 ## Future executor boundary
 
@@ -22,7 +24,7 @@ Implement only after explicit billing approval and privacy/safeguarding sign-off
 3. Cloud Scheduler is the only invoker. Public and unauthenticated invocation is denied.
 4. Each run starts in dry-run mode and records counts, never learner content.
 5. A per-request idempotency key prevents duplicate completion or Authentication-removal events.
-6. The executor re-reads the deletion request, active hold, certificate claim, completion, and exact record inventory immediately before mutation.
+6. The executor re-reads the deletion request, active hold, all certificate claims, completion, and exact record inventory immediately before mutation.
 7. Firestore removal and its completion/audit evidence use the same atomic package enforced by security rules or equivalent trusted-server validation.
 8. Firebase Authentication removal occurs only after Firestore completion. Failure leaves the request visibly pending for retry.
 9. Retries use bounded exponential backoff. Permanent failures enter an operator queue without copying learner content into logs.

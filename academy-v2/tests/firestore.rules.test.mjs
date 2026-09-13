@@ -2274,12 +2274,11 @@ test('deletion without a certificate removes every eligible fixed record in one 
   assert.equal((await getDoc(doc(admin, 'users', 'alice'))).exists(), false)
 })
 
-test('partial deletion and deletion during an active hold are rejected without a completion record', async () => {
+test('completion without deleting the profile and deletion during an active hold are rejected', async () => {
   await seedPrivacyRecords('alice', false)
   await requestOwnDeletion()
   const admin = verifiedUser('admin-user', { admin: true })
   const partial = writeBatch(admin)
-  partial.delete(doc(admin, 'users', 'alice'))
   addDeletionCompletion(partial, admin)
   await assertFails(partial.commit())
 
@@ -2298,6 +2297,123 @@ test('partial deletion and deletion during an active hold are rejected without a
   addDeletionCompletion(blocked, admin)
   await assertFails(blocked.commit())
   assert.equal((await getDoc(doc(admin, 'deletionCompletions', 'alice'))).exists(), false)
+})
+
+test('an administrator can inventory private drafts only while deletion is active', async () => {
+  await seedPrivacyRecords('alice', false)
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'submissions', 'web-basics--v1--project'), {
+      learnerUid: 'alice',
+      submissionId: 'web-basics--v1--project',
+      courseId: 'web-basics',
+      status: 'draft',
+    })
+  })
+  const admin = verifiedUser('admin-user', { admin: true })
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const inventory = collection(admin, 'users', 'alice', 'submissions')
+  await assertFails(getDocs(inventory))
+  await requestOwnDeletion()
+  const activeInventory = await assertSucceeds(getDocs(inventory))
+  assert.equal(activeInventory.size, 1)
+  await assertFails(getDocs(collection(reviewer, 'users', 'alice', 'submissions')))
+  await assertSucceeds(updateDoc(doc(verifiedUser('alice'), 'deletionRequests', 'alice'), {
+    status: 'cancelled',
+    updatedAt: serverTimestamp(),
+  }))
+  await assertFails(getDocs(inventory))
+})
+
+test('one audited deletion package removes dynamic records from every course', async () => {
+  await seedPrivacyRecords('alice', false)
+  const submissionId = 'web-basics--v1--project'
+  const resultId = 'alice--' + submissionId
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    await setDoc(doc(db, 'users', 'alice', 'progress', 'web-basics'), { courseId: 'web-basics' })
+    await setDoc(doc(db, 'users', 'alice', 'submissions', submissionId), {
+      learnerUid: 'alice', submissionId, courseId: 'web-basics', status: 'draft',
+    })
+    await setDoc(doc(db, 'users', 'alice', 'reviewResults', resultId), {
+      learnerUid: 'alice', submissionId, courseId: 'web-basics',
+    })
+    await setDoc(doc(db, 'users', 'alice', 'certificateRequests', 'web-basics'), {
+      learnerUid: 'alice', courseId: 'web-basics',
+    })
+    await setDoc(doc(db, 'reviewResults', resultId), {
+      learnerUid: 'alice', submissionId, courseId: 'web-basics',
+    })
+    await setDoc(doc(db, 'reviewAssignments', resultId), { learnerUid: 'alice', submissionId })
+  })
+  await requestOwnDeletion()
+  const admin = verifiedUser('admin-user', { admin: true })
+  const batch = writeBatch(admin)
+  for (const reference of [
+    doc(admin, 'users', 'alice'),
+    doc(admin, 'users', 'alice', 'progress', 'ai-foundations'),
+    doc(admin, 'users', 'alice', 'progress', 'web-basics'),
+    doc(admin, 'users', 'alice', 'submissions', submissionId),
+    doc(admin, 'users', 'alice', 'reviewResults', resultId),
+    doc(admin, 'users', 'alice', 'certificateRequests', 'web-basics'),
+    doc(admin, 'reviewResults', resultId),
+    doc(admin, 'reviewAssignments', resultId),
+  ]) batch.delete(reference)
+  addDeletionCompletion(batch, admin)
+  await assertSucceeds(batch.commit())
+  assert.equal((await getDoc(doc(verifiedUser('alice'), 'users', 'alice', 'submissions', submissionId))).exists(), false)
+  assert.equal((await getDoc(doc(admin, 'reviewAssignments', resultId))).exists(), false)
+})
+
+test('a course certificate protects only that course while other course evidence is deleted', async () => {
+  await seedPrivacyRecords('alice', false)
+  const aiSubmissionId = 'ai-foundations-project'
+  const aiResultId = 'alice--' + aiSubmissionId
+  const webSubmissionId = 'web-basics--v1--project'
+  const webResultId = 'alice--' + webSubmissionId
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    await setDoc(doc(db, 'users', 'alice', 'progress', 'web-basics'), { courseId: 'web-basics' })
+    for (const [courseId, submissionId, resultId] of [
+      ['ai-foundations', aiSubmissionId, aiResultId],
+      ['web-basics', webSubmissionId, webResultId],
+    ]) {
+      await setDoc(doc(db, 'users', 'alice', 'submissions', submissionId), {
+        learnerUid: 'alice', submissionId, courseId, status: 'submitted',
+      })
+      await setDoc(doc(db, 'users', 'alice', 'reviewResults', resultId), { learnerUid: 'alice', submissionId, courseId })
+      await setDoc(doc(db, 'users', 'alice', 'certificateRequests', courseId), { learnerUid: 'alice', courseId })
+      await setDoc(doc(db, 'reviewResults', resultId), { learnerUid: 'alice', submissionId, courseId })
+      await setDoc(doc(db, 'reviewAssignments', resultId), { learnerUid: 'alice', submissionId })
+    }
+    await setDoc(doc(db, 'certificateClaims', 'alice--web-basics'), {
+      learnerUid: 'alice', courseId: 'web-basics',
+    })
+  })
+  await requestOwnDeletion()
+  const admin = verifiedUser('admin-user', { admin: true })
+  const batch = writeBatch(admin)
+  for (const reference of [
+    doc(admin, 'users', 'alice'),
+    doc(admin, 'users', 'alice', 'progress', 'ai-foundations'),
+    doc(admin, 'users', 'alice', 'progress', 'web-basics'),
+    doc(admin, 'users', 'alice', 'submissions', aiSubmissionId),
+    doc(admin, 'users', 'alice', 'reviewResults', aiResultId),
+    doc(admin, 'users', 'alice', 'certificateRequests', 'ai-foundations'),
+    doc(admin, 'reviewResults', aiResultId),
+    doc(admin, 'reviewAssignments', aiResultId),
+  ]) batch.delete(reference)
+  addDeletionCompletion(batch, admin, 'alice', true)
+  await assertSucceeds(batch.commit())
+  const learner = verifiedUser('alice')
+  assert.equal((await getDoc(doc(learner, 'users', 'alice', 'submissions', aiSubmissionId))).exists(), false)
+  for (const reference of [
+    doc(learner, 'users', 'alice', 'submissions', webSubmissionId),
+    doc(learner, 'users', 'alice', 'reviewResults', webResultId),
+    doc(learner, 'users', 'alice', 'certificateRequests', 'web-basics'),
+    doc(admin, 'reviewResults', webResultId),
+    doc(admin, 'reviewAssignments', webResultId),
+  ]) assert.equal((await getDoc(reference)).exists(), true)
+  await assertFails(deleteDoc(doc(admin, 'users', 'alice', 'submissions', webSubmissionId)))
 })
 
 test('a certificate deletion preserves credential evidence while removing basic learner data', async () => {
@@ -2359,14 +2475,6 @@ test('Phase 20 synthetic learner, reviewer, and administrator complete the priva
   const deletion = writeBatch(admin)
   deletion.delete(doc(admin, 'users', uid))
   deletion.delete(doc(admin, 'users', uid, 'progress', 'ai-foundations'))
-  deletion.delete(doc(admin, 'users', uid, 'certificateRequests', 'ai-foundations'))
-  for (const submissionId of ['ai-foundations-project', 'ai-foundations-project-revision-1']) {
-    const resultId = uid + '--' + submissionId
-    deletion.delete(doc(admin, 'users', uid, 'submissions', submissionId))
-    deletion.delete(doc(admin, 'users', uid, 'reviewResults', resultId))
-    deletion.delete(doc(admin, 'reviewResults', resultId))
-    deletion.delete(doc(admin, 'reviewAssignments', resultId))
-  }
   deletion.update(doc(admin, 'deletionRequests', uid), {
     status: 'completed', updatedAt: serverTimestamp(), completedAt: serverTimestamp(), certificateEvidenceRetained: false,
   })

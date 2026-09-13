@@ -1884,7 +1884,13 @@ service cloud.firestore {
         && (
           (
             data.certificateEvidenceRetained == true
-            && data.deletedCategories == ['profile', 'courseProgress']
+            && (
+              data.deletedCategories == ['profile', 'courseProgress']
+              || data.deletedCategories == [
+                'profile', 'courseProgress', 'projectSubmissions',
+                'reviewRecords', 'certificateRequest'
+              ]
+            )
           )
           || (
             data.certificateEvidenceRetained == false
@@ -1964,46 +1970,56 @@ service cloud.firestore {
     }
 
     function basicLearnerRecordsGone(uid) {
-      return !existsAfter(/databases/$(database)/documents/users/$(uid))
-        && !existsAfter(/databases/$(database)/documents/users/$(uid)/progress/ai-foundations);
+      return !existsAfter(/databases/$(database)/documents/users/$(uid));
     }
 
-    function eligibleEvidenceGone(uid) {
-      return !existsAfter(/databases/$(database)/documents/users/$(uid)/certificateRequests/ai-foundations)
-        && !existsAfter(/databases/$(database)/documents/users/$(uid)/submissions/ai-foundations-project)
-        && !existsAfter(/databases/$(database)/documents/users/$(uid)/submissions/ai-foundations-project-revision-1)
-        && !existsAfter(/databases/$(database)/documents/users/$(uid)/reviewResults/$(uid + '--ai-foundations-project'))
-        && !existsAfter(/databases/$(database)/documents/users/$(uid)/reviewResults/$(uid + '--ai-foundations-project-revision-1'))
-        && !existsAfter(/databases/$(database)/documents/reviewResults/$(uid + '--ai-foundations-project'))
-        && !existsAfter(/databases/$(database)/documents/reviewResults/$(uid + '--ai-foundations-project-revision-1'))
-        && !existsAfter(/databases/$(database)/documents/reviewAssignments/$(uid + '--ai-foundations-project'))
-        && !existsAfter(/databases/$(database)/documents/reviewAssignments/$(uid + '--ai-foundations-project-revision-1'));
+    function deletionInventoryReadable(uid) {
+      return admin()
+        && get(/databases/$(database)/documents/deletionRequests/$(uid)).data.status == 'requested'
+        && (
+          !exists(/databases/$(database)/documents/retentionHolds/$(uid))
+          || get(/databases/$(database)/documents/retentionHolds/$(uid)).data.status == 'released'
+        );
+    }
+
+    function evidenceCourseId(data) {
+      return data.keys().hasAll(['courseId'])
+        ? data.courseId
+        : 'ai-foundations';
+    }
+
+    function assignmentCourseId(data) {
+      return data.keys().hasAll(['submissionId'])
+        ? (
+          get(/databases/$(database)/documents/users/$(data.learnerUid)/submissions/$(data.submissionId)).data.keys().hasAll(['courseId'])
+            ? get(/databases/$(database)/documents/users/$(data.learnerUid)/submissions/$(data.submissionId)).data.courseId
+            : 'ai-foundations'
+        )
+        : 'ai-foundations';
     }
 
     function deletionPackageValid(uid) {
       let deletionRequest = getAfter(/databases/$(database)/documents/deletionRequests/$(uid)).data;
       let completion = getAfter(/databases/$(database)/documents/deletionCompletions/$(uid)).data;
       let audit = getAfter(/databases/$(database)/documents/retentionAudit/$(completion.auditId)).data;
-      let hasCertificate = exists(/databases/$(database)/documents/certificateClaims/$(uid + '--ai-foundations'));
       let holdAllowsDeletion = !exists(/databases/$(database)/documents/retentionHolds/$(uid))
         || get(/databases/$(database)/documents/retentionHolds/$(uid)).data.status == 'released';
       return validDeletionRequest(deletionRequest, uid)
         && deletionRequest.status == 'completed'
         && deletionRequest.completedAt == request.time
-        && deletionRequest.certificateEvidenceRetained == hasCertificate
+        && deletionRequest.certificateEvidenceRetained == completion.certificateEvidenceRetained
         && validDeletionCompletion(completion, uid)
-        && completion.certificateEvidenceRetained == hasCertificate
         && validRetentionAudit(audit, completion.auditId)
         && audit.action == 'deletion.completed'
         && audit.learnerUid == uid
         && holdAllowsDeletion
-        && basicLearnerRecordsGone(uid)
-        && (hasCertificate || eligibleEvidenceGone(uid));
+        && basicLearnerRecordsGone(uid);
     }
 
-    function evidenceDeletionAllowed(uid) {
+    function evidenceDeletionAllowed(uid, courseId) {
       return admin()
-        && !exists(/databases/$(database)/documents/certificateClaims/$(uid + '--ai-foundations'))
+        && validCourseId(courseId)
+        && !exists(/databases/$(database)/documents/certificateClaims/$(uid + '--' + courseId))
         && deletionPackageValid(uid);
     }
     match /deletionRequests/{uid} {
@@ -2218,7 +2234,8 @@ service cloud.firestore {
           || (admin() && resource.data.status == 'submitted')
           || assignedReviewer(uid, submissionId);
         allow list: if owns(uid)
-          || (admin() && resource.data.status == 'submitted');
+          || (admin() && resource.data.status == 'submitted')
+          || deletionInventoryReadable(uid);
         allow create: if owns(uid)
           && verified()
           && learnerWritesAllowed(uid)
@@ -2244,7 +2261,7 @@ service cloud.firestore {
             )
             : legacySubmissionUpdateAllowed(uid, submissionId)
           );
-        allow delete: if evidenceDeletionAllowed(uid);
+        allow delete: if evidenceDeletionAllowed(uid, evidenceCourseId(resource.data));
       }
 
       // Learners receive a separate public-safe result. The linked private
@@ -2264,7 +2281,7 @@ service cloud.firestore {
             request.resource.data
           );
         allow update: if false;
-        allow delete: if evidenceDeletionAllowed(uid);
+        allow delete: if evidenceDeletionAllowed(uid, evidenceCourseId(resource.data));
       }
 
       // An approved learner deliberately chooses the name that may appear in
@@ -2277,7 +2294,7 @@ service cloud.firestore {
           && learnerWritesAllowed(uid)
           && validCertificateRequest(request.resource.data, uid, requestId);
         allow update: if false;
-        allow delete: if evidenceDeletionAllowed(uid);
+        allow delete: if evidenceDeletionAllowed(uid, evidenceCourseId(resource.data));
       }
     }
 
@@ -2591,7 +2608,10 @@ service cloud.firestore {
       allow delete: if admin()
         && (
           !exists(/databases/$(database)/documents/reviewResults/$(resultId))
-          || evidenceDeletionAllowed(resource.data.learnerUid)
+          || evidenceDeletionAllowed(
+            resource.data.learnerUid,
+            evidenceCourseId(resource.data)
+          )
         );
     }
 
@@ -2605,7 +2625,10 @@ service cloud.firestore {
       allow delete: if admin()
         && (
           !exists(/databases/$(database)/documents/reviewAssignments/$(assignmentId))
-          || evidenceDeletionAllowed(resource.data.learnerUid)
+          || evidenceDeletionAllowed(
+            resource.data.learnerUid,
+            assignmentCourseId(resource.data)
+          )
         );
     }
 
