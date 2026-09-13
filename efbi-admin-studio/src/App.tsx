@@ -99,7 +99,7 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
           <article><small>Privacy</small><strong>Controlled deletion</strong><p>Learner requests are restricted, reviewed, and permanently recorded.</p></article>
         </section>
         <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Control areas</p><h2>Built in secure stages</h2></div><p>Only tested workflows are enabled. Later operations remain visibly locked.</p></div><div className="area-grid">{areas.map((area) => <article key={area.number}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>{area.status}</small></article>)}</div></section>
-        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Complete content operations</h2><p>Programs, courses, and lessons use reviewed, versioned publishing while enrollment remains protected by a separate server switch.</p></div><span className="next-step__badge">Phase 24 active</span></section>
+        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Content operations complete</h2><p>Programs, courses, lessons, and articles now use private previews, reviewed versioned publishing, and an auditable history.</p></div><span className="next-step__badge">Phase 24 complete</span></section>
         </>}
       </main>
     </div>

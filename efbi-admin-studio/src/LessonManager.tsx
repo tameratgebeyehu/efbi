@@ -11,6 +11,7 @@ import {
   validLessonId,
 } from './lessonModel'
 import type { LessonDraft, LessonFormValues, LessonRelease, LessonStatus, PracticeQuestion } from './lessonModel'
+import OwnerPreviewLauncher from './OwnerPreview'
 
 type Notice = { kind: 'success' | 'error'; message: string } | null
 type LessonRecovery = {
@@ -463,6 +464,7 @@ export default function LessonManager({ user }: { user: User }) {
 
         <aside className="course-preview lesson-preview">
           <p className="eyebrow">Lesson preview</p>
+          <OwnerPreviewLauncher item={{ kind: 'lesson', id: selected?.lessonId ?? form.lessonId.trim(), content: normalized.content }} issues={normalized.errors} />
           <div className="preview-card">
             <span className="preview-category">Lesson {normalized.content.order || 0} · {normalized.content.durationMinutes || 0} min</span>
             <h2>{normalized.content.title || 'Lesson title'}</h2>

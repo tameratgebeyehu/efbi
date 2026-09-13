@@ -522,7 +522,18 @@ The third content-operations checkpoint is also implemented in the development c
 9. Ninety-three Firestore authorization and lifecycle tests pass, including private drafts, atomic publication, public reads, immutable releases, corrections as new releases, recoverable unpublishing, malformed schemas, and orphan-delete rejection.
 10. Learner and Admin Studio lint and production builds pass. No Firestore rules, article data, Admin Studio, or learner Hosting build was deployed.
 
-Remaining Phase 24 work: safe owner preview links for complete launch content.
+The fourth and final content-operations checkpoint is also implemented in the development codebase:
+
+1. Every program, course, lesson, and article editor now includes one consistent **Open full preview** control.
+2. The preview stays inside the authenticated localhost-only Admin Studio. It creates no public URL, public database record, release, or audit event.
+3. The preview uses the exact normalized values currently visible in the editor, including unsaved changes, and warns when required fields are unfinished.
+4. Desktop and phone widths can be checked in the same full-screen preview before a draft is marked ready.
+5. Program, course, lesson, and article presentations use distinct public-style layouts. Supported headings, paragraphs, and bullet lists are rendered as escaped React text rather than raw HTML.
+6. A valid lesson YouTube ID uses the privacy-enhanced player. Invalid or absent IDs fail closed to a clear no-video state.
+7. The dialog closes with its visible Close control or Escape, traps keyboard focus while open, restores the owner's prior focus, and prevents the hidden editor from scrolling.
+8. Learner and Admin Studio lint and production builds pass, and all ninety-three Firestore authorization and lifecycle tests remain green. No learner build, Firestore rules, database content, Admin Studio, or Hosting target was deployed.
+
+Phase 24 implementation is complete in the development codebase. Real launch content entry, browser/device QA, privacy gates, and controlled deployment remain later roadmap phases.
 
 
 ## Recovery commands

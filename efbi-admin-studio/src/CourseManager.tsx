@@ -14,6 +14,7 @@ import {
   validCourseId,
 } from './courseModel'
 import type { CourseDraft, CourseFormValues, CourseRelease, CourseStatus } from './courseModel'
+import OwnerPreviewLauncher from './OwnerPreview'
 
 type Notice = { kind: 'success' | 'error'; message: string } | null
 type CourseRecovery = {
@@ -531,6 +532,7 @@ export default function CourseManager({ user }: { user: User }) {
 
         <aside className="course-preview">
           <p className="eyebrow">Safe preview</p>
+          <OwnerPreviewLauncher item={{ kind: 'course', id: selected?.courseId ?? newCourseId.trim(), content: normalized.content }} issues={normalized.errors} />
           <div className="preview-card">
             <span className="preview-category">{categoryLabel(form.category)}</span>
             <h2>{normalized.content.title || 'Course title'}</h2>

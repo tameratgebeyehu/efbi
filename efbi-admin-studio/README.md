@@ -28,4 +28,6 @@ Phase 20 adds an administrator privacy queue with internal deadlines, hold-revie
 
 Unsaved course and lesson text have best-effort browser recovery copies for power-loss recovery. Firestore is still authoritative, and recovery is blocked if the saved server revision changed.
 
+Programs, courses, lessons, and articles each have an **Open full preview** control. It renders the current editor values in desktop and phone widths inside the authenticated Studio. It does not publish content or create a shareable preview URL.
+
 See `../ADMIN_STUDIO.md` for role provisioning and workflows, `../academy-v2/CERTIFICATE_OPERATIONS.md` for the certificate lifecycle, and `../academy-v2/RETENTION_AND_DELETION.md` for privacy operations.
