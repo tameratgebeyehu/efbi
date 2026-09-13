@@ -12,12 +12,16 @@ type AuditEvent = {
   createdAt: unknown
 }
 
-type RecordType = 'all' | 'program' | 'course' | 'lesson'
+type RecordType = 'all' | 'program' | 'blog' | 'course' | 'lesson'
 
 const actionOptions = [
   { value: 'program.draft.created', label: 'Program draft created' },
   { value: 'program.draft.updated', label: 'Program draft updated' },
   { value: 'program.release.published', label: 'Program release published' },
+  { value: 'blog.draft.created', label: 'Article draft created' },
+  { value: 'blog.draft.updated', label: 'Article draft updated' },
+  { value: 'blog.release.published', label: 'Article release published' },
+  { value: 'blog.post.unpublished', label: 'Article unpublished' },
   { value: 'course.draft.created', label: 'Course draft created' },
   { value: 'course.draft.updated', label: 'Course draft updated' },
   { value: 'course.release.published', label: 'Course release published' },
@@ -73,6 +77,7 @@ function actionLabel(value: string) {
 
 function recordLabel(value: string) {
   if (value.startsWith('program')) return 'Program'
+  if (value.startsWith('blog')) return 'Article'
   if (value.startsWith('course')) return 'Course'
   if (value.startsWith('lesson')) return 'Lesson'
   return 'Record'
@@ -153,9 +158,9 @@ export default function AuditLog() {
       <section className="audit-filters" aria-label="Filter audit history">
         <div className="audit-filter-heading"><div><p className="eyebrow">Find an event</p><h2>Filters</h2></div>{hasFilters && <button type="button" onClick={clearFilters}>Clear filters</button>}</div>
         <div className="audit-filter-grid">
-          <label>Record type<select value={recordType} onChange={(event) => setRecordType(event.target.value as RecordType)}><option value="all">All content</option><option value="program">Programs only</option><option value="course">Courses only</option><option value="lesson">Lessons only</option></select></label>
+          <label>Record type<select value={recordType} onChange={(event) => setRecordType(event.target.value as RecordType)}><option value="all">All content</option><option value="program">Programs only</option><option value="blog">Articles only</option><option value="course">Courses only</option><option value="lesson">Lessons only</option></select></label>
           <label>Action<select value={action} onChange={(event) => setAction(event.target.value)}><option value="all">All actions</option>{actionOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-          <label>Program, course, or lesson ID<input value={entityId} onChange={(event) => setEntityId(event.target.value)} placeholder="ai-foundations" /></label>
+          <label>Content ID<input value={entityId} onChange={(event) => setEntityId(event.target.value)} placeholder="ai-foundations" /></label>
           <label>Actor ID<input value={actorUid} onChange={(event) => setActorUid(event.target.value)} placeholder="Firebase user ID" /></label>
           <label>Release ID<input value={releaseId} onChange={(event) => setReleaseId(event.target.value)} placeholder="Published releases only" /></label>
         </div>

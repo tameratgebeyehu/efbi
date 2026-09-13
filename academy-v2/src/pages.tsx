@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { PageHero, ProgramCard, RebuildNotice, SectionHeading } from './components'
-import { blogPosts, buildPillars, methodology, programs as fallbackPrograms, values } from './data'
+import { blogPosts as plannedBlogPosts, buildPillars, methodology, programs as fallbackPrograms, values } from './data'
 import { Icon } from './icons'
 import { CourseAccessButton } from './auth'
 import { useAuth } from './auth-context'
 import { getFallbackCatalog, loadActiveCourseSummaries, loadCourseCatalog, type ActiveCourseSummary, type CourseCatalog } from './lib/catalog'
 import { loadPublishedPrograms } from './lib/programs'
+import { loadPublishedPost, loadPublishedPosts, type PublicBlogPost } from './lib/blog'
 
 import { learnerEnrollmentEnabled } from './site-mode'
 
@@ -290,18 +291,62 @@ export function CertificationPage() {
 
 export function BlogPage() {
   const [query, setQuery] = useState('')
-  const filtered = useMemo(() => blogPosts.slice(1).filter((post) => `${post.title} ${post.category} ${post.excerpt}`.toLowerCase().includes(query.toLowerCase())), [query])
-  const featured = blogPosts[0]
+  const [posts, setPosts] = useState<PublicBlogPost[]>([])
+  const [loaded, setLoaded] = useState(false)
+  useEffect(() => {
+    let active = true
+    void loadPublishedPosts().then((next) => { if (active) { setPosts(next); setLoaded(true) } })
+    return () => { active = false }
+  }, [])
+  const normalizedQuery = query.trim().toLowerCase()
+  const featured = normalizedQuery ? undefined : posts.find((post) => post.featured) ?? posts[0]
+  const filtered = useMemo(() => posts.filter((post) => post.postId !== featured?.postId && `${post.title} ${post.category} ${post.excerpt}`.toLowerCase().includes(normalizedQuery)), [featured?.postId, normalizedQuery, posts])
+  const plannedFeatured = plannedBlogPosts[0]
   return (
     <>
       <PageHero eyebrow="EFBI blog" title="Ideas for learning and building." description="Simple guides, project lessons, and scholarship advice." className="page-hero--blog" />
       <section className="section shell">
-        <article className="featured-post"><div className="featured-post-art"><span>FEATURED / 01</span><strong>Build work<br />you can show.</strong><Icon name="spark" /></div><div><span className="article-tag">{featured.category}</span><p className="article-status">{featured.status}</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><button className="text-arrow" disabled>Coming soon <Icon name="arrow" /></button></div></article>
+        {!loaded && <p className="catalog-loading" role="status">Loading articles…</p>}
+        {loaded && featured && <article className={`featured-post featured-post--${featured.tone}`}><div className="featured-post-art"><span>FEATURED / {String(featured.version).padStart(2, '0')}</span><strong>{featured.title}</strong><Icon name="spark" /></div><div><span className="article-tag">{featured.category}</span><p className="article-status">{featured.readingMinutes} min read</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><Link className="text-arrow" to={`/blog/${featured.postId}`}>Read article <Icon name="arrow" /></Link></div></article>}
+        {loaded && posts.length === 0 && !normalizedQuery && <article className="featured-post"><div className="featured-post-art"><span>FROM THE EFBI DESK</span><strong>Useful ideas are on the way.</strong><Icon name="spark" /></div><div><span className="article-tag">{plannedFeatured.category}</span><p className="article-status">Editorial preview</p><h2>{plannedFeatured.title}</h2><p>{plannedFeatured.excerpt}</p><button className="text-arrow" disabled>Coming soon <Icon name="arrow" /></button></div></article>}
         <div className="blog-toolbar"><div><p className="eyebrow-label">More from EFBI</p><h2>Latest articles</h2></div><label className="search-field"><span className="sr-only">Search articles</span><Icon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search articles" /></label></div>
-        <div className="blog-grid blog-grid--refined">{filtered.map((post, index) => <article key={post.title}><div className={`post-number post-number--${index + 2}`}>{String(index + 2).padStart(2, '0')}</div><span className="article-tag">{post.category}</span><h3>{post.title}</h3><p>{post.excerpt}</p><small>{post.status}</small></article>)}</div>
+        {loaded && posts.length > 0 && filtered.length === 0 && <p className="blog-empty">{query ? 'No published article matches that search.' : 'More published articles will appear here.'}</p>}
+        {loaded && posts.length > 0 && <div className="blog-grid blog-grid--refined">{filtered.map((post, index) => <article key={post.postId}><div className={`post-number post-number--${index + 2}`}>{String(index + 2).padStart(2, '0')}</div><span className="article-tag">{post.category}</span><h3>{post.title}</h3><p>{post.excerpt}</p><small>{post.readingMinutes} min read</small><Link className="text-arrow" to={`/blog/${post.postId}`}>Read article <Icon name="arrow" /></Link></article>)}</div>}
+        {loaded && posts.length === 0 && <div className="blog-grid blog-grid--refined">{plannedBlogPosts.slice(1).filter((post) => `${post.title} ${post.category} ${post.excerpt}`.toLowerCase().includes(query.toLowerCase())).map((post, index) => <article key={post.title}><div className={`post-number post-number--${index + 2}`}>{String(index + 2).padStart(2, '0')}</div><span className="article-tag">{post.category}</span><h3>{post.title}</h3><p>{post.excerpt}</p><small>{post.status}</small></article>)}</div>}
       </section>
     </>
   )
+}
+
+function ArticleBody({ body }: { body: string }) {
+  return <div className="article-body">{body.split(/\n{2,}/).map((block, index) => {
+    const text = block.trim()
+    if (!text) return null
+    if (text.startsWith('### ')) return <h3 key={index}>{text.slice(4)}</h3>
+    if (text.startsWith('## ')) return <h2 key={index}>{text.slice(3)}</h2>
+    const lines = text.split('\n')
+    if (lines.every((line) => line.startsWith('- '))) return <ul key={index}>{lines.map((line, lineIndex) => <li key={`${index}-${lineIndex}`}>{line.slice(2)}</li>)}</ul>
+    return <p key={index}>{text}</p>
+  })}</div>
+}
+
+export function BlogArticlePage() {
+  const { postId } = useParams()
+  const [resolved, setResolved] = useState<{ id: string; post: PublicBlogPost | null } | null>(null)
+  useEffect(() => {
+    if (!postId) return undefined
+    let active = true
+    void loadPublishedPost(postId).then((post) => { if (active) setResolved({ id: postId, post }) })
+    return () => { active = false }
+  }, [postId])
+  if (!postId) return <Navigate to="/blog" replace />
+  if (!resolved || resolved.id !== postId) return <main className="section shell" aria-live="polite">Loading article…</main>
+  if (!resolved.post) return <Navigate to="/blog" replace />
+  const post = resolved.post
+  return <>
+    <PageHero eyebrow={`${post.category} · ${post.readingMinutes} min read`} title={post.title} description={post.excerpt} className="page-hero--blog" />
+    <article className="section shell article-page"><div className="article-byline"><span>By {post.authorName}</span><span>{post.publishedAt ? post.publishedAt.toLocaleDateString() : 'Published by EFBI'}</span><span>Release {post.version}</span></div><ArticleBody body={post.bodyMarkdown} /><footer><Link className="button button--outline" to="/blog">Back to the EFBI blog</Link></footer></article>
+  </>
 }
 
 export function AboutPage() {

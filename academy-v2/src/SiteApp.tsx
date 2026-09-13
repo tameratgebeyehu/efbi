@@ -7,6 +7,7 @@ import { VerifyPage } from './verification'
 import {
   AboutPage,
   BlogPage,
+  BlogArticlePage,
   CertificationPage,
   ContactPage,
   CourseDetailPage,
@@ -32,6 +33,7 @@ export default function SiteApp() {
           <Route path="certification" element={<CertificationPage />} />
           <Route path="verify" element={<VerifyPage />} />
           <Route path="blog" element={<BlogPage />} />
+          <Route path="blog/:postId" element={<BlogArticlePage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="join" element={<JoinPage />} />

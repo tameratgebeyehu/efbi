@@ -296,6 +296,35 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .program-admin-preview h2 { font-size: 1.35rem; line-height: 1.2; }
 .program-admin-preview p { color: var(--muted); font-size: .78rem; line-height: 1.65; }
 .program-admin-preview > strong { padding-top: 8px; border-top: 1px solid var(--line); color: var(--deep); font-size: .72rem; }
+.status-pill--unpublished { color: #6f4b1d; background: #fff5df; }
+.blog-layout-admin { grid-template-columns: 235px minmax(420px, 1fr) minmax(310px, .8fr); }
+.blog-body-input { min-height: 430px !important; }
+.blog-admin-card { display: grid; gap: 12px; padding: 26px; border: 1px solid var(--line); border-top: 5px solid var(--green); background: #fff; }
+.blog-admin-card.tone-gold { border-top-color: #d69a13; }
+.blog-admin-card.tone-blue { border-top-color: #2774ae; }
+.blog-admin-card.tone-red { border-top-color: #c7493a; }
+.blog-admin-card > span { width: fit-content; color: var(--green); font-size: .67rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.blog-admin-card > small { color: #9a6710; font-size: .68rem; font-weight: 850; }
+.blog-admin-card h2, .blog-admin-card p { margin: 0; }
+.blog-admin-card h2 { color: var(--deep); font-size: 1.4rem; line-height: 1.25; }
+.blog-admin-card p { color: var(--muted); font-size: .78rem; line-height: 1.65; }
+.blog-admin-meta { padding-bottom: 14px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .68rem; font-weight: 750; }
+.blog-admin-body { max-height: 440px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: #33483c; font-size: .76rem; line-height: 1.75; }
+.publish-panel--danger { border-color: #e4c8c4; background: #fff8f7; }
+.publish-panel--danger > label { display: grid; gap: 7px; margin: 16px 0; color: #6f302a; font-size: .7rem; font-weight: 850; }
+.publish-panel--danger input { min-height: 42px; padding: 8px 10px; border: 1px solid #d9b7b2; background: #fff; }
+.publish-panel--danger > button { width: 100%; min-height: 44px; border: 1px solid #a8483f; color: #8b352e; background: #fff; font: inherit; font-size: .72rem; font-weight: 850; cursor: pointer; }
+.publish-panel--danger > button:disabled { opacity: .45; cursor: not-allowed; }
+
+@media (max-width: 1180px) {
+  .blog-layout-admin { grid-template-columns: 210px minmax(0, 1fr); }
+  .blog-preview-admin { grid-column: 1 / -1; }
+}
+
+@media (max-width: 720px) {
+  .blog-layout-admin { grid-template-columns: 1fr; }
+  .blog-preview-admin { grid-column: auto; }
+}
 
 @media (max-width: 900px) {
   .lesson-layout-admin { grid-template-columns: 190px minmax(0, 1fr); }

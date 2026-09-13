@@ -1,6 +1,6 @@
 # EFBI Academy roadmap to launch
 
-Updated: 2026-09-12
+Updated: 2026-09-13
 
 ## Current position
 
@@ -8,7 +8,7 @@ Phases 0–23 are complete in the development codebase. Phase 21's external priv
 
 The rebuilt source code is backed up on GitHub, but `www.efbi.site` still serves the maintenance site. The rebuilt academy has a separate development Hosting target at `https://efbi-academy-dev-doha.web.app`; it must not be published there with open enrollment until the preview safety switch exists.
 
-The localhost Admin Studio can manage program, course, and lesson drafts; flexible browser-only practice checks; immutable releases; audited course activation; multi-course project reviews and certificates; audit records; and deletion requests. Published program snapshots drive the public learning-path pages with a safe built-in fallback. Verified learners can browse complete activated courses, continue a progress-locked version, submit eligible projects, request certificates, and verify issued credentials. Blog operations and owner preview links remain Phase 24 work.
+The localhost Admin Studio can manage program, course, lesson, and article drafts; flexible browser-only practice checks; immutable releases; audited publication and course activation; multi-course project reviews and certificates; audit records; and deletion requests. Published program and article snapshots drive their public pages with safe built-in fallbacks. Verified learners can browse complete activated courses, continue a progress-locked version, submit eligible projects, request certificates, and verify issued credentials. Owner preview links remain Phase 24 work.
 
 ## Phase 22 — owner access and safe preview controls
 
@@ -35,7 +35,7 @@ Exit check: two synthetic courses can complete the full lifecycle without readin
 1. Connect published course and lesson releases to the public catalog and learner routes.
 2. Improve the question editor beyond the current three fixed practice slots where the approved course model requires it.
 3. Add structured program/category management. **Complete in the development codebase.**
-4. Add blog draft, preview, publish, unpublish, and revision controls.
+4. Add blog draft, preview, publish, unpublish, and revision controls. **Complete in the development codebase.**
 5. Add safe preview links so the owner checks content before publication.
 6. Keep media as validated YouTube IDs and safe HTTPS links; do not add file uploads yet.
 

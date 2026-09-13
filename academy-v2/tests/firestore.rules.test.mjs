@@ -265,6 +265,44 @@ function addProgramCreation(batch, db, programId, overrides = {}) {
   return auditId
 }
 
+function blogContent(overrides = {}) {
+  return {
+    title: 'How to Build a Strong Student Project Portfolio',
+    excerpt: 'A practical guide to documenting your learning, decisions, and community impact clearly.',
+    category: 'Scholarships',
+    authorName: 'Tamerat Gebeyehu',
+    readingMinutes: 6,
+    featured: true,
+    tone: 'gold',
+    bodyMarkdown: 'A strong portfolio helps another person understand what you built, why you built it, and how you improved it.\n\n## Start with the problem\n\nExplain the real need before describing the technology. Show what you learned from users and what changed after testing.',
+    ...overrides,
+  }
+}
+
+function blogDraftRecord({ postId, auditId, actorUid = 'admin-user', ...overrides }) {
+  return {
+    postId,
+    ...blogContent(),
+    status: 'draft',
+    revision: 1,
+    latestReleaseNumber: 0,
+    latestReleaseId: '',
+    createdAt: serverTimestamp(),
+    createdBy: actorUid,
+    updatedAt: serverTimestamp(),
+    updatedBy: actorUid,
+    lastAuditId: auditId,
+    ...overrides,
+  }
+}
+
+function addBlogCreation(batch, db, postId, overrides = {}) {
+  const auditId = `audit-blog-create-${postId}-0001`
+  batch.set(doc(db, 'blogDrafts', postId), blogDraftRecord({ postId, auditId, ...overrides }))
+  batch.set(doc(db, 'adminAudit', auditId), auditEvent({ eventId: auditId, action: 'blog.draft.created', entityType: 'blogDraft', entityId: postId, revision: 1 }))
+  return auditId
+}
+
 function questionV2(overrides = {}) {
   return {
     prompt: 'What should a learner do before trusting an AI answer?',
@@ -691,6 +729,134 @@ test('program schemas reject malformed drafts and incomplete publication batches
   incomplete.set(doc(admin, 'programReleases', releaseId), { releaseId, programId, ...programContent(), version: 1, draftRevision: 3, publishedAt: serverTimestamp(), publishedBy: 'admin-user', auditId })
   incomplete.set(doc(admin, 'adminAudit', auditId), auditEvent({ eventId: auditId, action: 'program.release.published', entityType: 'programRelease', entityId: programId, revision: 3, releaseId }))
   await assertFails(incomplete.commit())
+})
+
+test('article drafts stay private and require an atomic audit record', async () => {
+  const admin = verifiedUser('admin-user', { admin: true })
+  const postId = 'student-project-portfolio'
+  const create = writeBatch(admin)
+  addBlogCreation(create, admin, postId)
+  await assertSucceeds(create.commit())
+  await assertSucceeds(getDoc(doc(admin, 'blogDrafts', postId)))
+  await assertFails(getDoc(doc(verifiedUser('alice'), 'blogDrafts', postId)))
+  await assertFails(getDoc(doc(environment.unauthenticatedContext().firestore(), 'blogDrafts', postId)))
+  await assertFails(setDoc(doc(admin, 'blogDrafts', 'forged-article'), blogDraftRecord({ postId: 'forged-article', auditId: 'audit-blog-create-forged-article-0001' })))
+
+  const malformed = writeBatch(admin)
+  addBlogCreation(malformed, admin, 'invalid-article', { bodyMarkdown: 'Too short.' })
+  await assertFails(malformed.commit())
+})
+
+test('article publication creates one immutable release and public post', async () => {
+  const admin = verifiedUser('admin-user', { admin: true })
+  const postId = 'student-project-portfolio'
+  const create = writeBatch(admin)
+  addBlogCreation(create, admin, postId)
+  await assertSucceeds(create.commit())
+
+  const readyAuditId = 'audit-blog-ready-student-project-portfolio-0001'
+  const ready = writeBatch(admin)
+  ready.update(doc(admin, 'blogDrafts', postId), { status: 'ready', revision: 2, updatedAt: serverTimestamp(), updatedBy: 'admin-user', lastAuditId: readyAuditId })
+  ready.set(doc(admin, 'adminAudit', readyAuditId), auditEvent({ eventId: readyAuditId, action: 'blog.draft.updated', entityType: 'blogDraft', entityId: postId, revision: 2 }))
+  await assertSucceeds(ready.commit())
+
+  const releaseId = 'release-blog-student-project-portfolio-v1-0001'
+  const auditId = 'audit-blog-publish-student-project-portfolio-v1-0001'
+  const content = blogContent()
+  const publish = writeBatch(admin)
+  publish.update(doc(admin, 'blogDrafts', postId), { status: 'published', revision: 3, latestReleaseNumber: 1, latestReleaseId: releaseId, updatedAt: serverTimestamp(), updatedBy: 'admin-user', lastAuditId: auditId })
+  publish.set(doc(admin, 'blogReleases', releaseId), { releaseId, postId, ...content, version: 1, draftRevision: 3, publishedAt: serverTimestamp(), publishedBy: 'admin-user', auditId })
+  publish.set(doc(admin, 'publishedPosts', postId), { postId, ...content, releaseId, version: 1, publishedAt: serverTimestamp(), publishedBy: 'admin-user', auditId })
+  publish.set(doc(admin, 'adminAudit', auditId), auditEvent({ eventId: auditId, action: 'blog.release.published', entityType: 'blogRelease', entityId: postId, revision: 3, releaseId }))
+  await assertSucceeds(publish.commit())
+
+  const visitor = environment.unauthenticatedContext().firestore()
+  await assertSucceeds(getDoc(doc(visitor, 'publishedPosts', postId)))
+  await assertSucceeds(getDocs(collection(visitor, 'publishedPosts')))
+  await assertFails(getDoc(doc(visitor, 'blogReleases', releaseId)))
+  await assertFails(updateDoc(doc(admin, 'blogReleases', releaseId), { title: 'Rewritten history' }))
+  await assertFails(updateDoc(doc(verifiedUser('alice'), 'publishedPosts', postId), { title: 'Forged public post' }))
+})
+
+test('an article correction creates a second release without rewriting the first', async () => {
+  const admin = verifiedUser('admin-user', { admin: true })
+  const postId = 'student-project-portfolio'
+  const firstReleaseId = 'release-blog-student-project-portfolio-v1-0001'
+  const firstAuditId = 'audit-blog-publish-student-project-portfolio-v1-0001'
+  const originalContent = blogContent()
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    const publishedAt = new Date('2026-09-13T01:00:00Z')
+    await setDoc(doc(db, 'blogDrafts', postId), { postId, ...originalContent, status: 'published', revision: 3, latestReleaseNumber: 1, latestReleaseId: firstReleaseId, createdAt: publishedAt, createdBy: 'admin-user', updatedAt: publishedAt, updatedBy: 'admin-user', lastAuditId: firstAuditId })
+    await setDoc(doc(db, 'blogReleases', firstReleaseId), { releaseId: firstReleaseId, postId, ...originalContent, version: 1, draftRevision: 3, publishedAt, publishedBy: 'admin-user', auditId: firstAuditId })
+    await setDoc(doc(db, 'publishedPosts', postId), { postId, ...originalContent, releaseId: firstReleaseId, version: 1, publishedAt, publishedBy: 'admin-user', auditId: firstAuditId })
+  })
+
+  const correctedContent = blogContent({
+    title: 'How to Build a Clear Student Project Portfolio',
+    excerpt: 'A corrected guide to documenting your learning, decisions, testing, and community impact clearly.',
+  })
+  const editAuditId = 'audit-blog-correct-student-project-portfolio-0001'
+  const edit = writeBatch(admin)
+  edit.update(doc(admin, 'blogDrafts', postId), { ...correctedContent, status: 'draft', revision: 4, updatedAt: serverTimestamp(), updatedBy: 'admin-user', lastAuditId: editAuditId })
+  edit.set(doc(admin, 'adminAudit', editAuditId), auditEvent({ eventId: editAuditId, action: 'blog.draft.updated', entityType: 'blogDraft', entityId: postId, revision: 4, releaseId: firstReleaseId }))
+  await assertSucceeds(edit.commit())
+
+  const readyAuditId = 'audit-blog-ready-student-project-portfolio-v2-0001'
+  const ready = writeBatch(admin)
+  ready.update(doc(admin, 'blogDrafts', postId), { status: 'ready', revision: 5, updatedAt: serverTimestamp(), updatedBy: 'admin-user', lastAuditId: readyAuditId })
+  ready.set(doc(admin, 'adminAudit', readyAuditId), auditEvent({ eventId: readyAuditId, action: 'blog.draft.updated', entityType: 'blogDraft', entityId: postId, revision: 5, releaseId: firstReleaseId }))
+  await assertSucceeds(ready.commit())
+
+  const secondReleaseId = 'release-blog-student-project-portfolio-v2-0001'
+  const publishAuditId = 'audit-blog-publish-student-project-portfolio-v2-0001'
+  const publish = writeBatch(admin)
+  publish.update(doc(admin, 'blogDrafts', postId), { status: 'published', revision: 6, latestReleaseNumber: 2, latestReleaseId: secondReleaseId, updatedAt: serverTimestamp(), updatedBy: 'admin-user', lastAuditId: publishAuditId })
+  publish.set(doc(admin, 'blogReleases', secondReleaseId), { releaseId: secondReleaseId, postId, ...correctedContent, version: 2, draftRevision: 6, publishedAt: serverTimestamp(), publishedBy: 'admin-user', auditId: publishAuditId })
+  publish.update(doc(admin, 'publishedPosts', postId), { postId, ...correctedContent, releaseId: secondReleaseId, version: 2, publishedAt: serverTimestamp(), publishedBy: 'admin-user', auditId: publishAuditId })
+  publish.set(doc(admin, 'adminAudit', publishAuditId), auditEvent({ eventId: publishAuditId, action: 'blog.release.published', entityType: 'blogRelease', entityId: postId, revision: 6, releaseId: secondReleaseId }))
+  await assertSucceeds(publish.commit())
+
+  assert.equal((await getDoc(doc(admin, 'blogReleases', firstReleaseId))).data().title, originalContent.title)
+  assert.equal((await getDoc(doc(admin, 'blogReleases', secondReleaseId))).data().title, correctedContent.title)
+  const publicPost = await getDoc(doc(environment.unauthenticatedContext().firestore(), 'publishedPosts', postId))
+  assert.equal(publicPost.data().version, 2)
+  assert.equal(publicPost.data().title, correctedContent.title)
+})
+
+test('unpublishing removes only the public post and preserves article history', async () => {
+  const admin = verifiedUser('admin-user', { admin: true })
+  const postId = 'student-project-portfolio'
+  const releaseId = 'release-blog-student-project-portfolio-v1-0001'
+  const publishAuditId = 'audit-blog-publish-student-project-portfolio-v1-0001'
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    const content = blogContent()
+    await setDoc(doc(db, 'blogDrafts', postId), { postId, ...content, status: 'published', revision: 3, latestReleaseNumber: 1, latestReleaseId: releaseId, createdAt: new Date(), createdBy: 'admin-user', updatedAt: new Date(), updatedBy: 'admin-user', lastAuditId: publishAuditId })
+    await setDoc(doc(db, 'blogReleases', releaseId), { releaseId, postId, ...content, version: 1, draftRevision: 3, publishedAt: new Date(), publishedBy: 'admin-user', auditId: publishAuditId })
+    await setDoc(doc(db, 'publishedPosts', postId), { postId, ...content, releaseId, version: 1, publishedAt: new Date(), publishedBy: 'admin-user', auditId: publishAuditId })
+  })
+
+  const auditId = 'audit-blog-unpublish-student-project-portfolio-0001'
+  const unpublish = writeBatch(admin)
+  unpublish.update(doc(admin, 'blogDrafts', postId), { status: 'unpublished', revision: 4, updatedAt: serverTimestamp(), updatedBy: 'admin-user', lastAuditId: auditId })
+  unpublish.delete(doc(admin, 'publishedPosts', postId))
+  unpublish.set(doc(admin, 'adminAudit', auditId), auditEvent({ eventId: auditId, action: 'blog.post.unpublished', entityType: 'blogDraft', entityId: postId, revision: 4, releaseId }))
+  await assertSucceeds(unpublish.commit())
+
+  const visitor = environment.unauthenticatedContext().firestore()
+  const publicPost = await getDoc(doc(visitor, 'publishedPosts', postId))
+  assert.equal(publicPost.exists(), false)
+  await assertSucceeds(getDoc(doc(admin, 'blogReleases', releaseId)))
+  await assertFails(deleteDoc(doc(admin, 'blogReleases', releaseId)))
+
+  const orphanDelete = writeBatch(admin)
+  const secondPostId = 'unsafe-unpublish'
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'publishedPosts', secondPostId), { postId: secondPostId, ...blogContent(), releaseId: 'release-blog-unsafe-unpublish-v1-0001', version: 1, publishedAt: new Date(), publishedBy: 'admin-user', auditId: 'audit-blog-publish-unsafe-unpublish-v1-0001' })
+  })
+  orphanDelete.delete(doc(admin, 'publishedPosts', secondPostId))
+  await assertFails(orphanDelete.commit())
 })
 
 test('administrators publish immutable course versions while public and unverified access stays closed', async () => {

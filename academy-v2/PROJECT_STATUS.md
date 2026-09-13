@@ -509,7 +509,20 @@ The second content-operations checkpoint is also implemented in the development 
 8. Eighty-nine Firestore authorization and lifecycle tests pass, including private draft access, audited creation, dynamic course categories, atomic publishing, public reads, immutable releases, malformed schemas, and incomplete publication rejection.
 9. Learner and Admin Studio lint and production builds pass. No Firestore rules, program data, Admin Studio, or learner Hosting build was deployed.
 
-Remaining Phase 24 work: blog draft/preview/publish/unpublish/revision controls and owner preview links for complete launch content.
+The third content-operations checkpoint is also implemented in the development codebase:
+
+1. Admin Studio now has a separate Blog workspace for drafts, local recovery, review-ready status, owner preview, publication, corrections, unpublishing, and release history.
+2. Publication atomically creates an immutable article release, updates the private draft, refreshes the public article snapshot, and records the linked audit event.
+3. Corrections cannot rewrite history. The owner edits the draft and publishes a new numbered release while every earlier release remains unchanged.
+4. Unpublishing removes only the public snapshot after an exact confirmation phrase. The draft, immutable releases, and audit history remain available to the owner.
+5. The public Blog page loads only validated published snapshots, supports search, selects the newest featured article, and links to safe article routes.
+6. Article bodies support a deliberately small, escaped text format: paragraphs, second- and third-level headings, and bullet lists. Raw HTML is never rendered.
+7. Anonymous visitors can read only published article snapshots. Drafts and release history remain administrator-only, and all standalone or forged publication operations are rejected.
+8. The audit-history workspace labels and filters article operations.
+9. Ninety-three Firestore authorization and lifecycle tests pass, including private drafts, atomic publication, public reads, immutable releases, corrections as new releases, recoverable unpublishing, malformed schemas, and orphan-delete rejection.
+10. Learner and Admin Studio lint and production builds pass. No Firestore rules, article data, Admin Studio, or learner Hosting build was deployed.
+
+Remaining Phase 24 work: safe owner preview links for complete launch content.
 
 
 ## Recovery commands

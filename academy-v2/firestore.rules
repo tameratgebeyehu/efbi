@@ -256,6 +256,63 @@ service cloud.firestore {
         && data.lastAuditId.size() <= 180;
     }
 
+    function validPostId(postId) {
+      return postId is string
+        && postId.size() >= 3
+        && postId.size() <= 80
+        && postId.matches('[a-z0-9]+(-[a-z0-9]+)*');
+    }
+
+    function validBlogContent(data) {
+      return data.title is string
+        && data.title.size() >= 5
+        && data.title.size() <= 120
+        && data.excerpt is string
+        && data.excerpt.size() >= 20
+        && data.excerpt.size() <= 320
+        && data.category is string
+        && data.category.size() >= 2
+        && data.category.size() <= 40
+        && data.authorName is string
+        && data.authorName.size() >= 2
+        && data.authorName.size() <= 80
+        && data.readingMinutes is int
+        && data.readingMinutes >= 1
+        && data.readingMinutes <= 60
+        && data.featured is bool
+        && data.tone in ['green', 'gold', 'blue', 'red']
+        && data.bodyMarkdown is string
+        && data.bodyMarkdown.size() >= 100
+        && data.bodyMarkdown.size() <= 20000;
+    }
+
+    function validBlogDraft(data, postId) {
+      return data.keys().hasOnly([
+          'postId', 'title', 'excerpt', 'category', 'authorName',
+          'readingMinutes', 'featured', 'tone', 'bodyMarkdown', 'status',
+          'revision', 'latestReleaseNumber', 'latestReleaseId', 'createdAt',
+          'createdBy', 'updatedAt', 'updatedBy', 'lastAuditId'
+        ])
+        && validPostId(postId)
+        && data.postId == postId
+        && validBlogContent(data)
+        && data.status in ['draft', 'ready', 'published', 'unpublished']
+        && data.revision is int
+        && data.revision >= 1
+        && data.latestReleaseNumber is int
+        && data.latestReleaseNumber >= 0
+        && data.latestReleaseId is string
+        && data.latestReleaseId.size() <= 140
+        && data.createdAt is timestamp
+        && data.createdBy is string
+        && data.createdBy.size() > 0
+        && data.updatedAt == request.time
+        && data.updatedBy == request.auth.uid
+        && data.lastAuditId is string
+        && data.lastAuditId.size() >= 16
+        && data.lastAuditId.size() <= 180;
+    }
+
     function validPracticeQuestionV2(data) {
       return data.keys().hasOnly(['prompt', 'options', 'correctOption', 'explanation'])
         && data.prompt is string
@@ -619,9 +676,9 @@ service cloud.firestore {
           'revision', 'releaseId', 'createdAt'
         ])
         && data.eventId == eventId
-        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published', 'course.version.activated', 'lesson.draft.created', 'lesson.draft.updated', 'lesson.release.published', 'program.draft.created', 'program.draft.updated', 'program.release.published']
-        && data.entityType in ['courseDraft', 'courseRelease', 'courseVersion', 'lessonDraft', 'lessonRelease', 'programDraft', 'programRelease']
-        && validCourseId(data.entityId)
+        && data.action in ['course.draft.created', 'course.draft.updated', 'course.release.published', 'course.version.activated', 'lesson.draft.created', 'lesson.draft.updated', 'lesson.release.published', 'program.draft.created', 'program.draft.updated', 'program.release.published', 'blog.draft.created', 'blog.draft.updated', 'blog.release.published', 'blog.post.unpublished']
+        && data.entityType in ['courseDraft', 'courseRelease', 'courseVersion', 'lessonDraft', 'lessonRelease', 'programDraft', 'programRelease', 'blogDraft', 'blogRelease']
+        && (data.entityType in ['blogDraft', 'blogRelease'] ? validPostId(data.entityId) : validCourseId(data.entityId))
         && data.actorUid == request.auth.uid
         && data.revision is int
         && data.revision >= 1
@@ -752,7 +809,7 @@ service cloud.firestore {
         && validProgramContent(data)
         && data.releaseId is string
         && data.releaseId.size() >= 16
-        && data.releaseId.size() <= 120
+        && data.releaseId.size() <= 140
         && data.version is int
         && data.version >= 1
         && data.publishedAt == request.time
@@ -777,6 +834,94 @@ service cloud.firestore {
         && release.durationWeeks == data.durationWeeks
         && release.accent == data.accent
         && release.order == data.order;
+    }
+
+    function sameBlogContent() {
+      return request.resource.data.title == resource.data.title
+        && request.resource.data.excerpt == resource.data.excerpt
+        && request.resource.data.category == resource.data.category
+        && request.resource.data.authorName == resource.data.authorName
+        && request.resource.data.readingMinutes == resource.data.readingMinutes
+        && request.resource.data.featured == resource.data.featured
+        && request.resource.data.tone == resource.data.tone
+        && request.resource.data.bodyMarkdown == resource.data.bodyMarkdown;
+    }
+
+    function validBlogRelease(data, releaseId) {
+      return data.keys().hasOnly([
+          'releaseId', 'postId', 'title', 'excerpt', 'category', 'authorName',
+          'readingMinutes', 'featured', 'tone', 'bodyMarkdown', 'version',
+          'draftRevision', 'publishedAt', 'publishedBy', 'auditId'
+        ])
+        && data.releaseId == releaseId
+        && releaseId.size() >= 16
+        && releaseId.size() <= 140
+        && validPostId(data.postId)
+        && validBlogContent(data)
+        && data.version is int
+        && data.version >= 1
+        && data.draftRevision is int
+        && data.draftRevision >= 2
+        && data.publishedAt == request.time
+        && data.publishedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180;
+    }
+
+    function blogReleaseMatchesDraft(data, releaseId) {
+      let draft = getAfter(/databases/$(database)/documents/blogDrafts/$(data.postId)).data;
+      return draft.status == 'published'
+        && draft.latestReleaseId == releaseId
+        && draft.latestReleaseNumber == data.version
+        && draft.revision == data.draftRevision
+        && draft.lastAuditId == data.auditId
+        && draft.title == data.title
+        && draft.excerpt == data.excerpt
+        && draft.category == data.category
+        && draft.authorName == data.authorName
+        && draft.readingMinutes == data.readingMinutes
+        && draft.featured == data.featured
+        && draft.tone == data.tone
+        && draft.bodyMarkdown == data.bodyMarkdown;
+    }
+
+    function validPublishedPost(data, postId) {
+      return data.keys().hasOnly([
+          'postId', 'title', 'excerpt', 'category', 'authorName',
+          'readingMinutes', 'featured', 'tone', 'bodyMarkdown', 'releaseId',
+          'version', 'publishedAt', 'publishedBy', 'auditId'
+        ])
+        && data.postId == postId
+        && validPostId(postId)
+        && validBlogContent(data)
+        && data.releaseId is string
+        && data.releaseId.size() >= 16
+        && data.releaseId.size() <= 140
+        && data.version is int
+        && data.version >= 1
+        && data.publishedAt == request.time
+        && data.publishedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180;
+    }
+
+    function publishedPostMatchesRelease(data, postId) {
+      let release = getAfter(/databases/$(database)/documents/blogReleases/$(data.releaseId)).data;
+      return release.postId == postId
+        && release.version == data.version
+        && release.auditId == data.auditId
+        && release.publishedAt == data.publishedAt
+        && release.publishedBy == data.publishedBy
+        && release.title == data.title
+        && release.excerpt == data.excerpt
+        && release.category == data.category
+        && release.authorName == data.authorName
+        && release.readingMinutes == data.readingMinutes
+        && release.featured == data.featured
+        && release.tone == data.tone
+        && release.bodyMarkdown == data.bodyMarkdown;
     }
 
     function auditLinksToCourseDraft(data, eventId) {
@@ -865,6 +1010,44 @@ service cloud.firestore {
         && published.publishedBy == request.auth.uid;
     }
 
+    function auditLinksToBlogDraft(data, eventId) {
+      let draft = getAfter(/databases/$(database)/documents/blogDrafts/$(data.entityId)).data;
+      return data.action in ['blog.draft.created', 'blog.draft.updated']
+        && draft.lastAuditId == eventId
+        && draft.revision == data.revision
+        && draft.latestReleaseId == data.releaseId
+        && draft.updatedBy == request.auth.uid;
+    }
+
+    function auditLinksToBlogRelease(data, eventId) {
+      let draft = getAfter(/databases/$(database)/documents/blogDrafts/$(data.entityId)).data;
+      let release = getAfter(/databases/$(database)/documents/blogReleases/$(data.releaseId)).data;
+      let published = getAfter(/databases/$(database)/documents/publishedPosts/$(data.entityId)).data;
+      return data.action == 'blog.release.published'
+        && draft.status == 'published'
+        && draft.lastAuditId == eventId
+        && draft.revision == data.revision
+        && draft.latestReleaseId == data.releaseId
+        && draft.updatedBy == request.auth.uid
+        && release.auditId == eventId
+        && release.postId == data.entityId
+        && release.publishedBy == request.auth.uid
+        && published.auditId == eventId
+        && published.releaseId == data.releaseId
+        && published.publishedBy == request.auth.uid;
+    }
+
+    function auditLinksToBlogUnpublish(data, eventId) {
+      let draft = getAfter(/databases/$(database)/documents/blogDrafts/$(data.entityId)).data;
+      return data.action == 'blog.post.unpublished'
+        && draft.status == 'unpublished'
+        && draft.lastAuditId == eventId
+        && draft.revision == data.revision
+        && draft.latestReleaseId == data.releaseId
+        && draft.updatedBy == request.auth.uid
+        && !existsAfter(/databases/$(database)/documents/publishedPosts/$(data.entityId));
+    }
+
     function auditLinksToCourseOperation(data, eventId) {
       return data.entityType == 'courseDraft'
         ? auditLinksToCourseDraft(data, eventId)
@@ -880,7 +1063,13 @@ service cloud.firestore {
                   ? auditLinksToProgramDraft(data, eventId)
                   : data.entityType == 'programRelease'
                     ? auditLinksToProgramRelease(data, eventId)
-                    : false;
+                    : data.entityType == 'blogRelease'
+                      ? auditLinksToBlogRelease(data, eventId)
+                      : data.entityType == 'blogDraft'
+                        ? (data.action == 'blog.post.unpublished'
+                          ? auditLinksToBlogUnpublish(data, eventId)
+                          : auditLinksToBlogDraft(data, eventId))
+                        : false;
     }
 
     function validLegacySubmissionId(submissionId) {
@@ -2845,6 +3034,94 @@ service cloud.firestore {
           )
         );
       allow update, delete: if false;
+    }
+
+    // Blog drafts remain private. Publication creates an immutable release and
+    // public projection. Unpublishing deletes only that projection and preserves history.
+    match /blogDrafts/{postId} {
+      allow get, list: if admin();
+      allow create: if admin()
+        && validBlogDraft(request.resource.data, postId)
+        && request.resource.data.status == 'draft'
+        && request.resource.data.revision == 1
+        && request.resource.data.latestReleaseNumber == 0
+        && request.resource.data.latestReleaseId == ''
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid
+        && linkedAuditIsValid(request.resource.data.lastAuditId, 'blog.draft.created', 'blogDraft', postId, 1, '');
+      allow update: if admin()
+        && validBlogDraft(request.resource.data, postId)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.revision == resource.data.revision + 1
+        && (
+          (
+            request.resource.data.status in ['draft', 'ready']
+            && (request.resource.data.status != resource.data.status || !sameBlogContent())
+            && request.resource.data.latestReleaseNumber == resource.data.latestReleaseNumber
+            && request.resource.data.latestReleaseId == resource.data.latestReleaseId
+            && linkedAuditIsValid(request.resource.data.lastAuditId, 'blog.draft.updated', 'blogDraft', postId, request.resource.data.revision, request.resource.data.latestReleaseId)
+          )
+          || (
+            resource.data.status == 'ready'
+            && request.resource.data.status == 'published'
+            && sameBlogContent()
+            && request.resource.data.latestReleaseNumber == resource.data.latestReleaseNumber + 1
+            && request.resource.data.latestReleaseId != ''
+            && request.resource.data.latestReleaseId != resource.data.latestReleaseId
+            && linkedAuditIsValid(request.resource.data.lastAuditId, 'blog.release.published', 'blogRelease', postId, request.resource.data.revision, request.resource.data.latestReleaseId)
+            && getAfter(/databases/$(database)/documents/blogReleases/$(request.resource.data.latestReleaseId)).data.postId == postId
+            && getAfter(/databases/$(database)/documents/blogReleases/$(request.resource.data.latestReleaseId)).data.auditId == request.resource.data.lastAuditId
+            && getAfter(/databases/$(database)/documents/publishedPosts/$(postId)).data.releaseId == request.resource.data.latestReleaseId
+            && getAfter(/databases/$(database)/documents/publishedPosts/$(postId)).data.auditId == request.resource.data.lastAuditId
+          )
+          || (
+            resource.data.status == 'published'
+            && request.resource.data.status == 'unpublished'
+            && sameBlogContent()
+            && request.resource.data.latestReleaseNumber == resource.data.latestReleaseNumber
+            && request.resource.data.latestReleaseId == resource.data.latestReleaseId
+            && exists(/databases/$(database)/documents/publishedPosts/$(postId))
+            && !existsAfter(/databases/$(database)/documents/publishedPosts/$(postId))
+            && linkedAuditIsValid(request.resource.data.lastAuditId, 'blog.post.unpublished', 'blogDraft', postId, request.resource.data.revision, request.resource.data.latestReleaseId)
+          )
+        );
+      allow delete: if false;
+    }
+
+    match /blogReleases/{releaseId} {
+      allow get, list: if admin();
+      allow create: if admin()
+        && validBlogRelease(request.resource.data, releaseId)
+        && linkedAuditIsValid(request.resource.data.auditId, 'blog.release.published', 'blogRelease', request.resource.data.postId, request.resource.data.draftRevision, releaseId)
+        && blogReleaseMatchesDraft(request.resource.data, releaseId)
+        && getAfter(/databases/$(database)/documents/publishedPosts/$(request.resource.data.postId)).data.releaseId == releaseId;
+      allow update, delete: if false;
+    }
+
+    match /publishedPosts/{postId} {
+      allow get, list: if true;
+      allow create: if admin()
+        && validPublishedPost(request.resource.data, postId)
+        && publishedPostMatchesRelease(request.resource.data, postId)
+        && linkedAuditIsValid(request.resource.data.auditId, 'blog.release.published', 'blogRelease', postId, getAfter(/databases/$(database)/documents/blogReleases/$(request.resource.data.releaseId)).data.draftRevision, request.resource.data.releaseId);
+      allow update: if admin()
+        && validPublishedPost(request.resource.data, postId)
+        && request.resource.data.version == resource.data.version + 1
+        && request.resource.data.releaseId != resource.data.releaseId
+        && publishedPostMatchesRelease(request.resource.data, postId)
+        && linkedAuditIsValid(request.resource.data.auditId, 'blog.release.published', 'blogRelease', postId, getAfter(/databases/$(database)/documents/blogReleases/$(request.resource.data.releaseId)).data.draftRevision, request.resource.data.releaseId);
+      allow delete: if admin()
+        && getAfter(/databases/$(database)/documents/blogDrafts/$(postId)).data.status == 'unpublished'
+        && getAfter(/databases/$(database)/documents/blogDrafts/$(postId)).data.latestReleaseId == resource.data.releaseId
+        && linkedAuditIsValid(
+          getAfter(/databases/$(database)/documents/blogDrafts/$(postId)).data.lastAuditId,
+          'blog.post.unpublished',
+          'blogDraft',
+          postId,
+          getAfter(/databases/$(database)/documents/blogDrafts/$(postId)).data.revision,
+          resource.data.releaseId
+        );
     }
 
     // Program drafts remain private. Publishing atomically creates an immutable
