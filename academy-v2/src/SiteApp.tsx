@@ -4,6 +4,7 @@ import { AccountPage, AuthProvider, JoinPage, OwnerSetupPage, RequireVerifiedUse
 import { LearningPage } from './learning'
 import { SubmissionPage } from './submission'
 import { VerifyPage } from './verification'
+import { PrivacyPage } from './privacy'
 import {
   AboutPage,
   BlogPage,
@@ -36,6 +37,7 @@ export default function SiteApp() {
           <Route path="blog/:postId" element={<BlogArticlePage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="contact" element={<ContactPage />} />
+          <Route path="privacy" element={<PrivacyPage />} />
           <Route path="join" element={<JoinPage />} />
           <Route path="signin" element={<SignInPage />} />
           <Route path="owner-setup" element={<OwnerSetupPage />} />

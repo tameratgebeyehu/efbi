@@ -49,13 +49,15 @@ Development exit check met. Launch content entry and final quality review remain
 2. Allow 16+ self-registration only when enrollment is explicitly opened. **Complete in the development codebase.**
 3. Build the reviewed parent/guardian route for learners aged 12–15 before their account is created.
 4. Add the short privacy notice and separate versioned choices; do not collect a full birth date by default. **Technical first version complete; final external review remains required.**
-5. Add clear routes for access, correction, deletion, consent withdrawal, and safety concerns.
+5. Add clear routes for access, correction, deletion, consent withdrawal, and safety concerns. **Complete in the development codebase; final response procedures remain a launch gate.**
 6. Name the first safeguarding contact and choose a trusted backup before ages 12–15 enroll.
 7. Finish the incident-response checklist and review the DPIA near launch.
 
 Exit check: every age path is understandable, tested, and collects only the minimum information.
 
 Phase 25A development checkpoint complete: the three age paths are explicit, only the 16+ path can create a profile, acknowledgements are versioned, and verified sign-ins without an approved learner profile cannot write learning records. The 12–15 route remains deliberately closed.
+
+Phase 25B development checkpoint complete: one responsive Privacy & Support page explains the limited data model and provides clear access, correction, withdrawal/deletion, and learner-safety routes. The protected deletion workflow is available only to the signed-in learner. Other requests use the official EFBI inbox without creating another sensitive-message database.
 
 ## Phase 26 — assessments and certificates across courses
 

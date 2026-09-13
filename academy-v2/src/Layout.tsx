@@ -29,7 +29,7 @@ export function Layout() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
-    const section = ({ programs: 'Programs', courses: 'Courses', certification: 'Certification', verify: 'Verify Certificate', blog: 'Blog', about: 'About', contact: 'Contact', join: 'Join Academy', signin: 'Student Sign In' } as Record<string, string>)[location.pathname.split('/')[1] ?? '']
+    const section = ({ programs: 'Programs', courses: 'Courses', certification: 'Certification', verify: 'Verify Certificate', blog: 'Blog', about: 'About', contact: 'Contact', privacy: 'Privacy & Support', join: 'Join Academy', signin: 'Student Sign In' } as Record<string, string>)[location.pathname.split('/')[1] ?? '']
     document.title = section ? `${section} | EFBI Academy` : 'EFBI Academy — Learn. Build. Lead.'
   }, [location.pathname])
 
@@ -81,6 +81,7 @@ export function Layout() {
             <Link to="/certification">Certificates</Link>
             <Link to="/verify">Verify</Link>
             <Link to="/blog">Blog</Link>
+            <Link to="/privacy">Privacy & support</Link>
           </div>
 
           <div className="footer-column">

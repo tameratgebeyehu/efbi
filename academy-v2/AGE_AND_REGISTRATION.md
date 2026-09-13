@@ -30,6 +30,8 @@ If profile creation fails after the authentication account is created, the unfin
 4. Keep the 12–15 route closed until its authorization, safeguarding contact, backup contact, withdrawal procedure, and external review are complete.
 5. Do not request guardian identity documents by email.
 
+Learners can use the Privacy & Support page for access, correction, withdrawal/deletion, and safety routes. See `PRIVACY_SUPPORT_OPERATIONS.md` for the owner workflow.
+
 ## Still blocked
 
 This checkpoint does not approve or open enrollment for ages 12–15. It also does not replace the pending Ethiopian privacy and safeguarding review, final public privacy notice, incident procedure, or launch approval.

@@ -42,6 +42,15 @@ Primary source: https://justice.gov.et/wp-content/uploads/2025/04/seasiisia-seus
 - Firestore rejects under-16 profiles, incomplete acknowledgements, unexpected personal fields, and learning writes from verified sign-ins that have no approved profile.
 - These are technical safeguards, not external legal or safeguarding approval. The 12–15 route and public enrollment remain closed.
 
+## Phase 25B implementation record
+
+- A public Privacy & Support page explains what the learner platform saves, why it is used, who can see it, and the special public certificate fields.
+- Access, correction, withdrawal/deletion, and safety routes use plain language and the official EFBI privacy address.
+- Free-text support messages are not copied into a new Firestore collection.
+- Signed-in learners reach the existing protected deletion workflow from the same page; read-only previews do not offer unavailable account controls.
+- The footer, Contact page, and learner Account page link to the privacy center.
+- Final response procedures, safeguarding ownership, incident escalation, and external review remain pending.
+
 ## Decisions still required
 
 - Named safeguarding contact and backup contact

@@ -37,6 +37,12 @@
 .account-message--warning { border-color: rgba(232, 182, 56, .55); background: #fffaf0; }
 .account-message--success { border-color: rgba(8, 115, 66, .28); background: var(--green-soft); }
 .account-actions { display: flex; align-items: center; gap: 14px; }
+.account-privacy-link { display: grid; grid-template-columns: 34px 1fr; gap: 14px; margin-top: 28px; padding: 20px; border: 1px solid #bdd8c6; background: var(--green-soft); }
+.account-privacy-link > svg { width: 27px; color: var(--green); }
+.account-privacy-link strong { color: var(--green-dark); }
+.account-privacy-link p { margin: 6px 0 10px; color: #4d6256; font-size: .88rem; line-height: 1.55; }
+.account-privacy-link a { display: inline-flex; align-items: center; gap: 8px; color: var(--green); font-size: .86rem; font-weight: 800; }
+.account-privacy-link a svg { width: 17px; }
 .header-actions .button--outline { background: transparent; }
 @media (max-width: 620px) {
   .access-panel--form { padding: 30px 22px; }

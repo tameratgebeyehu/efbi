@@ -552,6 +552,22 @@ The first age, privacy, and learner-support checkpoint is implemented in the dev
 
 Phase 25 remains in progress. The 12–15 guardian route, learner privacy/support routes, safeguarding contacts, incident procedure, final DPIA review, external review, and controlled launch gates remain open.
 
+## Phase 25B — learner privacy and support routes
+
+The second age, privacy, and learner-support checkpoint is implemented in the development codebase:
+
+1. A dedicated `/privacy` page explains the limited learner-data model in plain language.
+2. Learners have visible routes to request access, request correction, withdraw and close the account, or report a safety concern.
+3. Access, correction, and safety messages use the official EFBI inbox with a warning not to send passwords, identity documents, health details, or another person's information.
+4. EFBI does not duplicate free-text privacy or safety messages into a new Firestore collection.
+5. Signed-in learners with approved profiles can use the existing protected deletion workflow from the privacy page.
+6. Read-only previews describe the closed account state instead of offering a sign-in action that is unavailable.
+7. The Account page, Contact page, and site footer link to Privacy & Support.
+8. The page is responsive in source structure and CSS, and the learner lint and production build pass. Automated Windows visual capture remained blocked by the local ACL error, so real browser/device review remains a Phase 27 launch check.
+9. No Firestore rules, application build, database content, Admin Studio, or Hosting target was deployed.
+
+Phase 25 remains in progress. Safeguarding contacts, incident response, final operator response procedures, a reviewed 12–15 guardian route, final DPIA review, external review, and controlled launch gates remain open.
+
 
 ## Recovery commands
 
