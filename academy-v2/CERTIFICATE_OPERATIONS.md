@@ -1,8 +1,8 @@
 # EFBI certificate operations
 
-## Phase 18 boundary
+## Phase 23 boundary
 
-Certificates are available only for the AI Foundations pilot in the development environment. A certificate is never created by lesson completion or by a review alone.
+Certificates are available for the original AI Foundations pilot and for activated project-assessment courses in the development environment. Practice-only courses do not issue certificates. A certificate is never created by lesson completion or by a review alone.
 
 The required sequence is:
 
@@ -11,11 +11,13 @@ The required sequence is:
 3. An administrator opens the localhost-only Admin Studio and deliberately confirms issuance.
 4. Firestore creates the private issuance, public certificate, active status, one-per-course claim, and audit event in one atomic operation.
 
+For an activated course, the request and issuance also remain bound to its immutable course version, assessment version, submitted project, and approved final review. Replacing a certificate cannot change that course proof.
+
 Reviewers, learners, support accounts, and anonymous visitors cannot issue or change credentials.
 
 ## Stored records
 
-- users/{uid}/certificateRequests/ai-foundations is the learner-owned, immutable name and publication consent.
+- users/{uid}/certificateRequests/{courseId} is the learner-owned, immutable name and publication consent for one course.
 - certificateIssuances/{credentialId} is the private, immutable evidence binding the credential to the learner, approved review, submitted version, versions, administrator, and issue time.
 - certificates/{credentialId} is the immutable public core: learner-approved name, course, issue date, credential ID, and replacement origin.
 - certificateStatuses/{credentialId} is the public current state: active, replaced, or revoked.
@@ -49,8 +51,8 @@ The replacement, old-status transition, one-per-course claim update, and audit e
 
 ## Verification
 
-Anyone may open /verify and look up one complete ID in the form EFBI-YYYY-XXXXXXXXXXXX. The registry cannot be listed or searched by name. A PDF or screenshot is not proof; the live status is authoritative.
+Anyone may open /verify and look up one complete ID in the form EFBI-YYYY-XXXXXXXXXXXX. The result is presented as a minimal printable certificate, but the live registry status remains authoritative. The registry cannot be listed or searched by name, and a saved PDF or screenshot is not proof of current status.
 
 ## Release boundary
 
-Phase 18 deploys only Firestore rules to efbi-academy-dev-doha. It does not deploy public Hosting, create real learner records, grant administrator roles, or enable production certificate operations.
+The Phase 23 source and tests do not deploy Hosting or Firestore rules, create real learner records, grant roles, or enable production certificate operations. Deployment remains a separate explicit decision.

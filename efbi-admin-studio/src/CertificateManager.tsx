@@ -5,7 +5,8 @@ import { getAdminFirebase } from './firebase'
 import './certificate.css'
 
 type RequestRecord = {
-  requestId: string; learnerUid: string; courseId: string; publicName: string; finalReviewId: string; submissionId: string
+  requestKey: string; requestId: string; learnerUid: string; courseId: string; courseTitle: string; versionId?: string
+  publicName: string; finalReviewId: string; submissionId: string
   courseVersion: number; assessmentVersion: number; reviewedAt: unknown; createdAt: unknown
 }
 type CredentialRecord = {
@@ -13,7 +14,7 @@ type CredentialRecord = {
 }
 type RequestWithCredential = RequestRecord & { credential: CredentialRecord | null }
 
-const courseTitle = 'AI Foundations for Ethiopia'
+const legacyCourseTitle = 'AI Foundations for Ethiopia'
 
 function safeString(value: unknown) { return typeof value === 'string' ? value : '' }
 function safeNumber(value: unknown) { return typeof value === 'number' ? value : 0 }
@@ -23,7 +24,23 @@ function readableDate(value: unknown) {
   return typeof timestamp.toDate === 'function' ? timestamp.toDate().toLocaleString() : 'Time unavailable'
 }
 function asRequest(learnerUid: string, data: Record<string, unknown>): RequestRecord {
-  return { requestId: safeString(data.requestId), learnerUid, courseId: safeString(data.courseId), publicName: safeString(data.publicName), finalReviewId: safeString(data.finalReviewId), submissionId: safeString(data.submissionId), courseVersion: safeNumber(data.courseVersion), assessmentVersion: safeNumber(data.assessmentVersion), reviewedAt: data.reviewedAt, createdAt: data.createdAt }
+  const courseId = safeString(data.courseId)
+  const versionId = safeString(data.versionId)
+  return {
+    requestKey: learnerUid + '--' + courseId,
+    requestId: safeString(data.requestId),
+    learnerUid,
+    courseId,
+    courseTitle: safeString(data.courseTitle) || legacyCourseTitle,
+    ...(versionId ? { versionId } : {}),
+    publicName: safeString(data.publicName),
+    finalReviewId: safeString(data.finalReviewId),
+    submissionId: safeString(data.submissionId),
+    courseVersion: safeNumber(data.courseVersion),
+    assessmentVersion: safeNumber(data.assessmentVersion),
+    reviewedAt: data.reviewedAt,
+    createdAt: data.createdAt,
+  }
 }
 function randomToken(length: number) {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -35,7 +52,7 @@ function newAuditId(action: string) { return `certificate-${action}-${Date.now()
 
 export default function CertificateManager({ user }: { user: User }) {
   const [records, setRecords] = useState<RequestWithCredential[]>([])
-  const [selectedUid, setSelectedUid] = useState('')
+  const [selectedKey, setSelectedKey] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [issueConfirmed, setIssueConfirmed] = useState(false)
@@ -69,21 +86,21 @@ export default function CertificateManager({ user }: { user: User }) {
         })).then((next) => {
           if (!active) return
           next.sort((a, b) => a.publicName.localeCompare(b.publicName))
-          setRecords(next); setSelectedUid((current) => next.some((item) => item.learnerUid === current) ? current : next[0]?.learnerUid || ''); setLoading(false)
+          setRecords(next); setSelectedKey((current) => next.some((item) => item.requestKey === current) ? current : next[0]?.requestKey || ''); setLoading(false)
         }).catch(() => { if (active) { setNotice({ kind: 'error', message: 'Certificate requests could not be loaded.' }); setLoading(false) } })
       }, () => { if (active) { setNotice({ kind: 'error', message: 'Certificate requests could not be loaded.' }); setLoading(false) } })
     }).catch(() => { if (active) { setNotice({ kind: 'error', message: 'Firebase could not start certificate operations.' }); setLoading(false) } })
     return () => { active = false; unsubscribe() }
   }, [])
 
-  const selected = records.find((item) => item.learnerUid === selectedUid) ?? null
+  const selected = records.find((item) => item.requestKey === selectedKey) ?? null
 
   function updateSelectedCredential(credential: CredentialRecord) {
-    setRecords((current) => current.map((item) => item.learnerUid === selectedUid ? { ...item, credential } : item))
+    setRecords((current) => current.map((item) => item.requestKey === selectedKey ? { ...item, credential } : item))
   }
 
   function resetControls() { setIssueConfirmed(false); setRevokeReason(''); setRevokeConfirmed(false); setReplacementReason(''); setReplacementConfirmed(false); setNotice(null) }
-  function select(uid: string) { setSelectedUid(uid); resetControls() }
+  function select(requestKey: string) { setSelectedKey(requestKey); resetControls() }
 
   async function writeIssuance(request: RequestRecord, replacesCredentialId: string, reason: string) {
     const services = await getAdminFirebase(); if (!services) throw new Error('Firebase configuration is missing.')
@@ -95,13 +112,14 @@ export default function CertificateManager({ user }: { user: User }) {
     const timestamp = serverTimestamp()
     const issuance = {
       credentialId, claimId, learnerUid: request.learnerUid, publicName: request.publicName, courseId: request.courseId,
-      courseTitle, finalReviewId: request.finalReviewId, submissionId: request.submissionId, courseVersion: request.courseVersion,
+      courseTitle: request.courseTitle, ...(request.versionId ? { versionId: request.versionId } : {}),
+      finalReviewId: request.finalReviewId, submissionId: request.submissionId, courseVersion: request.courseVersion,
       assessmentVersion: request.assessmentVersion, reviewedAt: request.reviewedAt, issuedAt: timestamp, issuedBy: user.uid,
       auditId, replacesCredentialId,
     }
     const batch = writeBatch(services.db)
     batch.set(doc(services.db, 'certificateIssuances', credentialId), issuance)
-    batch.set(doc(services.db, 'certificates', credentialId), { credentialId, publicName: request.publicName, courseId: request.courseId, courseTitle, issuedAt: timestamp, replacesCredentialId })
+    batch.set(doc(services.db, 'certificates', credentialId), { credentialId, publicName: request.publicName, courseId: request.courseId, courseTitle: request.courseTitle, issuedAt: timestamp, replacesCredentialId })
     batch.set(doc(services.db, 'certificateStatuses', credentialId), { credentialId, status: 'active', updatedAt: timestamp, replacedBy: '', lastAuditId: auditId })
     if (replacesCredentialId) {
       batch.update(doc(services.db, 'certificateClaims', claimId), { currentCredentialId: credentialId, updatedAt: timestamp, lastAuditId: auditId })
@@ -156,8 +174,8 @@ export default function CertificateManager({ user }: { user: User }) {
   }
 
   return <section className="certificate-workspace"><header className="workspace-title"><div><p className="eyebrow">Phase 18 · Certificates</p><h1>Issue verified credentials</h1><p>Every action requires approved work, learner consent, and permanent audit evidence.</p></div><span className="security-badge">Administrator access</span></header>{notice && <div className={`notice notice--${notice.kind}`} role={notice.kind === 'error' ? 'alert' : 'status'}>{notice.message}</div>}<div className="certificate-layout-admin">
-    <aside className="certificate-list"><div><strong>Eligible requests</strong><span>{records.length}</span></div>{loading && <p>Loading protected requests…</p>}{!loading && !records.length && <p>No learner has requested a certificate.</p>}{records.map((item) => <button key={item.learnerUid} className={selectedUid === item.learnerUid ? 'selected' : ''} onClick={() => select(item.learnerUid)}><strong>{item.publicName}</strong><span>{item.courseId}</span><small>{item.credential ? item.credential.status : 'Ready to issue'}</small></button>)}</aside>
-    <main className="certificate-record-admin">{!selected ? <div className="certificate-empty"><strong>Select a certificate request.</strong><p>The approved review binding and public name will appear here.</p></div> : <><header><div><p className="eyebrow">Learner-authorized public name</p><h2>{selected.publicName}</h2><p>Requested {readableDate(selected.createdAt)}</p></div><span className={`certificate-state certificate-state--${selected.credential?.status || 'requested'}`}>{selected.credential?.status || 'requested'}</span></header><dl><div><dt>Learner ID</dt><dd>{selected.learnerUid}</dd></div><div><dt>Final review</dt><dd>{selected.finalReviewId}</dd></div><div><dt>Submission</dt><dd>{selected.submissionId}</dd></div><div><dt>Review time</dt><dd>{readableDate(selected.reviewedAt)}</dd></div><div><dt>Course version</dt><dd>{selected.courseVersion}</dd></div><div><dt>Assessment version</dt><dd>{selected.assessmentVersion}</dd></div></dl>{selected.credential && <section className="current-credential"><p className="eyebrow">Current credential</p><h3>{selected.credential.credentialId}</h3><p>Issued {readableDate(selected.credential.issuedAt)}</p>{selected.credential.replacesCredentialId && <p>Replaces {selected.credential.replacesCredentialId}</p>}<a href={`http://127.0.0.1:5173/verify?credential=${encodeURIComponent(selected.credential.credentialId)}`} target="_blank" rel="noreferrer">Open public verification ↗</a></section>}</>}</main>
+    <aside className="certificate-list"><div><strong>Certificate requests</strong><span>{records.length}</span></div>{loading && <p>Loading protected requests…</p>}{!loading && !records.length && <p>No learner has requested a certificate.</p>}{records.map((item) => <button key={item.requestKey} className={selectedKey === item.requestKey ? 'selected' : ''} onClick={() => select(item.requestKey)}><strong>{item.publicName}</strong><span>{item.courseTitle}</span><small>{item.credential ? item.credential.status : 'Ready to issue'}</small></button>)}</aside>
+    <main className="certificate-record-admin">{!selected ? <div className="certificate-empty"><strong>Select a certificate request.</strong><p>The approved review binding and public name will appear here.</p></div> : <><header><div><p className="eyebrow">{selected.courseTitle}</p><h2>{selected.publicName}</h2><p>Requested {readableDate(selected.createdAt)}</p></div><span className={`certificate-state certificate-state--${selected.credential?.status || 'requested'}`}>{selected.credential?.status || 'requested'}</span></header><dl><div><dt>Learner ID</dt><dd>{selected.learnerUid}</dd></div><div><dt>Course</dt><dd>{selected.courseId}</dd></div><div><dt>Final review</dt><dd>{selected.finalReviewId}</dd></div><div><dt>Submission</dt><dd>{selected.submissionId}</dd></div><div><dt>Review time</dt><dd>{readableDate(selected.reviewedAt)}</dd></div><div><dt>Course version</dt><dd>{selected.courseVersion}</dd></div><div><dt>Assessment version</dt><dd>{selected.assessmentVersion}</dd></div></dl>{selected.credential && <section className="current-credential"><p className="eyebrow">Current credential</p><h3>{selected.credential.credentialId}</h3><p>Issued {readableDate(selected.credential.issuedAt)}</p>{selected.credential.replacesCredentialId && <p>Replaces {selected.credential.replacesCredentialId}</p>}<a href={`http://127.0.0.1:5173/verify?credential=${encodeURIComponent(selected.credential.credentialId)}`} target="_blank" rel="noreferrer">Open public verification ↗</a></section>}</>}</main>
     <aside className="certificate-actions"><p className="eyebrow">Protected action</p>{!selected && <p>Choose a request to continue.</p>}{selected && !selected.credential && <form onSubmit={(event) => void issue(event)}><h2>Issue certificate</h2><p>This publishes only the chosen name, course, issue date, credential ID, and status.</p><label className="certificate-confirm"><input type="checkbox" checked={issueConfirmed} onChange={(event) => setIssueConfirmed(event.target.checked)} /><span>I checked the final approved review and learner’s public-name consent. This issuance is permanent.</span></label><button className="primary-action" disabled={busy || !issueConfirmed}>{busy ? 'Issuing…' : 'Issue audited certificate'}</button></form>}{selected?.credential?.status === 'active' && <><form onSubmit={(event) => void revoke(event)}><h2>Revoke credential</h2><p>Use only when this credential must no longer be valid. History is preserved.</p><label>Private reason<textarea value={revokeReason} onChange={(event) => { setRevokeReason(event.target.value); setRevokeConfirmed(false) }} minLength={10} maxLength={500} required /></label><label className="certificate-confirm"><input type="checkbox" checked={revokeConfirmed} onChange={(event) => setRevokeConfirmed(event.target.checked)} /><span>I understand revocation is permanent and publicly visible.</span></label><button className="danger-action" disabled={busy || revokeReason.trim().length < 10 || !revokeConfirmed}>Revoke permanently</button></form><form onSubmit={(event) => void replace(event)}><h2>Replace credential</h2><p>A new ID becomes active. The old ID remains verifiable as replaced.</p><label>Private replacement reason<textarea value={replacementReason} onChange={(event) => { setReplacementReason(event.target.value); setReplacementConfirmed(false) }} minLength={10} maxLength={500} required /></label><label className="certificate-confirm"><input type="checkbox" checked={replacementConfirmed} onChange={(event) => setReplacementConfirmed(event.target.checked)} /><span>I checked the public name and understand the old credential cannot become active again.</span></label><button className="secondary-action" disabled={busy || replacementReason.trim().length < 10 || !replacementConfirmed}>{busy ? 'Replacing…' : 'Create replacement'}</button></form></>}{selected?.credential && selected.credential.status !== 'active' && <div className="certificate-locked"><strong>No further browser action</strong><p>This credential is permanently {selected.credential.status}. Its history remains available for verification and audit.</p></div>}<div className="certificate-boundary"><strong>Permanent boundary</strong><p>Core certificates and issuance evidence never change. Status transitions require a matching audit event in the same atomic operation.</p></div></aside>
   </div></section>
 }

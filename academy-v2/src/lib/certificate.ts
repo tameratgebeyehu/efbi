@@ -1,5 +1,5 @@
 import { getFirebaseFirestore } from './firebase'
-import type { LearnerReviewResult } from './submission'
+import type { LearnerReviewResult, SubmissionCourse } from './submission'
 
 export const certificateCourseId = 'ai-foundations'
 export const certificateCourseTitle = 'AI Foundations for Ethiopia'
@@ -9,6 +9,8 @@ export type CertificateRequest = {
   requestId: string
   learnerUid: string
   courseId: string
+  courseTitle?: string
+  versionId?: string
   publicName: string
   consentVersion: string
   consentAcceptedAt: unknown
@@ -62,12 +64,17 @@ async function requireFirestore() {
 }
 
 function asRequest(data: Record<string, unknown>): CertificateRequest {
-  return {
+  const certificateRequest: CertificateRequest = {
     requestId: safeString(data.requestId), learnerUid: safeString(data.learnerUid), courseId: safeString(data.courseId),
     publicName: safeString(data.publicName), consentVersion: safeString(data.consentVersion), consentAcceptedAt: data.consentAcceptedAt,
     finalReviewId: safeString(data.finalReviewId), submissionId: safeString(data.submissionId), courseVersion: safeNumber(data.courseVersion),
     assessmentVersion: safeNumber(data.assessmentVersion), reviewedAt: data.reviewedAt, status: 'requested', createdAt: data.createdAt,
   }
+  const courseTitle = safeString(data.courseTitle)
+  const versionId = safeString(data.versionId)
+  if (courseTitle) certificateRequest.courseTitle = courseTitle
+  if (versionId) certificateRequest.versionId = versionId
+  return certificateRequest
 }
 
 function asClaim(data: Record<string, unknown>): CertificateClaim {
@@ -78,30 +85,40 @@ function asClaim(data: Record<string, unknown>): CertificateClaim {
   }
 }
 
-export async function readCertificateRequest(uid: string) {
+export async function readCertificateRequest(uid: string, courseId = certificateCourseId) {
   const services = await requireFirestore()
-  const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'certificateRequests', certificateCourseId)
+  const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'certificateRequests', courseId)
   const snapshot = await services.firestoreSdk.getDoc(reference)
   return snapshot.exists() ? asRequest(snapshot.data()) : null
 }
 
-export async function readOwnCertificateClaim(uid: string) {
+export async function readOwnCertificateClaim(uid: string, courseId = certificateCourseId) {
   const services = await requireFirestore()
-  const reference = services.firestoreSdk.doc(services.db, 'certificateClaims', `${uid}--${certificateCourseId}`)
+  const reference = services.firestoreSdk.doc(services.db, 'certificateClaims', `${uid}--${courseId}`)
   const snapshot = await services.firestoreSdk.getDoc(reference)
   return snapshot.exists() ? asClaim(snapshot.data()) : null
 }
 
-export async function createCertificateRequest(uid: string, publicName: string, result: LearnerReviewResult) {
+export async function createCertificateRequest(uid: string, publicName: string, result: LearnerReviewResult, course: SubmissionCourse) {
   const name = publicName.trim().replace(/\s+/g, ' ')
   if (result.decision !== 'approved') throw new Error('A final approved review is required.')
+  if (result.courseVersion !== course.courseVersion || result.assessmentVersion !== course.assessmentVersion) {
+    throw new Error('The approved review does not match this course release.')
+  }
+  if (course.versionId && (result.courseId !== course.courseId || result.versionId !== course.versionId)) {
+    throw new Error('The approved review does not match this course release.')
+  }
+  if (!course.versionId && course.courseId !== certificateCourseId) {
+    throw new Error('This legacy course cannot request a certificate.')
+  }
   if (name.length < 2 || name.length > 80) throw new Error('Enter a public certificate name between 2 and 80 characters.')
   const services = await requireFirestore()
-  const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'certificateRequests', certificateCourseId)
+  const reference = services.firestoreSdk.doc(services.db, 'users', uid, 'certificateRequests', course.courseId)
   await services.firestoreSdk.setDoc(reference, {
-    requestId: certificateCourseId,
+    requestId: course.courseId,
     learnerUid: uid,
-    courseId: certificateCourseId,
+    courseId: course.courseId,
+    ...(course.versionId ? { courseTitle: course.courseTitle, versionId: course.versionId } : {}),
     publicName: name,
     consentVersion: certificateConsentVersion,
     consentAcceptedAt: services.firestoreSdk.serverTimestamp(),
@@ -113,7 +130,7 @@ export async function createCertificateRequest(uid: string, publicName: string, 
     status: 'requested',
     createdAt: services.firestoreSdk.serverTimestamp(),
   })
-  return readCertificateRequest(uid)
+  return readCertificateRequest(uid, course.courseId)
 }
 
 export function normalizeCredentialId(value: string) {

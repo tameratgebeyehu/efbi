@@ -1581,7 +1581,7 @@ service cloud.firestore {
         && credentialId.matches('EFBI-[0-9]{4}-[A-Z0-9]{12}');
     }
 
-    function validCertificateRequest(data, uid, requestId) {
+    function validLegacyCertificateRequest(data, uid, requestId) {
       let result = get(/databases/$(database)/documents/users/$(uid)/reviewResults/$(data.finalReviewId)).data;
       return data.keys().hasOnly([
           'requestId', 'learnerUid', 'courseId', 'publicName',
@@ -1614,6 +1614,64 @@ service cloud.firestore {
         && result.decision == 'approved';
     }
 
+    function validVersionedCertificateRequest(data, uid, requestId) {
+      let result = get(/databases/$(database)/documents/users/$(uid)/reviewResults/$(data.finalReviewId)).data;
+      let version = get(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
+      return data.keys().hasOnly([
+          'requestId', 'learnerUid', 'courseId', 'courseTitle',
+          'versionId', 'publicName', 'consentVersion',
+          'consentAcceptedAt', 'finalReviewId', 'submissionId',
+          'courseVersion', 'assessmentVersion', 'reviewedAt',
+          'status', 'createdAt'
+        ])
+        && validCourseId(requestId)
+        && data.requestId == requestId
+        && data.learnerUid == uid
+        && data.courseId == requestId
+        && data.courseTitle is string
+        && data.courseTitle.size() >= 5
+        && data.courseTitle.size() <= 100
+        && data.versionId is string
+        && data.versionId.size() >= 8
+        && data.versionId.size() <= 140
+        && data.publicName is string
+        && data.publicName.size() >= 2
+        && data.publicName.size() <= 80
+        && data.consentVersion == 'efbi-certificate-public-v1'
+        && data.consentAcceptedAt == request.time
+        && data.finalReviewId == uid + '--' + data.submissionId
+        && data.submissionId in [
+          data.versionId + '--project',
+          data.versionId + '--project-revision-1'
+        ]
+        && data.courseVersion is int
+        && data.assessmentVersion is int
+        && data.reviewedAt is timestamp
+        && data.status == 'requested'
+        && data.createdAt == request.time
+        && version.versionId == data.versionId
+        && version.courseId == data.courseId
+        && version.courseTitle == data.courseTitle
+        && version.courseVersion == data.courseVersion
+        && version.assessmentVersion == data.assessmentVersion
+        && version.assessmentType == 'project'
+        && result.assignmentId == data.finalReviewId
+        && result.learnerUid == uid
+        && result.submissionId == data.submissionId
+        && result.courseId == data.courseId
+        && result.versionId == data.versionId
+        && result.courseVersion == data.courseVersion
+        && result.assessmentVersion == data.assessmentVersion
+        && result.reviewedAt == data.reviewedAt
+        && result.decision == 'approved';
+    }
+
+    function validCertificateRequest(data, uid, requestId) {
+      return data.keys().hasAll(['versionId'])
+        ? validVersionedCertificateRequest(data, uid, requestId)
+        : validLegacyCertificateRequest(data, uid, requestId);
+    }
+
     function validCertificateClaim(data, claimId) {
       return data.keys().hasOnly([
           'claimId', 'learnerUid', 'courseId', 'currentCredentialId',
@@ -1624,7 +1682,7 @@ service cloud.firestore {
         && data.learnerUid is string
         && data.learnerUid.size() >= 1
         && data.learnerUid.size() <= 128
-        && data.courseId == 'ai-foundations'
+        && validCourseId(data.courseId)
         && validCredentialId(data.currentCredentialId)
         && data.createdAt is timestamp
         && data.updatedAt == request.time
@@ -1633,7 +1691,7 @@ service cloud.firestore {
         && data.lastAuditId.size() <= 180;
     }
 
-    function validCertificateIssuance(data, credentialId) {
+    function validLegacyCertificateIssuance(data, credentialId) {
       let certificateRequest = get(/databases/$(database)/documents/users/$(data.learnerUid)/certificateRequests/ai-foundations).data;
       return data.keys().hasOnly([
           'credentialId', 'claimId', 'learnerUid', 'publicName', 'courseId',
@@ -1675,6 +1733,69 @@ service cloud.firestore {
         && certificateRequest.reviewedAt == data.reviewedAt;
     }
 
+    function validVersionedCertificateIssuance(data, credentialId) {
+      let certificateRequest = get(/databases/$(database)/documents/users/$(data.learnerUid)/certificateRequests/$(data.courseId)).data;
+      return data.keys().hasOnly([
+          'credentialId', 'claimId', 'learnerUid', 'publicName',
+          'courseId', 'courseTitle', 'versionId', 'finalReviewId',
+          'submissionId', 'courseVersion', 'assessmentVersion',
+          'reviewedAt', 'issuedAt', 'issuedBy', 'auditId',
+          'replacesCredentialId'
+        ])
+        && validCredentialId(credentialId)
+        && data.credentialId == credentialId
+        && data.claimId == data.learnerUid + '--' + data.courseId
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && data.publicName is string
+        && data.publicName.size() >= 2
+        && data.publicName.size() <= 80
+        && validCourseId(data.courseId)
+        && data.courseTitle is string
+        && data.courseTitle.size() >= 5
+        && data.courseTitle.size() <= 100
+        && data.versionId is string
+        && data.versionId.size() >= 8
+        && data.versionId.size() <= 140
+        && data.finalReviewId is string
+        && data.submissionId in [
+          data.versionId + '--project',
+          data.versionId + '--project-revision-1'
+        ]
+        && data.courseVersion is int
+        && data.courseVersion >= 1
+        && data.courseVersion <= 10000
+        && data.assessmentVersion is int
+        && data.assessmentVersion >= 1
+        && data.assessmentVersion <= 10000
+        && data.reviewedAt is timestamp
+        && data.issuedAt == request.time
+        && data.issuedBy == request.auth.uid
+        && data.auditId is string
+        && data.auditId.size() >= 16
+        && data.auditId.size() <= 180
+        && (data.replacesCredentialId == '' || validCredentialId(data.replacesCredentialId))
+        && certificateRequest.requestId == data.courseId
+        && certificateRequest.status == 'requested'
+        && certificateRequest.learnerUid == data.learnerUid
+        && certificateRequest.courseId == data.courseId
+        && certificateRequest.courseTitle == data.courseTitle
+        && certificateRequest.versionId == data.versionId
+        && certificateRequest.publicName == data.publicName
+        && certificateRequest.finalReviewId == data.finalReviewId
+        && certificateRequest.submissionId == data.submissionId
+        && certificateRequest.courseVersion == data.courseVersion
+        && certificateRequest.assessmentVersion == data.assessmentVersion
+        && certificateRequest.reviewedAt == data.reviewedAt;
+    }
+
+    function validCertificateIssuance(data, credentialId) {
+      return data.keys().hasAll(['versionId'])
+        ? validVersionedCertificateIssuance(data, credentialId)
+        : validLegacyCertificateIssuance(data, credentialId);
+    }
+
     function validPublicCertificate(data, credentialId) {
       return data.keys().hasOnly([
           'credentialId', 'publicName', 'courseId', 'courseTitle',
@@ -1685,8 +1806,10 @@ service cloud.firestore {
         && data.publicName is string
         && data.publicName.size() >= 2
         && data.publicName.size() <= 80
-        && data.courseId == 'ai-foundations'
-        && data.courseTitle == 'AI Foundations for Ethiopia'
+        && validCourseId(data.courseId)
+        && data.courseTitle is string
+        && data.courseTitle.size() >= 5
+        && data.courseTitle.size() <= 100
         && data.issuedAt == request.time
         && (data.replacesCredentialId == '' || validCredentialId(data.replacesCredentialId));
     }
@@ -1698,6 +1821,33 @@ service cloud.firestore {
         && issuance.courseTitle == publicCertificate.courseTitle
         && issuance.issuedAt == publicCertificate.issuedAt
         && issuance.replacesCredentialId == publicCertificate.replacesCredentialId;
+    }
+
+    // Companion records trust only the immutable issuance created in the same
+    // atomic package. The issuance rule remains the single full validator for
+    // the request, reviewed work, course version, and every linked record.
+    function certificateClaimMatchesIssuance(issuance, claim) {
+      return issuance.claimId == claim.claimId
+        && issuance.learnerUid == claim.learnerUid
+        && issuance.courseId == claim.courseId
+        && issuance.credentialId == claim.currentCredentialId
+        && issuance.auditId == claim.lastAuditId
+        && issuance.issuedAt == claim.updatedAt;
+    }
+
+    function activeCertificateStatusMatchesIssuance(issuance, status, credentialId) {
+      return issuance.credentialId == credentialId
+        && issuance.auditId == status.lastAuditId
+        && issuance.issuedAt == status.updatedAt
+        && status.status == 'active'
+        && status.replacedBy == '';
+    }
+
+    function replacementStatusMatchesIssuance(issuance, status, credentialId) {
+      return issuance.credentialId == status.replacedBy
+        && issuance.replacesCredentialId == credentialId
+        && issuance.auditId == status.lastAuditId
+        && issuance.issuedAt == status.updatedAt;
     }
 
     function validCertificateStatus(data, credentialId) {
@@ -2315,10 +2465,6 @@ service cloud.firestore {
       allow list: if false;
       allow create: if admin()
         && validPublicCertificate(request.resource.data, credentialId)
-        && validCertificateIssuance(
-          getAfter(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data,
-          credentialId
-        )
         && publicCertificateMatches(
           getAfter(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data,
           request.resource.data
@@ -2340,23 +2486,22 @@ service cloud.firestore {
       allow create: if admin()
         && validCertificateClaim(request.resource.data, claimId)
         && request.resource.data.createdAt == request.time
-        && validCertificateIssuance(
+        && certificateClaimMatchesIssuance(
           getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data,
-          request.resource.data.currentCredentialId
+          request.resource.data
         )
         && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data.replacesCredentialId == ''
-        && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data.auditId == request.resource.data.lastAuditId;
+        && request.resource.data.updatedAt == request.resource.data.createdAt;
       allow update: if admin()
         && validCertificateClaim(request.resource.data, claimId)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'currentCredentialId', 'updatedAt', 'lastAuditId'
         ])
-        && validCertificateIssuance(
+        && certificateClaimMatchesIssuance(
           getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data,
-          request.resource.data.currentCredentialId
+          request.resource.data
         )
-        && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data.replacesCredentialId == resource.data.currentCredentialId
-        && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data.auditId == request.resource.data.lastAuditId;
+        && getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.currentCredentialId)).data.replacesCredentialId == resource.data.currentCredentialId;
       allow delete: if false;
     }
 
@@ -2365,14 +2510,11 @@ service cloud.firestore {
       allow list: if false;
       allow create: if admin()
         && validCertificateStatus(request.resource.data, credentialId)
-        && request.resource.data.status == 'active'
-        && request.resource.data.replacedBy == ''
-        && validCertificateIssuance(
+        && activeCertificateStatusMatchesIssuance(
           getAfter(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data,
+          request.resource.data,
           credentialId
-        )
-        && getAfter(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data.auditId == request.resource.data.lastAuditId
-        && getAfter(/databases/$(database)/documents/certificateIssuances/$(credentialId)).data.issuedAt == request.resource.data.updatedAt;
+        );
       allow update: if admin()
         && (
           validRevocation(request.resource.data, credentialId)
@@ -2381,9 +2523,10 @@ service cloud.firestore {
             && resource.data.status == 'active'
             && request.resource.data.status == 'replaced'
             && validCredentialId(request.resource.data.replacedBy)
-            && certificatePackageIsValid(
+            && replacementStatusMatchesIssuance(
               getAfter(/databases/$(database)/documents/certificateIssuances/$(request.resource.data.replacedBy)).data,
-              request.resource.data.replacedBy
+              request.resource.data,
+              credentialId
             )
           )
         );

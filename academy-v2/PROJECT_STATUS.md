@@ -473,8 +473,16 @@ The first three multi-course checkpoints are complete in the development codebas
 37. Certificate claims protect assessment evidence course by course, so an issued credential for one course does not prevent deletion of unrelated uncertified-course evidence.
 38. The localhost Studio stops before writing if a record cannot be matched to a course or if more than 450 document deletions would be needed; eligible data, completion, and audit evidence remain one atomic package.
 39. Eighty-three Firestore authorization and lifecycle tests cover active-request draft inventory, dynamic course deletion, mixed certified and uncertified courses, hold blocking, and legacy pilot compatibility.
+40. Certificate requests now work per course after a learner receives the approved final review for an activated project-assessment release.
+41. Versioned issuance remains bound to the immutable course title, course release, assessment release, submitted project, approved review, and learner-approved public name.
+42. Admin Studio lists and operates certificate requests by learner and course, so one learner may hold separate claims for separate completed courses without selection collisions.
+43. Public verification now presents the active record as a minimal printable certificate while continuing to reveal only the approved name, course, issue date, credential ID, and current status.
+44. Initial issuance, revocation, and replacement remain atomic and audited. A replacement preserves the original course proof and cannot silently change the title or release.
+45. The immutable issuance is the single full package validator. Public certificate, claim, and status writes must match that issuance exactly, keeping replacement below Firestore's evaluation ceiling without allowing an independently forged companion record.
+46. Eighty-five Firestore authorization and lifecycle tests pass, including forged version and title rejection, versioned issuance, versioned replacement, legacy pilot compatibility, and cross-course isolation.
+47. Learner and Admin Studio lint and production builds pass. No Hosting or Firestore rules deployment was performed, enrollment remains closed, and no synthetic test data left the emulator.
 
-Remaining Phase 23 work: generalize certificate request, issuance, and verification across activated project courses while retaining the tested pilot compatibility path, then prove the complete lifecycle with two synthetic courses. No new submission, review, deletion, or certificate rules have been deployed.
+Phase 23 implementation is complete in the development codebase. Production configuration, final browser QA, development deployment, and release approval remain separate launch steps.
 
 
 ## Recovery commands

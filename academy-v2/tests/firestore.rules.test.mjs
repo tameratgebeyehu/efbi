@@ -2725,3 +2725,167 @@ test('a revision request unlocks exactly one versioned course revision', async (
     { ...revision, submissionId: versionedProject.versionId + '--project-revision-2', revisionNumber: 2 },
   ))
 })
+
+function versionedCertificateRequest(reviewedAt, overrides = {}) {
+  const submissionId = versionedProject.versionId + '--project'
+  return {
+    requestId: versionedProject.courseId,
+    learnerUid: 'alice',
+    courseId: versionedProject.courseId,
+    courseTitle: versionedProject.courseTitle,
+    versionId: versionedProject.versionId,
+    publicName: 'Alice Learner',
+    consentVersion: 'efbi-certificate-public-v1',
+    consentAcceptedAt: serverTimestamp(),
+    finalReviewId: 'alice--' + submissionId,
+    submissionId,
+    courseVersion: versionedProject.courseVersion,
+    assessmentVersion: versionedProject.assessmentVersion,
+    reviewedAt,
+    status: 'requested',
+    createdAt: serverTimestamp(),
+    ...overrides,
+  }
+}
+
+async function seedVersionedCertificateRequest() {
+  await seedVersionedSubmittedProject()
+  const submissionId = versionedProject.versionId + '--project'
+  const resultId = 'alice--' + submissionId
+  const reviewedAt = new Date('2026-09-12T02:00:00Z')
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'reviewResults', resultId), {
+      ...versionedPublicReviewResult(new Date('2026-09-12T01:40:00Z')),
+      reviewedAt,
+    })
+  })
+  const learner = verifiedUser('alice')
+  const result = await getDoc(doc(learner, 'users', 'alice', 'reviewResults', resultId))
+  await assertSucceeds(setDoc(
+    doc(learner, 'users', 'alice', 'certificateRequests', versionedProject.courseId),
+    versionedCertificateRequest(result.data().reviewedAt),
+  ))
+  return result.data().reviewedAt
+}
+
+function addVersionedCertificatePackage(batch, db, reviewedAt, credentialId, auditId, replacesCredentialId = '') {
+  const claimId = 'alice--' + versionedProject.courseId
+  const submissionId = versionedProject.versionId + '--project'
+  batch.set(doc(db, 'certificateIssuances', credentialId), {
+    credentialId,
+    claimId,
+    learnerUid: 'alice',
+    publicName: 'Alice Learner',
+    courseId: versionedProject.courseId,
+    courseTitle: versionedProject.courseTitle,
+    versionId: versionedProject.versionId,
+    finalReviewId: 'alice--' + submissionId,
+    submissionId,
+    courseVersion: versionedProject.courseVersion,
+    assessmentVersion: versionedProject.assessmentVersion,
+    reviewedAt,
+    issuedAt: serverTimestamp(),
+    issuedBy: 'admin-user',
+    auditId,
+    replacesCredentialId,
+  })
+  batch.set(doc(db, 'certificates', credentialId), {
+    credentialId,
+    publicName: 'Alice Learner',
+    courseId: versionedProject.courseId,
+    courseTitle: versionedProject.courseTitle,
+    issuedAt: serverTimestamp(),
+    replacesCredentialId,
+  })
+  batch.set(doc(db, 'certificateStatuses', credentialId), certificateStatus(credentialId, auditId))
+  if (replacesCredentialId) {
+    batch.update(doc(db, 'certificateClaims', claimId), {
+      currentCredentialId: credentialId,
+      updatedAt: serverTimestamp(),
+      lastAuditId: auditId,
+    })
+    batch.update(doc(db, 'certificateStatuses', replacesCredentialId), {
+      status: 'replaced',
+      updatedAt: serverTimestamp(),
+      replacedBy: credentialId,
+      lastAuditId: auditId,
+    })
+  } else {
+    batch.set(doc(db, 'certificateClaims', claimId), {
+      claimId,
+      learnerUid: 'alice',
+      courseId: versionedProject.courseId,
+      currentCredentialId: credentialId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      lastAuditId: auditId,
+    })
+  }
+  batch.set(doc(db, 'certificateAudit', auditId), certificateAudit(
+    auditId,
+    replacesCredentialId ? 'certificate.replaced' : 'certificate.issued',
+    replacesCredentialId || credentialId,
+    replacesCredentialId ? credentialId : '',
+    replacesCredentialId
+      ? 'A corrected replacement was approved for the versioned course certificate.'
+      : 'Approved versioned course review and learner consent confirmed.',
+  ))
+}
+
+test('a versioned project certificate stays bound to its immutable course release', async () => {
+  await seedVersionedSubmittedProject()
+  const submissionId = versionedProject.versionId + '--project'
+  const resultId = 'alice--' + submissionId
+  const reviewedAt = new Date('2026-09-12T02:00:00Z')
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'reviewResults', resultId), {
+      ...versionedPublicReviewResult(new Date('2026-09-12T01:40:00Z')),
+      reviewedAt,
+    })
+  })
+  const learner = verifiedUser('alice')
+  const result = await getDoc(doc(learner, 'users', 'alice', 'reviewResults', resultId))
+  const requestRef = doc(learner, 'users', 'alice', 'certificateRequests', versionedProject.courseId)
+  await assertFails(setDoc(requestRef, versionedCertificateRequest(result.data().reviewedAt, {
+    courseTitle: 'A forged course title',
+  })))
+  await assertFails(setDoc(requestRef, versionedCertificateRequest(result.data().reviewedAt, {
+    versionId: 'web-basics--v2',
+  })))
+  await assertSucceeds(setDoc(requestRef, versionedCertificateRequest(result.data().reviewedAt)))
+
+  const admin = verifiedUser('admin-user', { admin: true })
+  const forged = writeBatch(admin)
+  addVersionedCertificatePackage(forged, admin, result.data().reviewedAt, certificateIdOne, 'certificate-versioned-forged-0001')
+  forged.set(doc(admin, 'certificates', certificateIdOne), {
+    credentialId: certificateIdOne,
+    publicName: 'Alice Learner',
+    courseId: versionedProject.courseId,
+    courseTitle: 'A forged course title',
+    issuedAt: serverTimestamp(),
+    replacesCredentialId: '',
+  })
+  await assertFails(forged.commit())
+
+  const valid = writeBatch(admin)
+  addVersionedCertificatePackage(valid, admin, result.data().reviewedAt, certificateIdOne, 'certificate-versioned-issued-0001')
+  await assertSucceeds(valid.commit())
+  const certificate = await getDoc(doc(environment.unauthenticatedContext().firestore(), 'certificates', certificateIdOne))
+  assert.equal(certificate.data().courseTitle, versionedProject.courseTitle)
+  assert.equal((await getDoc(doc(admin, 'certificateClaims', 'alice--web-basics'))).data().currentCredentialId, certificateIdOne)
+})
+
+test('a versioned course certificate can be replaced without changing its course proof', async () => {
+  const reviewedAt = await seedVersionedCertificateRequest()
+  const admin = verifiedUser('admin-user', { admin: true })
+  const initial = writeBatch(admin)
+  addVersionedCertificatePackage(initial, admin, reviewedAt, certificateIdOne, 'certificate-versioned-issued-0002')
+  await assertSucceeds(initial.commit())
+
+  const replacement = writeBatch(admin)
+  addVersionedCertificatePackage(replacement, admin, reviewedAt, certificateIdTwo, 'certificate-versioned-replaced-0003', certificateIdOne)
+  await assertSucceeds(replacement.commit())
+  assert.equal((await getDoc(doc(admin, 'certificateStatuses', certificateIdOne))).data().status, 'replaced')
+  assert.equal((await getDoc(doc(admin, 'certificateClaims', 'alice--web-basics'))).data().currentCredentialId, certificateIdTwo)
+  assert.equal((await getDoc(doc(admin, 'certificateIssuances', certificateIdTwo))).data().versionId, versionedProject.versionId)
+})
