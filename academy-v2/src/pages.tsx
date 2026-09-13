@@ -5,7 +5,7 @@ import { buildPillars, methodology, programs as fallbackPrograms, values } from 
 import { Icon } from './icons'
 import { CourseAccessButton } from './auth'
 import { useAuth } from './auth-context'
-import { getFallbackCatalog, loadActiveCourseSummaries, loadCourseCatalog, type ActiveCourseSummary, type CourseCatalog } from './lib/catalog'
+import { getFallbackCatalog, loadCourseCatalog, loadPublicCourseCatalog, loadPublicCourseSummaries, type ActiveCourseSummary, type CourseCatalog } from './lib/catalog'
 import { loadPublishedPrograms } from './lib/programs'
 import { loadPublishedPost, loadPublishedPosts, type PublicBlogPost } from './lib/blog'
 
@@ -174,22 +174,18 @@ export function ProgramDetailPage() {
 }
 
 export function CoursesPage() {
-  const { user } = useAuth()
   const { programs } = useProgramCatalog()
   const [activeCourses, setActiveCourses] = useState<ActiveCourseSummary[]>([])
   const [catalogReady, setCatalogReady] = useState(false)
-  const verified = user?.emailVerified === true
-
   useEffect(() => {
-    if (!user?.emailVerified) return undefined
     let active = true
-    void loadActiveCourseSummaries().then((courses) => {
+    void loadPublicCourseSummaries().then((courses) => {
       if (!active) return
       setActiveCourses(courses)
       setCatalogReady(true)
     })
     return () => { active = false }
-  }, [user])
+  }, [])
 
   const additionalCourses = activeCourses.filter((course) => course.courseId !== 'ai-foundations')
 
@@ -211,12 +207,12 @@ export function CoursesPage() {
             <Link className="button button--primary" to="/courses/ai-foundations">View course <Icon name="arrow" /></Link>
           </div>
         </article>
-        {verified && <section className="learner-catalog" aria-labelledby="active-courses-title">
+        <section className="learner-catalog" aria-labelledby="active-courses-title">
           <div className="catalog-heading"><div><p className="eyebrow-label">Your course catalog</p><h2 id="active-courses-title">Active EFBI courses</h2></div><p>Only reviewed versions activated by EFBI appear here.</p></div>
           {!catalogReady && <p className="catalog-loading" role="status">Checking active courses…</p>}
           {catalogReady && additionalCourses.length === 0 && <div className="catalog-empty"><Icon name="book" /><div><strong>AI Foundations is the active pilot.</strong><p>More courses will appear here after EFBI reviews and activates their complete lesson sets.</p></div></div>}
           {additionalCourses.length > 0 && <div className="active-course-grid">{additionalCourses.map((course) => <article key={course.courseId}><div className="active-course-number">V{course.courseVersion}</div><div className="course-tags"><span>{course.level}</span><span>{course.lessonCount} lessons</span><span>{course.assessmentType === 'project' ? 'Reviewed project certificate' : 'Learning only · no certificate'}</span></div><h3>{course.courseTitle}</h3><p>{course.courseDescription}</p><Link className="button button--outline" to={`/courses/${course.courseId}`}>View course <Icon name="arrow" /></Link></article>)}</div>}
-        </section>}
+        </section>
         <div className="catalog-heading"><div><p className="eyebrow-label">Coming next</p><h2>More courses are on the way</h2></div><p>We’ll open each course after its lessons and learning tools are ready.</p></div>
         <div className="course-roadmap">{programs.slice(1).map((program, index) => <article key={program.slug}><span>{String(index + 2).padStart(2, '0')}</span><div><h3>{program.title}</h3><p>{program.description}</p></div><small>{program.level}</small></article>)}</div>
       </section>
@@ -232,20 +228,20 @@ export function CourseDetailPage() {
   const verified = user?.emailVerified === true
 
   useEffect(() => {
-    if (!verified || !courseId) return undefined
+    if (!courseId) return undefined
     let active = true
-    void loadCourseCatalog(courseId).then((catalog) => {
+    void (verified ? loadCourseCatalog(courseId) : loadPublicCourseCatalog(courseId)).then((catalog) => {
       if (active) setResolved({ courseId, catalog })
     })
     return () => { active = false }
   }, [courseId, verified])
 
   if (!courseId) return <Navigate to="/courses" replace />
-  if ((loading && !fallback) || (verified && resolved?.courseId !== courseId)) {
+  if ((loading && !fallback) || resolved?.courseId !== courseId) {
     return <section className="section shell course-loading"><p className="eyebrow-label">Course catalog</p><h1>Opening the course…</h1><p>Checking the active version and its reviewed lessons.</p></section>
   }
 
-  const catalog = verified ? resolved?.catalog ?? null : fallback
+  const catalog = resolved?.catalog ?? fallback
   if (!catalog) return <Navigate to="/courses" replace />
   const versionLabel = catalog.courseVersion ? `Version ${catalog.courseVersion}` : 'Pilot course'
   const assessmentLabel = catalog.assessmentType === 'project' ? 'Reviewed project certificate' : 'Learning only · no certificate'

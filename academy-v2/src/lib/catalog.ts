@@ -2,7 +2,7 @@ import { curriculum, type CourseLesson, type KnowledgeCheckQuestion } from '../d
 import { getFirebaseFirestore } from './firebase'
 
 export type CourseCatalog = {
-  source: 'built-in' | 'backend-release' | 'published-version'
+  source: 'built-in' | 'backend-release' | 'published-version' | 'public-outline'
   courseId: string
   versionId?: string
   courseVersion?: number
@@ -65,6 +65,15 @@ type ActiveCourseRecord = {
   lessonCount: number
   assessmentVersion: number
   assessmentType: 'practice-only' | 'project'
+}
+
+type PublicLessonOutline = { lessonId: string; title: string; summary: string; order: number; durationMinutes: number }
+type PublicCourseRecord = ActiveCourseRecord & {
+  courseDescription: string
+  level: string
+  language: string
+  estimatedMinutes: number
+  lessonOutlines: PublicLessonOutline[]
 }
 
 export type ActiveCourseSummary = {
@@ -185,6 +194,23 @@ function asActiveCourse(data: Record<string, unknown>, expectedCourseId: string)
     assessmentVersion,
     assessmentType,
   }
+}
+
+function asPublicCourse(data: Record<string, unknown>, expectedCourseId: string): PublicCourseRecord | null {
+  const active = asActiveCourse(data, expectedCourseId)
+  const outlines = Array.isArray(data.lessonOutlines) ? data.lessonOutlines : []
+  if (!active || outlines.length !== active.lessonCount) return null
+  const lessonOutlines = outlines.map((value) => {
+    const item = value && typeof value === 'object' ? value as Record<string, unknown> : {}
+    return { lessonId: safeString(item.lessonId), title: safeString(item.title), summary: safeString(item.summary), order: safeNumber(item.order), durationMinutes: safeNumber(item.durationMinutes) }
+  })
+  const courseDescription = safeString(data.courseDescription)
+  const level = safeString(data.level)
+  const language = safeString(data.language)
+  const estimatedMinutes = safeNumber(data.estimatedMinutes)
+  if (lessonOutlines.some((item, index) => !validLessonId(item.lessonId) || item.title.length < 5 || item.summary.length < 20 || item.order !== index + 1 || item.durationMinutes < 1 || item.durationMinutes > 240)) return null
+  if (courseDescription.length < 20 || level.length < 2 || language.length < 2 || estimatedMinutes < 1 || estimatedMinutes > 100000) return null
+  return { ...active, courseDescription, level, language, estimatedMinutes, lessonOutlines }
 }
 
 function latestById(records: LessonReleaseRecord[], lessonIds: string[]) {
@@ -396,6 +422,39 @@ export async function loadActiveCourseSummaries(): Promise<ActiveCourseSummary[]
   } catch {
     return []
   }
+}
+
+export async function loadPublicCourseSummaries(): Promise<ActiveCourseSummary[]> {
+  const services = await getFirebaseFirestore()
+  if (!services) return []
+  try {
+    const snapshot = await services.firestoreSdk.getDocs(services.firestoreSdk.collection(services.db, 'publicCourseCatalog'))
+    return snapshot.docs
+      .map((item) => asPublicCourse(item.data(), item.id))
+      .filter((item): item is PublicCourseRecord => Boolean(item))
+      .map((item) => ({ courseId: item.courseId, courseTitle: item.courseTitle, courseDescription: item.courseDescription, level: item.level || 'Beginner', lessonCount: item.lessonCount, courseVersion: item.courseVersion, assessmentVersion: item.assessmentVersion, assessmentType: item.assessmentType }))
+      .sort((left, right) => left.courseTitle.localeCompare(right.courseTitle))
+  } catch { return [] }
+}
+
+export async function loadPublicCourseCatalog(courseIdValue: string): Promise<CourseCatalog | null> {
+  const courseId = courseIdValue.trim()
+  const fallback = courseId === aiCourseId ? aiFallbackCatalog : null
+  if (!validCourseId(courseId)) return null
+  const services = await getFirebaseFirestore()
+  if (!services) return fallback
+  try {
+    const snapshot = await services.firestoreSdk.getDoc(services.firestoreSdk.doc(services.db, 'publicCourseCatalog', courseId))
+    if (!snapshot.exists()) return fallback
+    const record = asPublicCourse(snapshot.data(), courseId)
+    if (!record) return fallback
+    return {
+      source: 'public-outline', courseId: record.courseId, versionId: record.versionId, courseVersion: record.courseVersion,
+      assessmentVersion: record.assessmentVersion, assessmentType: record.assessmentType, courseTitle: record.courseTitle,
+      courseDescription: record.courseDescription, level: record.level || 'Beginner', statusMessage: 'Create an account or sign in to open the complete lessons.',
+      lessons: record.lessonOutlines.map((lesson) => ({ number: String(lesson.order).padStart(2, '0'), slug: lesson.lessonId, title: lesson.title, detail: lesson.summary, duration: `${lesson.durationMinutes} min`, objectives: [], sections: [], knowledgeCheck: [] })),
+    }
+  } catch { return fallback }
 }
 
 export function getFallbackCatalog(courseId = aiCourseId) {

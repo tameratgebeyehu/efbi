@@ -5,15 +5,24 @@ import { getAdminFirebase } from './firebase'
 type Notice = { kind: 'success' | 'error'; message: string } | null
 
 type CourseRelease = {
+  releaseId: string
   courseId: string
   title: string
+  summary: string
+  description: string
+  level: string
+  language: string
+  estimatedMinutes: number
   version: number
 }
 
 type LessonRelease = {
+  releaseId: string
   lessonId: string
   courseId: string
   title: string
+  summary: string
+  durationMinutes: number
   order: number
   version: number
 }
@@ -40,17 +49,26 @@ function safeNumber(value: unknown) {
 
 function asCourseRelease(data: Record<string, unknown>): CourseRelease {
   return {
+    releaseId: safeString(data.releaseId),
     courseId: safeString(data.courseId),
     title: safeString(data.title),
+    summary: safeString(data.summary),
+    description: safeString(data.description),
+    level: safeString(data.level),
+    language: safeString(data.language),
+    estimatedMinutes: safeNumber(data.estimatedMinutes),
     version: safeNumber(data.version),
   }
 }
 
 function asLessonRelease(data: Record<string, unknown>): LessonRelease {
   return {
+    releaseId: safeString(data.releaseId),
     lessonId: safeString(data.lessonId),
     courseId: safeString(data.courseId),
     title: safeString(data.title),
+    summary: safeString(data.summary),
+    durationMinutes: safeNumber(data.durationMinutes),
     order: safeNumber(data.order),
     version: safeNumber(data.version),
   }
@@ -210,6 +228,28 @@ export default function CourseActivationManager({ user }: { user: User }) {
         activatedBy: user.uid,
         auditId,
       })
+      batch.set(doc(collection(services.db, 'publicCourseCatalog'), courseId), {
+        courseId,
+        versionId,
+        courseReleaseId: selectedCourse.releaseId,
+        courseVersion: selectedVersion,
+        courseTitle: selectedCourse.title,
+        courseDescription: selectedCourse.summary || selectedCourse.description,
+        level: selectedCourse.level,
+        language: selectedCourse.language,
+        estimatedMinutes: selectedCourse.estimatedMinutes,
+        lessonCount: lessonIds.length,
+        assessmentVersion: assessmentNumber,
+        assessmentType,
+        lessonOutlines: selectedLessons.map((lesson) => ({
+          lessonId: lesson.lessonId,
+          title: lesson.title,
+          summary: lesson.summary,
+          order: lesson.order,
+          durationMinutes: lesson.durationMinutes,
+        })),
+        publishedAt: serverTimestamp(),
+      })
       batch.set(doc(collection(services.db, 'adminAudit'), auditId), {
         eventId: auditId,
         action: 'course.version.activated',
@@ -222,9 +262,9 @@ export default function CourseActivationManager({ user }: { user: User }) {
       })
       await batch.commit()
       setConfirmed(false)
-      setNotice({ kind: 'success', message: `${selectedCourse.title} version ${selectedVersion} is now active for new learners.` })
+      setNotice({ kind: 'success', message: `${selectedCourse.title} version ${selectedVersion} is now publicly discoverable and active for new learners.` })
     } catch {
-      setNotice({ kind: 'error', message: 'Activation failed safely. No course version, active pointer, or audit event was partially written.' })
+      setNotice({ kind: 'error', message: 'Activation failed safely. No course version, public catalog entry, active pointer, or audit event was partially written.' })
     } finally {
       setBusy(false)
     }
@@ -233,7 +273,7 @@ export default function CourseActivationManager({ user }: { user: User }) {
   return (
     <section className="activation-workspace">
       <header className="workspace-title">
-        <div><p className="eyebrow">Phase 23 · Controlled release</p><h1>Course activation</h1><p>Choose one complete release set and make it available to new verified learners.</p></div>
+        <div><p className="eyebrow">Phase 23 · Controlled release</p><h1>Course activation</h1><p>Choose one complete release set, publish its safe outline, and make its lessons available to verified learners.</p></div>
         <span className="security-badge">Atomic and audited</span>
       </header>
 
@@ -269,10 +309,10 @@ export default function CourseActivationManager({ user }: { user: User }) {
           <p className="eyebrow">Protected action</p>
           <h2>{currentActive ? `Currently active: version ${currentActive.courseVersion}` : 'No active version yet'}</h2>
           {currentActive && <p>{currentActive.courseTitle} · {currentActive.lessonCount} lessons · {currentActive.assessmentType === 'project' ? 'Final project' : 'Practice only'}</p>}
-          <div className="activation-boundary"><strong>What activation changes</strong><p>New learners start this version. Existing learners remain locked to the version they already started.</p></div>
-          <label className="confirm-check"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} disabled={!releaseReady || busy} />I checked the course, every lesson, their order, and understand what this completion path allows learners to do.</label>
+          <div className="activation-boundary"><strong>What activation changes</strong><p>Signed-out visitors can see the title, summary, learning time, and lesson outline. Only verified learners can open the full lessons. Existing learners remain locked to the version they already started.</p></div>
+          <label className="confirm-check"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} disabled={!releaseReady || busy} />I checked the course, every lesson, their order, the public outline, and what this completion path allows learners to do.</label>
           <button className="publish-action" type="button" disabled={!releaseReady || !confirmed || busy} onClick={() => void activate()}>{busy ? 'Activating…' : `Activate version ${selectedVersion || '—'}`}</button>
-          <small>Activation writes the immutable course version, active pointer, and audit event together. If one fails, none are saved.</small>
+          <small>Activation writes the immutable course version, safe public outline, active pointer, and audit event together. If one fails, none are saved.</small>
         </aside>
       </div>
     </section>

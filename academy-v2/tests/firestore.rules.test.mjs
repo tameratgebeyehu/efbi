@@ -939,6 +939,80 @@ test('administrators publish immutable course versions while public and unverifi
   await assertFails(unauditedBatch.commit())
 })
 
+test('course activation publishes only a narrow signed-out catalog outline', async () => {
+  const values = {
+    versionId: 'public-web-basics--v1',
+    courseId: 'public-web-basics',
+    courseTitle: 'Public Web Basics',
+    courseVersion: 1,
+    assessmentVersion: 1,
+    assessmentType: 'project',
+    lessonIds: ['web-introduction', 'build-a-first-page'],
+  }
+  const releaseId = 'release-public-web-basics-v1-0001'
+  const auditId = activationAuditId(values)
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'courseReleases', releaseId), {
+      releaseId,
+      courseId: values.courseId,
+      title: values.courseTitle,
+      summary: 'Learn the foundations of creating a clear and useful web page.',
+      description: 'A reviewed beginner course about planning and creating a small responsive web page.',
+      category: 'web-development',
+      level: 'beginner',
+      language: 'English',
+      estimatedMinutes: 90,
+      version: 1,
+      draftRevision: 2,
+      publishedAt: new Date('2026-09-13T00:00:00Z'),
+      publishedBy: 'admin-user',
+      auditId: 'audit-existing-course-release-0001',
+    })
+  })
+  const catalog = {
+    courseId: values.courseId,
+    versionId: values.versionId,
+    courseReleaseId: releaseId,
+    courseVersion: 1,
+    courseTitle: values.courseTitle,
+    courseDescription: 'Learn the foundations of creating a clear and useful web page.',
+    level: 'beginner',
+    language: 'English',
+    estimatedMinutes: 90,
+    lessonCount: 2,
+    assessmentVersion: 1,
+    assessmentType: 'project',
+    lessonOutlines: [
+      { lessonId: 'web-introduction', title: 'How the web works', summary: 'Understand pages, browsers, addresses, and the basic request flow.', order: 1, durationMinutes: 40 },
+      { lessonId: 'build-a-first-page', title: 'Build a first page', summary: 'Plan and create a small page with clear structure and readable content.', order: 2, durationMinutes: 50 },
+    ],
+    publishedAt: serverTimestamp(),
+  }
+  const admin = verifiedUser('admin-user', { admin: true })
+  function activationBatch(publicRecord) {
+    const batch = writeBatch(admin)
+    batch.set(doc(admin, 'courseVersions', values.versionId), courseVersionRecord({ ...values, auditId }))
+    batch.set(doc(admin, 'activeCourses', values.courseId), activeCourseRecord({ ...values, auditId }))
+    batch.set(doc(admin, 'publicCourseCatalog', values.courseId), publicRecord)
+    batch.set(doc(admin, 'adminAudit', auditId), auditEvent({ eventId: auditId, action: 'course.version.activated', entityType: 'courseVersion', entityId: values.courseId, revision: 1, releaseId: values.versionId }))
+    return batch
+  }
+
+  await assertFails(activationBatch({ ...catalog, lessonOutlines: [{ ...catalog.lessonOutlines[0], videoYoutubeId: 'private12345' }, catalog.lessonOutlines[1]] }).commit())
+  await assertSucceeds(activationBatch(catalog).commit())
+
+  const visitor = environment.unauthenticatedContext().firestore()
+  const publicRecord = await assertSucceeds(getDoc(doc(visitor, 'publicCourseCatalog', values.courseId)))
+  assert.equal(publicRecord.data().courseTitle, values.courseTitle)
+  assert.equal(publicRecord.data().publishedBy, undefined)
+  assert.equal(publicRecord.data().auditId, undefined)
+  assert.deepEqual(Object.keys(publicRecord.data().lessonOutlines[0]).sort(), ['durationMinutes', 'lessonId', 'order', 'summary', 'title'])
+  await assertSucceeds(getDocs(collection(visitor, 'publicCourseCatalog')))
+  await assertFails(setDoc(doc(verifiedUser('alice'), 'publicCourseCatalog', values.courseId), catalog))
+  await assertFails(getDoc(doc(visitor, 'courseVersions', values.versionId)))
+  await assertFails(getDoc(doc(visitor, 'lessonReleases', 'any-private-lesson-release')))
+})
+
 test('two courses keep progress isolated and reject skipped or foreign lessons', async () => {
   const admin = verifiedUser('admin-user', { admin: true })
   const ai = {

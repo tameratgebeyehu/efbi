@@ -650,6 +650,23 @@ The second launch-quality checkpoint is also implemented in the development code
 
 Phase 27 remains in progress. The real published inventory must still be checked in Admin Studio and corrected by the owner. Public pre-registration discovery for every activated course, manual browser/device/accessibility tests, failure and recovery exercises, Firebase operational review, and the final controlled security check remain.
 
+## Phase 27C — safe public course discovery
+
+The third launch-quality checkpoint is implemented in the development codebase:
+
+1. Course activation now atomically creates a narrow `publicCourseCatalog` record with the immutable version, active pointer, and audit event.
+2. Signed-out visitors can browse every course that has this record and open its reviewed overview and ordered lesson outline before registering.
+3. The public record contains only course marketing details, completion type, learning time, and lesson titles, summaries, order, and duration.
+4. Full lesson text, YouTube IDs, practice questions, answers, learner data, administrator identity, and internal audit identifiers are not exposed.
+5. Firestore validates every public field against the protected immutable release and rejects extra fields, malformed outlines, learner writes, partial activation, and reused audit events.
+6. Verified learners continue through the existing protected loader and receive the complete immutable lesson release; signed-out users never use that loader.
+7. Launch readiness reports an active course whose public record is absent or points to a different version.
+8. Existing active versions created before Phase 27C are not silently backfilled. The owner must publish and activate a newly reviewed version before launch, preserving the immutable release history.
+9. All ninety-six Firestore authorization and lifecycle tests pass. Learner and Admin Studio lint and production builds pass.
+10. No Firestore rules, database content, application build, Admin Studio, or Hosting target was deployed.
+
+Phase 27 remains in progress. Real launch content entry and correction, manual browser/device/accessibility tests, failure and recovery exercises, Firebase operational review, and the final controlled security check remain.
+
 
 ## Recovery commands
 

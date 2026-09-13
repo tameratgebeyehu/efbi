@@ -434,6 +434,79 @@ service cloud.firestore {
         && data.auditId == version.auditId;
     }
 
+    function validPublicLessonOutline(outline, version, index) {
+      return outline.keys().hasOnly(['lessonId', 'title', 'summary', 'order', 'durationMinutes'])
+        && outline.lessonId == version.lessonIds[index]
+        && validLessonId(outline.lessonId)
+        && outline.title is string
+        && outline.title.size() >= 5
+        && outline.title.size() <= 100
+        && outline.summary is string
+        && outline.summary.size() >= 20
+        && outline.summary.size() <= 240
+        && outline.order == index + 1
+        && outline.durationMinutes is int
+        && outline.durationMinutes >= 1
+        && outline.durationMinutes <= 240;
+    }
+
+    function validPublicLessonOutlines(data, version) {
+      return data.lessonOutlines is list
+        && data.lessonOutlines.size() == version.lessonIds.size()
+        && data.lessonOutlines.size() >= 1
+        && data.lessonOutlines.size() <= 12
+        && validPublicLessonOutline(data.lessonOutlines[0], version, 0)
+        && (data.lessonOutlines.size() < 2 || validPublicLessonOutline(data.lessonOutlines[1], version, 1))
+        && (data.lessonOutlines.size() < 3 || validPublicLessonOutline(data.lessonOutlines[2], version, 2))
+        && (data.lessonOutlines.size() < 4 || validPublicLessonOutline(data.lessonOutlines[3], version, 3))
+        && (data.lessonOutlines.size() < 5 || validPublicLessonOutline(data.lessonOutlines[4], version, 4))
+        && (data.lessonOutlines.size() < 6 || validPublicLessonOutline(data.lessonOutlines[5], version, 5))
+        && (data.lessonOutlines.size() < 7 || validPublicLessonOutline(data.lessonOutlines[6], version, 6))
+        && (data.lessonOutlines.size() < 8 || validPublicLessonOutline(data.lessonOutlines[7], version, 7))
+        && (data.lessonOutlines.size() < 9 || validPublicLessonOutline(data.lessonOutlines[8], version, 8))
+        && (data.lessonOutlines.size() < 10 || validPublicLessonOutline(data.lessonOutlines[9], version, 9))
+        && (data.lessonOutlines.size() < 11 || validPublicLessonOutline(data.lessonOutlines[10], version, 10))
+        && (data.lessonOutlines.size() < 12 || validPublicLessonOutline(data.lessonOutlines[11], version, 11));
+    }
+
+    function validPublicCourseCatalog(data, courseId) {
+      let version = getAfter(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
+      let active = getAfter(/databases/$(database)/documents/activeCourses/$(courseId)).data;
+      let release = getAfter(/databases/$(database)/documents/courseReleases/$(data.courseReleaseId)).data;
+      return data.keys().hasOnly([
+          'courseId', 'versionId', 'courseReleaseId', 'courseVersion',
+          'courseTitle', 'courseDescription', 'level', 'language',
+          'estimatedMinutes', 'lessonCount', 'assessmentVersion',
+          'assessmentType', 'lessonOutlines', 'publishedAt'
+        ])
+        && data.courseId == courseId
+        && validCourseId(courseId)
+        && version.versionId == data.versionId
+        && version.courseId == courseId
+        && active.versionId == data.versionId
+        && active.courseId == courseId
+        && data.courseVersion == version.courseVersion
+        && data.courseVersion == active.courseVersion
+        && data.courseTitle == version.courseTitle
+        && data.courseTitle == release.title
+        && data.courseDescription == release.summary
+        && data.level == release.level
+        && data.language == release.language
+        && data.estimatedMinutes == release.estimatedMinutes
+        && release.releaseId == data.courseReleaseId
+        && release.courseId == courseId
+        && release.version == data.courseVersion
+        && data.lessonCount == version.lessonIds.size()
+        && data.lessonCount == active.lessonCount
+        && data.assessmentVersion == version.assessmentVersion
+        && data.assessmentVersion == active.assessmentVersion
+        && data.assessmentType == version.assessmentType
+        && data.assessmentType == active.assessmentType
+        && validPublicLessonOutlines(data, version)
+        && data.publishedAt == request.time
+        && version.auditId == active.auditId;
+    }
+
     function validVersionedProgress(data, courseId) {
       let version = get(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
       return data.keys().hasOnly([
@@ -2814,6 +2887,23 @@ service cloud.firestore {
         && validActiveCourse(request.resource.data, courseId)
         && linkedAuditIsValid(
           request.resource.data.auditId,
+          'course.version.activated',
+          'courseVersion',
+          courseId,
+          request.resource.data.courseVersion,
+          request.resource.data.versionId
+        );
+      allow delete: if false;
+    }
+
+    // A deliberately narrow pre-registration catalog. It contains course
+    // marketing details and lesson outlines, never lesson bodies or answer keys.
+    match /publicCourseCatalog/{courseId} {
+      allow get, list: if true;
+      allow create, update: if admin()
+        && validPublicCourseCatalog(request.resource.data, courseId)
+        && linkedAuditIsValid(
+          getAfter(/databases/$(database)/documents/courseVersions/$(request.resource.data.versionId)).data.auditId,
           'course.version.activated',
           'courseVersion',
           courseId,

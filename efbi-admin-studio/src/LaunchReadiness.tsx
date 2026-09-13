@@ -6,7 +6,7 @@ type Inventory = Record<string, StoredRecord[]>
 
 const collectionNames = [
   'programDrafts', 'publishedPrograms', 'courseDrafts', 'courseReleases', 'lessonDrafts',
-  'lessonReleases', 'courseVersions', 'activeCourses', 'blogDrafts', 'publishedPosts',
+  'lessonReleases', 'courseVersions', 'activeCourses', 'publicCourseCatalog', 'blogDrafts', 'publishedPosts',
 ] as const
 
 const manualChecks = [
@@ -56,6 +56,7 @@ export default function LaunchReadiness() {
     const versions = new Map(records('courseVersions').map((record) => [record.id, record.data]))
     const courseReleases = records('courseReleases')
     const lessonReleases = records('lessonReleases')
+    const publicCatalog = new Map(records('publicCourseCatalog').map((record) => [record.id, record]))
     const issues: string[] = []
     const activeSources: StoredRecord[] = [...records('publishedPrograms'), ...records('publishedPosts')]
     let referencedLessons = 0
@@ -67,6 +68,9 @@ export default function LaunchReadiness() {
       const version = versions.get(versionId)
       if (!version) { issues.push(`${courseId}: active version ${versionId || 'is missing'}.`); continue }
       activeSources.push({ id: versionId, data: version })
+      const publicRecord = publicCatalog.get(courseId)
+      if (!publicRecord || text(publicRecord.data.versionId) !== versionId) issues.push(`${courseId}: the signed-out public catalog is missing or points to another version.`)
+      else activeSources.push(publicRecord)
       const lessonIds = Array.isArray(version.lessonIds) ? version.lessonIds.filter((item): item is string => typeof item === 'string') : []
       referencedLessons += lessonIds.length
       if (text(version.courseId) !== courseId || number(version.courseVersion) !== courseVersion) issues.push(`${courseId}: the active pointer does not match its immutable course version.`)

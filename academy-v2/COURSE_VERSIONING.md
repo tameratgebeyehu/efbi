@@ -50,10 +50,10 @@ Use a new lesson ID when the meaning of that lesson changes materially. Use a ne
 6. Confirm the lesson list is unique, ordered continuously from 1, and contains no more than 12 lessons.
 7. Choose the assessment type and version.
 8. Read and accept the protected-action confirmation, then activate.
-9. Confirm the new version, active pointer, and audit event appear together. If any part fails, none should be saved.
+9. Confirm the new version, safe public outline, active pointer, and audit event appear together. If any part fails, none should be saved.
 10. Test with synthetic learner accounts before opening enrollment.
 
-Publishing a course or lesson release does not activate it. Activation is a separate atomic operation that creates an immutable course version, changes the active pointer, and creates a matching immutable audit event.
+Publishing a course or lesson release does not activate it. Activation is a separate atomic operation that creates an immutable course version, publishes a deliberately limited signed-out outline, changes the active pointer, and creates a matching immutable audit event.
 
 An already-created version cannot be edited or activated again. Publish and activate a new version instead. This preserves a clear history and prevents an old audit event from being reused.
 
@@ -66,7 +66,7 @@ The protected learner route is `/learn/:courseId/:lessonSlug`.
 - A learner with no progress starts only the current active version.
 - Incomplete, mismatched, invalid, and unpublished course data fails closed.
 
-Verified learners can browse complete activated courses and open their dynamic course details. Anonymous visitors still see only the safe built-in pilot preview. Do not treat activation alone as public launch approval.
+Anyone can browse the safe outline of an activated course: title, summary, level, learning time, completion path, and ordered lesson titles and summaries. Lesson bodies, videos, practice questions, answers, and learner data remain protected. Verified learners can open the complete activated lessons. Do not treat activation alone as permission to open enrollment.
 
 ## Certificate boundary
 

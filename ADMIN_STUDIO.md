@@ -121,11 +121,11 @@ Lesson drafts stay private to administrators. Published lesson releases reach th
 4. Confirm that the readiness panel shows 1–12 unique lessons in continuous order starting at 1.
 5. Choose whether the version uses practice only or a final project, and confirm the assessment version.
 6. Read the protected-action boundary and check the confirmation box only after reviewing the exact lesson list.
-7. Choose **Activate version**. The immutable course version, active pointer, and audit event are written together or not at all.
+7. Choose **Activate version**. The immutable course version, safe public outline, active pointer, and audit event are written together or not at all.
 8. New learners start the active version. Existing learners stay on the version already saved in their progress.
 9. Do not try to reuse an old version. Publish and activate a new version for the next release.
 
-Activation does not open public enrollment and does not publish Admin Studio. The multi-course public catalog, assessments, certificates, and deletion workflow still require the remaining Phase 23 work.
+Activation makes only the course overview and ordered lesson outline publicly discoverable. Lesson text, videos, practice questions, answers, and learner records remain protected until the learner signs in with a verified account. Activation does not open enrollment and never publishes Admin Studio.
 
 ## Review assignment workflow
 

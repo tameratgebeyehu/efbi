@@ -92,6 +92,8 @@ Phase 27A development checkpoint complete: Admin Studio now includes a protected
 
 Phase 27B development checkpoint complete: the learner site no longer presents unpublished article drafts as content, its fallback catalog matches the four approved program areas, and enrollment-enabled builds use only program records actually published through Admin Studio. Preview/rebuild messages now follow the real site mode, stale duplicate access-page code is removed, and empty program or article collections produce honest public states.
 
+Phase 27C development checkpoint complete: every newly activated course now receives an atomic, read-only public catalog record. Signed-out visitors can discover activated courses and inspect a safe lesson outline before creating an account, while lesson text, videos, questions, answers, learner data, administrator identity, and internal audit references remain private. The Launch readiness workspace flags active versions that predate or do not match this public record. All ninety-six Firestore authorization and lifecycle tests pass, along with both application lint and production builds. Existing active versions created before this checkpoint require a newly reviewed version and activation before launch. Nothing was deployed.
+
 ## Phase 28 — controlled internet launch
 
 1. Deploy the tested build to development Hosting with enrollment still closed.
