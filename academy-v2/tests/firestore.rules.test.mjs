@@ -2401,3 +2401,219 @@ test('Phase 20 synthetic learner, reviewer, and administrator complete the priva
   await assertFails(updateDoc(doc(admin, 'authenticationRemovals', uid), { method: 'changed' }))
   await assertFails(deleteDoc(doc(admin, 'authenticationRemovals', uid)))
 })
+
+const versionedProject = {
+  courseId: 'web-basics',
+  versionId: 'web-basics--v1',
+  courseTitle: 'Web Basics',
+  courseVersion: 1,
+  assessmentVersion: 1,
+  assessmentType: 'project',
+  lessonIds: ['web-introduction', 'build-a-first-page'],
+}
+
+function versionedSubmissionDraft(overrides = {}) {
+  const submissionId = versionedProject.versionId + '--project'
+  return submissionDraft({
+    submissionId,
+    courseId: versionedProject.courseId,
+    versionId: versionedProject.versionId,
+    ...overrides,
+  })
+}
+
+function versionedFinalSubmission(createdAt, overrides = {}) {
+  return versionedSubmissionDraft({
+    createdAt,
+    consentVersion: 'efbi-project-consent-v1',
+    consentAcceptedAt: serverTimestamp(),
+    status: 'submitted',
+    updatedAt: serverTimestamp(),
+    submittedAt: serverTimestamp(),
+    ...overrides,
+  })
+}
+
+async function seedVersionedProjectCourse({
+  uid = 'alice',
+  course = versionedProject,
+  completedLessonIds = course.lessonIds,
+} = {}) {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    await setDoc(doc(db, 'courseVersions', course.versionId), {
+      ...courseVersionRecord(course),
+      publishedAt: new Date('2026-09-12T01:00:00Z'),
+    })
+    await setDoc(doc(db, 'activeCourses', course.courseId), {
+      ...activeCourseRecord(course),
+      activatedAt: new Date('2026-09-12T01:00:00Z'),
+    })
+    await setDoc(doc(db, 'users', uid, 'progress', course.courseId), {
+      ...versionedProgressRecord({
+        courseId: course.courseId,
+        versionId: course.versionId,
+        courseVersion: course.courseVersion,
+        lessonCount: course.lessonIds.length,
+        completedLessonIds,
+        createdAt: new Date('2026-09-12T01:10:00Z'),
+      }),
+      updatedAt: new Date('2026-09-12T01:20:00Z'),
+    })
+  })
+}
+
+async function seedVersionedSubmittedProject(uid = 'alice') {
+  await seedVersionedProjectCourse({ uid })
+  const submissionId = versionedProject.versionId + '--project'
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', uid, 'submissions', submissionId), {
+      ...versionedSubmissionDraft(),
+      createdAt: new Date('2026-09-12T01:30:00Z'),
+      updatedAt: new Date('2026-09-12T01:40:00Z'),
+      consentVersion: 'efbi-project-consent-v1',
+      consentAcceptedAt: new Date('2026-09-12T01:40:00Z'),
+      status: 'submitted',
+      submittedAt: new Date('2026-09-12T01:40:00Z'),
+    })
+  })
+}
+
+function versionedPrivateReviewResult(submissionSubmittedAt, overrides = {}) {
+  const submissionId = versionedProject.versionId + '--project'
+  const assignmentId = 'alice--' + submissionId
+  return privateReviewResult(submissionSubmittedAt, {
+    assignmentId,
+    submissionId,
+    courseId: versionedProject.courseId,
+    versionId: versionedProject.versionId,
+    ...overrides,
+  })
+}
+
+function versionedPublicReviewResult(submissionSubmittedAt, overrides = {}) {
+  const privateResult = versionedPrivateReviewResult(submissionSubmittedAt, overrides)
+  const { reviewerUid, concern, privateNote, ...safeResult } = privateResult
+  void reviewerUid; void concern; void privateNote
+  return safeResult
+}
+
+test('a completed versioned project course accepts one bound draft and final submission', async () => {
+  await seedVersionedProjectCourse()
+  const learner = verifiedUser('alice')
+  const submissionId = versionedProject.versionId + '--project'
+  const reference = doc(learner, 'users', 'alice', 'submissions', submissionId)
+  await assertSucceeds(setDoc(reference, versionedSubmissionDraft()))
+  const draft = await getDoc(reference)
+  await assertSucceeds(setDoc(reference, versionedFinalSubmission(draft.data().createdAt)))
+  const submitted = await assertSucceeds(getDoc(reference))
+  assert.equal(submitted.data().versionId, versionedProject.versionId)
+  assert.equal(submitted.data().status, 'submitted')
+})
+
+test('versioned submissions reject incomplete, practice-only, and cross-course bindings', async () => {
+  await seedVersionedProjectCourse({ completedLessonIds: ['web-introduction'] })
+  const learner = verifiedUser('alice')
+  const submissionId = versionedProject.versionId + '--project'
+  await assertFails(setDoc(
+    doc(learner, 'users', 'alice', 'submissions', submissionId),
+    versionedSubmissionDraft(),
+  ))
+
+  const practiceCourse = {
+    ...versionedProject,
+    courseId: 'ai-practice',
+    versionId: 'ai-practice--v1',
+    courseTitle: 'AI Practice',
+    assessmentType: 'practice-only',
+    lessonIds: ['practice-one'],
+  }
+  await seedVersionedProjectCourse({ course: practiceCourse })
+  await assertFails(setDoc(
+    doc(learner, 'users', 'alice', 'submissions', practiceCourse.versionId + '--project'),
+    versionedSubmissionDraft({
+      submissionId: practiceCourse.versionId + '--project',
+      courseId: practiceCourse.courseId,
+      versionId: practiceCourse.versionId,
+    }),
+  ))
+  await assertFails(setDoc(
+    doc(learner, 'users', 'alice', 'submissions', submissionId),
+    versionedSubmissionDraft({ courseId: practiceCourse.courseId }),
+  ))
+})
+
+test('a versioned review stays atomically bound to its assigned course release', async () => {
+  await seedVersionedSubmittedProject()
+  const admin = verifiedUser('admin-user', { admin: true })
+  const submissionId = versionedProject.versionId + '--project'
+  const resultId = 'alice--' + submissionId
+  await assertSucceeds(setDoc(doc(admin, 'reviewAssignments', resultId), {
+    assignmentId: resultId,
+    learnerUid: 'alice',
+    submissionId,
+    reviewerUid: 'reviewer-user',
+    status: 'assigned',
+    assignedAt: serverTimestamp(),
+    assignedBy: 'admin-user',
+  }))
+
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const submitted = await getDoc(doc(reviewer, 'users', 'alice', 'submissions', submissionId))
+  const submittedAt = submitted.data().submittedAt
+  const forged = writeBatch(reviewer)
+  forged.set(doc(reviewer, 'reviewResults', resultId), versionedPrivateReviewResult(submittedAt))
+  forged.set(
+    doc(reviewer, 'users', 'alice', 'reviewResults', resultId),
+    versionedPublicReviewResult(submittedAt, { versionId: 'another-course--v1' }),
+  )
+  await assertFails(forged.commit())
+
+  const valid = writeBatch(reviewer)
+  valid.set(doc(reviewer, 'reviewResults', resultId), versionedPrivateReviewResult(submittedAt))
+  valid.set(doc(reviewer, 'users', 'alice', 'reviewResults', resultId), versionedPublicReviewResult(submittedAt))
+  await assertSucceeds(valid.commit())
+})
+
+test('a revision request unlocks exactly one versioned course revision', async () => {
+  await seedVersionedSubmittedProject()
+  const submissionId = versionedProject.versionId + '--project'
+  const revisionId = versionedProject.versionId + '--project-revision-1'
+  const resultId = 'alice--' + submissionId
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'reviewResults', resultId), {
+      ...versionedPublicReviewResult(new Date('2026-09-12T01:40:00Z'), {
+        decision: 'revision_requested',
+        scores: rubricScores({ safetyResponsibility: 0 }),
+        totalScore: 8,
+      }),
+      reviewedAt: new Date('2026-09-12T01:50:00Z'),
+    })
+  })
+
+  const learner = verifiedUser('alice')
+  const revision = versionedSubmissionDraft({
+    submissionId: revisionId,
+    originalSubmissionId: submissionId,
+    revisionNumber: 1,
+    basedOnReviewId: resultId,
+    originalSubmittedAt: new Date('2026-09-12T01:40:00Z'),
+    basedOnReviewReviewedAt: new Date('2026-09-12T01:50:00Z'),
+  })
+  const reference = doc(learner, 'users', 'alice', 'submissions', revisionId)
+  await assertSucceeds(setDoc(reference, revision))
+  const draft = await getDoc(reference)
+  await assertSucceeds(setDoc(reference, {
+    ...revision,
+    createdAt: draft.data().createdAt,
+    consentVersion: 'efbi-project-revision-consent-v1',
+    consentAcceptedAt: serverTimestamp(),
+    status: 'submitted',
+    updatedAt: serverTimestamp(),
+    submittedAt: serverTimestamp(),
+  }))
+  await assertFails(setDoc(
+    doc(learner, 'users', 'alice', 'submissions', versionedProject.versionId + '--project-revision-2'),
+    { ...revision, submissionId: versionedProject.versionId + '--project-revision-2', revisionNumber: 2 },
+  ))
+})

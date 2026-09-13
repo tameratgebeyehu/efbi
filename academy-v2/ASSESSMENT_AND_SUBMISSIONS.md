@@ -1,10 +1,10 @@
 # EFBI assessment and project-submission boundary
 
-## Current Phase 18 status
+## Current Phase 23 status
 
-The development environment now supports a complete, controlled review cycle for the AI Foundations pilot:
+The development environment now supports a complete, controlled review cycle for the legacy AI Foundations pilot and administrator-activated project courses:
 
-- a verified learner must finish all four lessons before creating one private project draft;
+- a verified learner must finish every lesson in the exact course version they started before creating one private project draft;
 - final submission requires complete structured text, HTTPS evidence, and versioned consent;
 - an administrator assigns a submitted version to a reviewer but cannot score it;
 - only the assigned reviewer can publish one permanent rubric result;
@@ -13,26 +13,35 @@ The development environment now supports a complete, controlled review cycle for
 - the revision receives its own assignment and second permanent review;
 - the learner sees only scores, decision, and public feedback from each review.
 
-Certificate requests now require the final approved review plus separate learner consent for the public name. Issuance, revocation, and replacement are administrator-only, atomic, and audited. Appeals, file uploads, public enrollment, production review operations, and production deployment remain disabled.
+Certificate requests remain limited to the legacy AI Foundations pilot during this checkpoint. Its final approved review still requires separate learner consent for the public name, and issuance, revocation, and replacement remain administrator-only, atomic, and audited. Appeals, file uploads, public enrollment, production review operations, and production deployment remain disabled.
 
 ## Submission versions
 
-Both learner records live under `users/{uid}/submissions`:
+All learner project records live under `users/{uid}/submissions`.
+
+The legacy pilot keeps its existing identifiers:
 
 - `ai-foundations-project` is the original Version 1 submission;
-- `ai-foundations-project-revision-1` is the only permitted revision, shown as Version 2.
+- `ai-foundations-project-revision-1` is its only permitted revision.
+
+An activated project course uses identifiers bound to its immutable release:
+
+- `{versionId}--project` is the original Version 1 submission;
+- `{versionId}--project-revision-1` is its only permitted revision.
+
+Every versioned record also stores `courseId`, `versionId`, `courseVersion`, and `assessmentVersion`. Firestore checks these values against the learner's locked progress record and the immutable course-version record. Practice-only courses, incomplete progress, foreign course versions, invented identifiers, and mismatched assessment versions cannot open a project draft.
 
 Drafts are private to the learner. Administrators see only submitted versions, and only the specifically assigned reviewer can read a submitted version. Every submitted version is immutable and cannot be deleted through a browser account.
 
 The revision record adds three protected provenance fields:
 
-- `originalSubmissionId` must be `ai-foundations-project`;
+- `originalSubmissionId` must identify the same release's original project;
 - `revisionNumber` must be `1`;
 - `basedOnReviewId` must identify the learner's permanent Version 1 review;
 - `originalSubmittedAt` must match the trusted Version 1 submission time;
 - `basedOnReviewReviewedAt` must match the trusted first-review time.
 
-Firestore permits creation of this exact revision ID only when the learner owns the record, completed the course, Version 1 is submitted, and the learner-safe Version 1 result is `revision_requested`. Unknown IDs, a second revision number, changed provenance, and extra fields are rejected.
+Firestore permits creation of this exact revision ID only when the learner owns the record, completed the same course version, Version 1 is submitted, and the learner-safe Version 1 result is `revision_requested`. Unknown IDs, a second revision number, changed provenance, cross-course data, and extra fields are rejected.
 
 ## Consent and evidence
 
@@ -44,12 +53,12 @@ This wording still needs local legal and safeguarding review before production u
 
 ## Versioned review records
 
-Each submitted version has an immutable assignment ID formed from the learner ID and that submission's ID. One review action creates two matching records in the same atomic batch:
+Each submitted version has an immutable assignment ID formed from the learner ID and that submission's ID. For activated courses, both private and learner-safe results also carry the exact `courseId` and `versionId`. One review action creates two matching records in the same atomic batch:
 
 - `reviewResults/{assignmentId}` stores the assigned reviewer ID, rubric scores, decision, public feedback, private concern category, optional private note, versions, exact submission timestamp, and review timestamp;
 - `users/{uid}/reviewResults/{assignmentId}` stores only learner-safe fields: scores, total, decision, public feedback, versions, exact submission timestamp, and review timestamp.
 
-Firestore rejects either record when its matching copy is absent or inconsistent. Learners and unrelated reviewers cannot read the private record. No browser identity can change or delete a published result.
+Firestore rejects either record when its matching copy is absent, inconsistent, assigned to another reviewer, or bound to another course release. Learners and unrelated reviewers cannot read the private record. No browser identity can change or delete a published result.
 
 The second review uses the revision assignment ID and exact revision timestamp. It cannot replace, approve, or modify the Version 1 review. A second `revision_requested` decision does not unlock another submission version.
 
@@ -84,14 +93,16 @@ An approved final review lets the learner create one immutable certificate reque
 
 Automated retention cleanup is not active. Before production enrollment, EFBI must implement a clear draft-deletion request, a 90-day inactive-draft policy, deletion of project and review data after the agreed retention period, investigation holds, and minimal deletion-completion logs that do not preserve project content.
 
-## Phase 18 implementation
+## Phase 23 implementation
 
-All certificate controls ship together in the development environment:
+The submission and review checkpoint now provides:
 
-1. Eligibility derives only from the final valid approved review.
-2. The learner separately consents to the public certificate name.
-3. Issuance creates private evidence, public core, active status, one-per-course claim, and audit history atomically.
-4. Public verification exposes only the approved name, course, issue date, credential ID, replacement link, and status.
-5. Revocation and replacement preserve original issuance history.
-6. Sixty-six role-boundary and lifecycle tests pass.
-7. Appeals, file uploads, public enrollment, and production deployment remain disabled.
+1. Dynamic learner routes at `/submit/:courseId` for activated project courses.
+2. Submission IDs derived from the immutable course-version ID.
+3. Exact progress, release, assessment, consent, evidence, and provenance checks.
+4. Dynamic administrator review assignment and version-bound result publishing.
+5. Separate direct legacy and multi-course validators that stay within Firestore's evaluation ceiling.
+6. Eighty authorization and lifecycle tests, including cross-course and cross-version attack cases.
+7. Legacy AI Foundations certificate behavior remains unchanged.
+8. Generalized certificates and deletion inventory are the next lifecycle checkpoint.
+9. Appeals, file uploads, public enrollment, and production deployment remain disabled.

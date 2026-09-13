@@ -598,10 +598,27 @@ service cloud.firestore {
         );
     }
 
-    function validSubmissionId(submissionId) {
+    function validLegacySubmissionId(submissionId) {
       return submissionId in [
         'ai-foundations-project', 'ai-foundations-project-revision-1'
       ];
+    }
+
+    function versionedOriginalSubmissionId(data) {
+      return data.versionId + '--project';
+    }
+
+    function versionedRevisionSubmissionId(data) {
+      return data.versionId + '--project-revision-1';
+    }
+
+    function validSubmissionId(data, submissionId) {
+      return data.keys().hasAll(['versionId'])
+        ? submissionId in [
+            versionedOriginalSubmissionId(data),
+            versionedRevisionSubmissionId(data)
+          ]
+        : validLegacySubmissionId(submissionId);
     }
 
     function validEvidenceLink(value) {
@@ -620,7 +637,7 @@ service cloud.firestore {
         && (evidence.size() < 3 || validEvidenceLink(evidence[2]));
     }
 
-    function validSubmissionShape(data, submissionId, uid) {
+    function validLegacySubmissionShape(data, submissionId, uid) {
       let originalFields = [
           'submissionId', 'courseId', 'courseVersion', 'assessmentVersion',
           'projectTitle', 'problemStatement', 'intendedUsers', 'solutionSummary',
@@ -651,7 +668,7 @@ service cloud.firestore {
             && data.assessmentVersion == get(/databases/$(database)/documents/users/$(uid)/submissions/ai-foundations-project).data.assessmentVersion
           )
         )
-        && validSubmissionId(submissionId)
+        && validLegacySubmissionId(submissionId)
         && data.submissionId == submissionId
         && data.courseId == 'ai-foundations'
         && data.courseVersion is int
@@ -674,6 +691,83 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
+    function validVersionedSubmissionShape(data, submissionId, uid) {
+      let version = get(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
+      let originalId = versionedOriginalSubmissionId(data);
+      let original = get(/databases/$(database)/documents/users/$(uid)/submissions/$(originalId)).data;
+      let originalReviewId = uid + '--' + originalId;
+      let originalReview = get(/databases/$(database)/documents/users/$(uid)/reviewResults/$(originalReviewId)).data;
+      let originalFields = [
+          'submissionId', 'courseId', 'versionId', 'courseVersion',
+          'assessmentVersion', 'projectTitle', 'problemStatement',
+          'intendedUsers', 'solutionSummary', 'evidence', 'reflection',
+          'aiUseDisclosure', 'consentVersion', 'consentAcceptedAt',
+          'status', 'createdAt', 'updatedAt', 'submittedAt'
+        ];
+      let revisionFields = [
+          'submissionId', 'courseId', 'versionId', 'courseVersion',
+          'assessmentVersion', 'projectTitle', 'problemStatement',
+          'intendedUsers', 'solutionSummary', 'evidence', 'reflection',
+          'aiUseDisclosure', 'consentVersion', 'consentAcceptedAt',
+          'status', 'createdAt', 'updatedAt', 'submittedAt',
+          'originalSubmissionId', 'revisionNumber', 'basedOnReviewId',
+          'originalSubmittedAt', 'basedOnReviewReviewedAt'
+        ];
+      return (
+          (
+            submissionId == originalId
+            && data.keys().hasOnly(originalFields)
+          )
+          || (
+            submissionId == versionedRevisionSubmissionId(data)
+            && data.keys().hasOnly(revisionFields)
+            && data.originalSubmissionId == originalId
+            && data.revisionNumber == 1
+            && data.basedOnReviewId == originalReviewId
+            && data.originalSubmittedAt is timestamp
+            && data.basedOnReviewReviewedAt is timestamp
+            && data.originalSubmittedAt == original.submittedAt
+            && data.basedOnReviewReviewedAt == originalReview.reviewedAt
+            && data.courseVersion == original.courseVersion
+            && data.assessmentVersion == original.assessmentVersion
+            && data.versionId == original.versionId
+          )
+        )
+        && validSubmissionId(data, submissionId)
+        && data.submissionId == submissionId
+        && validCourseId(data.courseId)
+        && data.versionId is string
+        && data.versionId.size() >= 8
+        && data.versionId.size() <= 140
+        && version.versionId == data.versionId
+        && version.courseId == data.courseId
+        && version.courseVersion == data.courseVersion
+        && version.assessmentVersion == data.assessmentVersion
+        && version.assessmentType == 'project'
+        && data.courseVersion is int
+        && data.assessmentVersion is int
+        && data.projectTitle is string
+        && data.projectTitle.size() <= 100
+        && data.problemStatement is string
+        && data.problemStatement.size() <= 1200
+        && data.intendedUsers is string
+        && data.intendedUsers.size() <= 600
+        && data.solutionSummary is string
+        && data.solutionSummary.size() <= 2000
+        && data.reflection is string
+        && data.reflection.size() <= 2000
+        && data.aiUseDisclosure is string
+        && data.aiUseDisclosure.size() <= 1200
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function validSubmissionShape(data, submissionId, uid) {
+      return data.keys().hasAll(['versionId'])
+        ? validVersionedSubmissionShape(data, submissionId, uid)
+        : validLegacySubmissionShape(data, submissionId, uid);
+    }
+
     function validSubmissionDraft(data, submissionId, uid) {
       return validSubmissionShape(data, submissionId, uid)
         && data.status == 'draft'
@@ -694,10 +788,10 @@ service cloud.firestore {
         && data.aiUseDisclosure.size() >= 20
         && validEvidence(data.evidence, true)
         && (
-          (submissionId == 'ai-foundations-project'
+          (!data.keys().hasAny(['originalSubmissionId'])
             && data.consentVersion == 'efbi-project-consent-v1')
           ||
-          (submissionId == 'ai-foundations-project-revision-1'
+          (data.keys().hasAll(['originalSubmissionId'])
             && data.consentVersion == 'efbi-project-revision-consent-v1')
         )
         && data.consentAcceptedAt == request.time
@@ -711,7 +805,60 @@ service cloud.firestore {
         && progress.completedLessonIds == ['understanding-ai', 'prompting-with-purpose', 'responsible-use', 'build-an-ethiopian-solution'];
     }
 
-    function revisionIsAllowed(uid) {
+    function completedVersionedSubmissionCourse(uid, data) {
+      let progress = get(/databases/$(database)/documents/users/$(uid)/progress/$(data.courseId)).data;
+      let version = get(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
+      return progress.courseId == data.courseId
+        && progress.versionId == data.versionId
+        && progress.courseVersion == data.courseVersion
+        && progress.lessonCount == version.lessonIds.size()
+        && progress.completedLessonIds.size() == progress.lessonCount
+        && progress.completedLessonIds.toSet()
+          .difference(version.lessonIds.toSet()).size() == 0
+        && version.versionId == data.versionId
+        && version.courseId == data.courseId
+        && version.courseVersion == data.courseVersion
+        && version.assessmentVersion == data.assessmentVersion
+        && version.assessmentType == 'project';
+    }
+
+    function completedSubmissionCourse(uid, data) {
+      return data.keys().hasAll(['versionId'])
+        ? completedVersionedSubmissionCourse(uid, data)
+        : completedAiFoundations(uid);
+    }
+
+    function validLegacySubmissionDraftFast(data, submissionId, uid) {
+      return validLegacySubmissionShape(data, submissionId, uid)
+        && data.status == 'draft'
+        && validEvidence(data.evidence, false)
+        && data.consentVersion == ''
+        && data.consentAcceptedAt == null
+        && data.submittedAt == null;
+    }
+
+    function validLegacyFinalSubmissionFast(data, submissionId, uid) {
+      return validLegacySubmissionShape(data, submissionId, uid)
+        && data.status == 'submitted'
+        && data.projectTitle.size() >= 5
+        && data.problemStatement.size() >= 40
+        && data.intendedUsers.size() >= 10
+        && data.solutionSummary.size() >= 50
+        && data.reflection.size() >= 50
+        && data.aiUseDisclosure.size() >= 20
+        && validEvidence(data.evidence, true)
+        && (
+          (submissionId == 'ai-foundations-project'
+            && data.consentVersion == 'efbi-project-consent-v1')
+          ||
+          (submissionId == 'ai-foundations-project-revision-1'
+            && data.consentVersion == 'efbi-project-revision-consent-v1')
+        )
+        && data.consentAcceptedAt == request.time
+        && data.submittedAt == request.time;
+    }
+
+    function legacyRevisionIsAllowed(uid) {
       let original = get(/databases/$(database)/documents/users/$(uid)/submissions/ai-foundations-project).data;
       let result = get(/databases/$(database)/documents/users/$(uid)/reviewResults/$(uid + '--ai-foundations-project')).data;
       return original.status == 'submitted'
@@ -720,11 +867,281 @@ service cloud.firestore {
         && result.decision == 'revision_requested';
     }
 
+    function sameLegacySubmissionIdentity() {
+      return request.resource.data.submissionId == resource.data.submissionId
+        && request.resource.data.courseId == resource.data.courseId
+        && request.resource.data.courseVersion == resource.data.courseVersion
+        && request.resource.data.assessmentVersion == resource.data.assessmentVersion
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function legacySubmissionUpdateAllowed(uid, submissionId) {
+      return completedAiFoundations(uid)
+        && resource.data.status == 'draft'
+        && sameLegacySubmissionIdentity()
+        && (
+          submissionId == 'ai-foundations-project'
+          || (
+            submissionId == 'ai-foundations-project-revision-1'
+            && legacyRevisionIsAllowed(uid)
+          )
+        )
+        && (
+          validLegacySubmissionDraftFast(request.resource.data, submissionId, uid)
+          || validLegacyFinalSubmissionFast(request.resource.data, submissionId, uid)
+        );
+    }
+
+    function validVersionedOriginalSubmissionShapeFast(data, submissionId) {
+      let version = get(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
+      return data.keys().hasOnly([
+          'submissionId', 'courseId', 'versionId', 'courseVersion',
+          'assessmentVersion', 'projectTitle', 'problemStatement',
+          'intendedUsers', 'solutionSummary', 'evidence', 'reflection',
+          'aiUseDisclosure', 'consentVersion', 'consentAcceptedAt',
+          'status', 'createdAt', 'updatedAt', 'submittedAt'
+        ])
+        && submissionId == data.versionId + '--project'
+        && data.submissionId == submissionId
+        && validCourseId(data.courseId)
+        && data.versionId is string
+        && data.versionId.size() >= 8
+        && data.versionId.size() <= 140
+        && version.versionId == data.versionId
+        && version.courseId == data.courseId
+        && version.courseVersion == data.courseVersion
+        && version.assessmentVersion == data.assessmentVersion
+        && version.assessmentType == 'project'
+        && data.courseVersion is int
+        && data.assessmentVersion is int
+        && data.projectTitle is string
+        && data.projectTitle.size() <= 100
+        && data.problemStatement is string
+        && data.problemStatement.size() <= 1200
+        && data.intendedUsers is string
+        && data.intendedUsers.size() <= 600
+        && data.solutionSummary is string
+        && data.solutionSummary.size() <= 2000
+        && data.reflection is string
+        && data.reflection.size() <= 2000
+        && data.aiUseDisclosure is string
+        && data.aiUseDisclosure.size() <= 1200
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function validVersionedRevisionSubmissionShapeFast(data, submissionId, uid) {
+      let version = get(/databases/$(database)/documents/courseVersions/$(data.versionId)).data;
+      let originalId = data.versionId + '--project';
+      let reviewId = uid + '--' + originalId;
+      let original = get(/databases/$(database)/documents/users/$(uid)/submissions/$(originalId)).data;
+      let review = get(/databases/$(database)/documents/users/$(uid)/reviewResults/$(reviewId)).data;
+      return data.keys().hasOnly([
+          'submissionId', 'courseId', 'versionId', 'courseVersion',
+          'assessmentVersion', 'projectTitle', 'problemStatement',
+          'intendedUsers', 'solutionSummary', 'evidence', 'reflection',
+          'aiUseDisclosure', 'consentVersion', 'consentAcceptedAt',
+          'status', 'createdAt', 'updatedAt', 'submittedAt',
+          'originalSubmissionId', 'revisionNumber', 'basedOnReviewId',
+          'originalSubmittedAt', 'basedOnReviewReviewedAt'
+        ])
+        && submissionId == data.versionId + '--project-revision-1'
+        && data.submissionId == submissionId
+        && data.originalSubmissionId == originalId
+        && data.revisionNumber == 1
+        && data.basedOnReviewId == reviewId
+        && data.originalSubmittedAt is timestamp
+        && data.basedOnReviewReviewedAt is timestamp
+        && original.status == 'submitted'
+        && original.submittedAt == data.originalSubmittedAt
+        && original.courseId == data.courseId
+        && original.versionId == data.versionId
+        && original.courseVersion == data.courseVersion
+        && original.assessmentVersion == data.assessmentVersion
+        && review.learnerUid == uid
+        && review.submissionId == originalId
+        && review.reviewedAt == data.basedOnReviewReviewedAt
+        && review.decision == 'revision_requested'
+        && validCourseId(data.courseId)
+        && data.versionId is string
+        && data.versionId.size() >= 8
+        && data.versionId.size() <= 140
+        && version.versionId == data.versionId
+        && version.courseId == data.courseId
+        && version.courseVersion == data.courseVersion
+        && version.assessmentVersion == data.assessmentVersion
+        && version.assessmentType == 'project'
+        && data.courseVersion is int
+        && data.assessmentVersion is int
+        && data.projectTitle is string
+        && data.projectTitle.size() <= 100
+        && data.problemStatement is string
+        && data.problemStatement.size() <= 1200
+        && data.intendedUsers is string
+        && data.intendedUsers.size() <= 600
+        && data.solutionSummary is string
+        && data.solutionSummary.size() <= 2000
+        && data.reflection is string
+        && data.reflection.size() <= 2000
+        && data.aiUseDisclosure is string
+        && data.aiUseDisclosure.size() <= 1200
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function sameVersionedSubmissionIdentityFast() {
+      return request.resource.data.submissionId == resource.data.submissionId
+        && request.resource.data.courseId == resource.data.courseId
+        && request.resource.data.versionId == resource.data.versionId
+        && request.resource.data.courseVersion == resource.data.courseVersion
+        && request.resource.data.assessmentVersion == resource.data.assessmentVersion
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function validVersionedOriginalDraftFast(data, submissionId) {
+      return validVersionedOriginalSubmissionShapeFast(data, submissionId)
+        && data.status == 'draft'
+        && validEvidence(data.evidence, false)
+        && data.consentVersion == ''
+        && data.consentAcceptedAt == null
+        && data.submittedAt == null;
+    }
+
+    function validVersionedRevisionDraftFast(data, submissionId, uid) {
+      return validVersionedRevisionSubmissionShapeFast(data, submissionId, uid)
+        && data.status == 'draft'
+        && validEvidence(data.evidence, false)
+        && data.consentVersion == ''
+        && data.consentAcceptedAt == null
+        && data.submittedAt == null;
+    }
+
+    function validVersionedOriginalFinalFast(data, submissionId) {
+      return validVersionedOriginalSubmissionShapeFast(data, submissionId)
+        && data.status == 'submitted'
+        && data.projectTitle.size() >= 5
+        && data.problemStatement.size() >= 40
+        && data.intendedUsers.size() >= 10
+        && data.solutionSummary.size() >= 50
+        && data.reflection.size() >= 50
+        && data.aiUseDisclosure.size() >= 20
+        && validEvidence(data.evidence, true)
+        && data.consentVersion == 'efbi-project-consent-v1'
+        && data.consentAcceptedAt == request.time
+        && data.submittedAt == request.time;
+    }
+
+    function validVersionedRevisionFinalFast(data, submissionId, uid) {
+      return validVersionedRevisionSubmissionShapeFast(data, submissionId, uid)
+        && data.status == 'submitted'
+        && data.projectTitle.size() >= 5
+        && data.problemStatement.size() >= 40
+        && data.intendedUsers.size() >= 10
+        && data.solutionSummary.size() >= 50
+        && data.reflection.size() >= 50
+        && data.aiUseDisclosure.size() >= 20
+        && validEvidence(data.evidence, true)
+        && data.consentVersion == 'efbi-project-revision-consent-v1'
+        && data.consentAcceptedAt == request.time
+        && data.submittedAt == request.time;
+    }
+
+    function versionedOriginalSubmissionUpdateAllowed(uid, submissionId) {
+      return completedVersionedSubmissionCourse(uid, request.resource.data)
+        && resource.data.status == 'draft'
+        && sameVersionedSubmissionIdentityFast()
+        && validVersionedOriginalSubmissionShapeFast(request.resource.data, submissionId)
+        && (
+          (
+            request.resource.data.status == 'draft'
+            && validEvidence(request.resource.data.evidence, false)
+            && request.resource.data.consentVersion == ''
+            && request.resource.data.consentAcceptedAt == null
+            && request.resource.data.submittedAt == null
+          )
+          || (
+            request.resource.data.status == 'submitted'
+            && request.resource.data.projectTitle.size() >= 5
+            && request.resource.data.problemStatement.size() >= 40
+            && request.resource.data.intendedUsers.size() >= 10
+            && request.resource.data.solutionSummary.size() >= 50
+            && request.resource.data.reflection.size() >= 50
+            && request.resource.data.aiUseDisclosure.size() >= 20
+            && validEvidence(request.resource.data.evidence, true)
+            && request.resource.data.consentVersion == 'efbi-project-consent-v1'
+            && request.resource.data.consentAcceptedAt == request.time
+            && request.resource.data.submittedAt == request.time
+          )
+        );
+    }
+
+    function versionedRevisionSubmissionUpdateAllowed(uid, submissionId) {
+      return completedVersionedSubmissionCourse(uid, request.resource.data)
+        && resource.data.status == 'draft'
+        && sameVersionedSubmissionIdentityFast()
+        && validVersionedRevisionSubmissionShapeFast(request.resource.data, submissionId, uid)
+        && (
+          (
+            request.resource.data.status == 'draft'
+            && validEvidence(request.resource.data.evidence, false)
+            && request.resource.data.consentVersion == ''
+            && request.resource.data.consentAcceptedAt == null
+            && request.resource.data.submittedAt == null
+          )
+          || (
+            request.resource.data.status == 'submitted'
+            && request.resource.data.projectTitle.size() >= 5
+            && request.resource.data.problemStatement.size() >= 40
+            && request.resource.data.intendedUsers.size() >= 10
+            && request.resource.data.solutionSummary.size() >= 50
+            && request.resource.data.reflection.size() >= 50
+            && request.resource.data.aiUseDisclosure.size() >= 20
+            && validEvidence(request.resource.data.evidence, true)
+            && request.resource.data.consentVersion == 'efbi-project-revision-consent-v1'
+            && request.resource.data.consentAcceptedAt == request.time
+            && request.resource.data.submittedAt == request.time
+          )
+        );
+    }
+
+    function revisionIsAllowed(uid, data) {
+      let originalId = data.keys().hasAll(['versionId'])
+        ? versionedOriginalSubmissionId(data)
+        : 'ai-foundations-project';
+      let original = get(/databases/$(database)/documents/users/$(uid)/submissions/$(originalId)).data;
+      let result = get(/databases/$(database)/documents/users/$(uid)/reviewResults/$(uid + '--' + originalId)).data;
+      return original.status == 'submitted'
+        && result.learnerUid == uid
+        && result.submissionId == originalId
+        && result.decision == 'revision_requested';
+    }
+
+    function originalSubmission(data, submissionId) {
+      return data.keys().hasAll(['versionId'])
+        ? submissionId == versionedOriginalSubmissionId(data)
+        : submissionId == 'ai-foundations-project';
+    }
+
+    function revisionSubmission(data, submissionId) {
+      return data.keys().hasAll(['versionId'])
+        ? submissionId == versionedRevisionSubmissionId(data)
+        : submissionId == 'ai-foundations-project-revision-1';
+    }
+
     function sameSubmissionIdentity() {
       return request.resource.data.submissionId == resource.data.submissionId
         && request.resource.data.courseId == resource.data.courseId
         && request.resource.data.courseVersion == resource.data.courseVersion
         && request.resource.data.assessmentVersion == resource.data.assessmentVersion
+        && (
+          (
+            !request.resource.data.keys().hasAny(['versionId'])
+            && !resource.data.keys().hasAny(['versionId'])
+          )
+          || (
+            request.resource.data.versionId == resource.data.versionId
+          )
+        )
         && request.resource.data.createdAt == resource.data.createdAt;
     }
 
@@ -783,7 +1200,8 @@ service cloud.firestore {
     function validReviewBinding(data, resultId) {
       let assignment = get(/databases/$(database)/documents/reviewAssignments/$(resultId)).data;
       let submission = get(/databases/$(database)/documents/users/$(data.learnerUid)/submissions/$(data.submissionId)).data;
-      return assignment.assignmentId == resultId
+      return resultId == data.learnerUid + '--' + data.submissionId
+        && assignment.assignmentId == resultId
         && assignment.learnerUid == data.learnerUid
         && assignment.submissionId == data.submissionId
         && assignment.reviewerUid == request.auth.uid
@@ -791,27 +1209,52 @@ service cloud.firestore {
         && submission.status == 'submitted'
         && submission.courseVersion == data.courseVersion
         && submission.assessmentVersion == data.assessmentVersion
-        && submission.submittedAt == data.submissionSubmittedAt;
+        && submission.submittedAt == data.submissionSubmittedAt
+        && validSubmissionId(submission, data.submissionId)
+        && (
+          (
+            submission.keys().hasAll(['versionId'])
+            && data.keys().hasAll(['courseId', 'versionId'])
+            && data.courseId == submission.courseId
+            && data.versionId == submission.versionId
+          )
+          || (
+            !submission.keys().hasAny(['versionId'])
+            && !data.keys().hasAny(['courseId', 'versionId'])
+          )
+        );
     }
 
     function validPrivateReviewResult(data, resultId) {
-      return data.keys().hasOnly([
+      let legacyFields = [
           'assignmentId', 'learnerUid', 'submissionId', 'reviewerUid',
           'rubricVersion', 'courseVersion', 'assessmentVersion',
           'submissionSubmittedAt', 'scores', 'totalScore', 'decision',
           'publicFeedback', 'concern', 'privateNote', 'reviewedAt'
-        ])
+        ];
+      let versionedFields = [
+          'assignmentId', 'learnerUid', 'submissionId', 'courseId',
+          'versionId', 'reviewerUid', 'rubricVersion', 'courseVersion',
+          'assessmentVersion', 'submissionSubmittedAt', 'scores',
+          'totalScore', 'decision', 'publicFeedback', 'concern',
+          'privateNote', 'reviewedAt'
+        ];
+      return (
+          (data.keys().hasAll(['versionId']) && data.keys().hasOnly(versionedFields))
+          || (!data.keys().hasAny(['versionId', 'courseId']) && data.keys().hasOnly(legacyFields))
+        )
         && data.assignmentId == resultId
         && data.learnerUid is string
         && data.learnerUid.size() >= 1
         && data.learnerUid.size() <= 128
-        && validSubmissionId(data.submissionId)
         && data.reviewerUid == request.auth.uid
         && data.rubricVersion == 1
         && data.courseVersion is int
         && data.courseVersion >= 1
         && data.courseVersion <= 10000
-        && data.assessmentVersion == 1
+        && data.assessmentVersion is int
+        && data.assessmentVersion >= 1
+        && data.assessmentVersion <= 10000
         && data.submissionSubmittedAt is timestamp
         && validReviewScores(data.scores)
         && data.totalScore is int
@@ -830,21 +1273,32 @@ service cloud.firestore {
     }
 
     function validPublicReviewResult(data, resultId) {
-      return data.keys().hasOnly([
+      let legacyFields = [
           'assignmentId', 'learnerUid', 'submissionId', 'rubricVersion',
           'courseVersion', 'assessmentVersion', 'submissionSubmittedAt',
           'scores', 'totalScore', 'decision', 'publicFeedback', 'reviewedAt'
-        ])
+        ];
+      let versionedFields = [
+          'assignmentId', 'learnerUid', 'submissionId', 'courseId',
+          'versionId', 'rubricVersion', 'courseVersion',
+          'assessmentVersion', 'submissionSubmittedAt', 'scores',
+          'totalScore', 'decision', 'publicFeedback', 'reviewedAt'
+        ];
+      return (
+          (data.keys().hasAll(['versionId']) && data.keys().hasOnly(versionedFields))
+          || (!data.keys().hasAny(['versionId', 'courseId']) && data.keys().hasOnly(legacyFields))
+        )
         && data.assignmentId == resultId
         && data.learnerUid is string
         && data.learnerUid.size() >= 1
         && data.learnerUid.size() <= 128
-        && validSubmissionId(data.submissionId)
         && data.rubricVersion == 1
         && data.courseVersion is int
         && data.courseVersion >= 1
         && data.courseVersion <= 10000
-        && data.assessmentVersion == 1
+        && data.assessmentVersion is int
+        && data.assessmentVersion >= 1
+        && data.assessmentVersion <= 10000
         && data.submissionSubmittedAt is timestamp
         && validReviewScores(data.scores)
         && data.totalScore is int
@@ -868,10 +1322,239 @@ service cloud.firestore {
         && privateResult.totalScore == publicResult.totalScore
         && privateResult.decision == publicResult.decision
         && privateResult.publicFeedback == publicResult.publicFeedback
+        && privateResult.reviewedAt == publicResult.reviewedAt
+        && (
+          (
+            privateResult.keys().hasAll(['versionId', 'courseId'])
+            && publicResult.keys().hasAll(['versionId', 'courseId'])
+            && privateResult.versionId == publicResult.versionId
+            && privateResult.courseId == publicResult.courseId
+          )
+          || (
+            !privateResult.keys().hasAny(['versionId', 'courseId'])
+            && !publicResult.keys().hasAny(['versionId', 'courseId'])
+          )
+        );
+    }
+
+    // Keep the original AI Foundations review path below Firestore's expression
+    // ceiling. Versioned courses use the stricter validators above.
+    function validLegacyReviewBindingFast(data, resultId) {
+      let assignment = get(/databases/$(database)/documents/reviewAssignments/$(resultId)).data;
+      let submission = get(/databases/$(database)/documents/users/$(data.learnerUid)/submissions/$(data.submissionId)).data;
+      return assignment.assignmentId == resultId
+        && assignment.learnerUid == data.learnerUid
+        && assignment.submissionId == data.submissionId
+        && assignment.reviewerUid == request.auth.uid
+        && assignment.status == 'assigned'
+        && submission.status == 'submitted'
+        && submission.courseVersion == data.courseVersion
+        && submission.assessmentVersion == data.assessmentVersion
+        && submission.submittedAt == data.submissionSubmittedAt;
+    }
+
+    function validLegacyPrivateReviewResultFast(data, resultId) {
+      return data.keys().hasOnly([
+          'assignmentId', 'learnerUid', 'submissionId', 'reviewerUid',
+          'rubricVersion', 'courseVersion', 'assessmentVersion',
+          'submissionSubmittedAt', 'scores', 'totalScore', 'decision',
+          'publicFeedback', 'concern', 'privateNote', 'reviewedAt'
+        ])
+        && data.assignmentId == resultId
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && validLegacySubmissionId(data.submissionId)
+        && data.reviewerUid == request.auth.uid
+        && data.rubricVersion == 1
+        && data.courseVersion is int
+        && data.courseVersion >= 1
+        && data.courseVersion <= 10000
+        && data.assessmentVersion == 1
+        && data.submissionSubmittedAt is timestamp
+        && validReviewScores(data.scores)
+        && data.totalScore is int
+        && data.totalScore == rubricTotal(data.scores)
+        && data.decision in ['approved', 'revision_requested']
+        && data.publicFeedback is string
+        && data.publicFeedback.size() >= 40
+        && data.publicFeedback.size() <= 1500
+        && data.concern in ['none', 'plagiarism', 'identity', 'consent', 'safeguarding']
+        && data.privateNote is string
+        && data.privateNote.size() <= 2000
+        && (data.concern == 'none' || data.privateNote.size() >= 20)
+        && data.reviewedAt == request.time
+        && validReviewDecision(data)
+        && validLegacyReviewBindingFast(data, resultId);
+    }
+
+    function validLegacyPublicReviewResultFast(data, resultId) {
+      return data.keys().hasOnly([
+          'assignmentId', 'learnerUid', 'submissionId', 'rubricVersion',
+          'courseVersion', 'assessmentVersion', 'submissionSubmittedAt',
+          'scores', 'totalScore', 'decision', 'publicFeedback', 'reviewedAt'
+        ])
+        && data.assignmentId == resultId
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && validLegacySubmissionId(data.submissionId)
+        && data.rubricVersion == 1
+        && data.courseVersion is int
+        && data.courseVersion >= 1
+        && data.courseVersion <= 10000
+        && data.assessmentVersion == 1
+        && data.submissionSubmittedAt is timestamp
+        && validReviewScores(data.scores)
+        && data.totalScore is int
+        && data.totalScore == rubricTotal(data.scores)
+        && data.decision in ['approved', 'revision_requested']
+        && data.publicFeedback is string
+        && data.publicFeedback.size() >= 40
+        && data.publicFeedback.size() <= 1500
+        && data.reviewedAt == request.time;
+    }
+
+    function sameLegacyPublicReviewFast(privateResult, publicResult) {
+      return privateResult.assignmentId == publicResult.assignmentId
+        && privateResult.learnerUid == publicResult.learnerUid
+        && privateResult.submissionId == publicResult.submissionId
+        && privateResult.rubricVersion == publicResult.rubricVersion
+        && privateResult.courseVersion == publicResult.courseVersion
+        && privateResult.assessmentVersion == publicResult.assessmentVersion
+        && privateResult.submissionSubmittedAt == publicResult.submissionSubmittedAt
+        && privateResult.scores == publicResult.scores
+        && privateResult.totalScore == publicResult.totalScore
+        && privateResult.decision == publicResult.decision
+        && privateResult.publicFeedback == publicResult.publicFeedback
         && privateResult.reviewedAt == publicResult.reviewedAt;
     }
 
+    function validVersionedReviewBindingFast(data, resultId) {
+      let assignment = get(/databases/$(database)/documents/reviewAssignments/$(resultId)).data;
+      let submission = get(/databases/$(database)/documents/users/$(data.learnerUid)/submissions/$(data.submissionId)).data;
+      return resultId == data.learnerUid + '--' + data.submissionId
+        && data.submissionId in [
+          data.versionId + '--project',
+          data.versionId + '--project-revision-1'
+        ]
+        && assignment.assignmentId == resultId
+        && assignment.learnerUid == data.learnerUid
+        && assignment.submissionId == data.submissionId
+        && assignment.reviewerUid == request.auth.uid
+        && assignment.status == 'assigned'
+        && submission.status == 'submitted'
+        && submission.submissionId == data.submissionId
+        && submission.courseId == data.courseId
+        && submission.versionId == data.versionId
+        && submission.courseVersion == data.courseVersion
+        && submission.assessmentVersion == data.assessmentVersion
+        && submission.submittedAt == data.submissionSubmittedAt;
+    }
+
+    function validVersionedPrivateReviewResultFast(data, resultId) {
+      return data.keys().hasOnly([
+          'assignmentId', 'learnerUid', 'submissionId', 'courseId',
+          'versionId', 'reviewerUid', 'rubricVersion', 'courseVersion',
+          'assessmentVersion', 'submissionSubmittedAt', 'scores',
+          'totalScore', 'decision', 'publicFeedback', 'concern',
+          'privateNote', 'reviewedAt'
+        ])
+        && data.assignmentId == resultId
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && data.reviewerUid == request.auth.uid
+        && data.rubricVersion == 1
+        && data.courseVersion is int
+        && data.courseVersion >= 1
+        && data.courseVersion <= 10000
+        && data.assessmentVersion is int
+        && data.assessmentVersion >= 1
+        && data.assessmentVersion <= 10000
+        && data.submissionSubmittedAt is timestamp
+        && validReviewScores(data.scores)
+        && data.totalScore is int
+        && data.totalScore == rubricTotal(data.scores)
+        && data.decision in ['approved', 'revision_requested']
+        && data.publicFeedback is string
+        && data.publicFeedback.size() >= 40
+        && data.publicFeedback.size() <= 1500
+        && data.concern in ['none', 'plagiarism', 'identity', 'consent', 'safeguarding']
+        && data.privateNote is string
+        && data.privateNote.size() <= 2000
+        && (data.concern == 'none' || data.privateNote.size() >= 20)
+        && data.reviewedAt == request.time
+        && validReviewDecision(data)
+        && validVersionedReviewBindingFast(data, resultId);
+    }
+
+    function validVersionedPublicReviewResultFast(data, resultId) {
+      return data.keys().hasOnly([
+          'assignmentId', 'learnerUid', 'submissionId', 'courseId',
+          'versionId', 'rubricVersion', 'courseVersion',
+          'assessmentVersion', 'submissionSubmittedAt', 'scores',
+          'totalScore', 'decision', 'publicFeedback', 'reviewedAt'
+        ])
+        && data.assignmentId == resultId
+        && data.learnerUid is string
+        && data.learnerUid.size() >= 1
+        && data.learnerUid.size() <= 128
+        && data.rubricVersion == 1
+        && data.courseVersion is int
+        && data.courseVersion >= 1
+        && data.courseVersion <= 10000
+        && data.assessmentVersion is int
+        && data.assessmentVersion >= 1
+        && data.assessmentVersion <= 10000
+        && data.submissionSubmittedAt is timestamp
+        && validReviewScores(data.scores)
+        && data.totalScore is int
+        && data.totalScore == rubricTotal(data.scores)
+        && data.decision in ['approved', 'revision_requested']
+        && data.publicFeedback is string
+        && data.publicFeedback.size() >= 40
+        && data.publicFeedback.size() <= 1500
+        && data.reviewedAt == request.time;
+    }
+
+    function sameVersionedPublicReviewFast(privateResult, publicResult) {
+      return privateResult.assignmentId == publicResult.assignmentId
+        && privateResult.learnerUid == publicResult.learnerUid
+        && privateResult.submissionId == publicResult.submissionId
+        && privateResult.courseId == publicResult.courseId
+        && privateResult.versionId == publicResult.versionId
+        && privateResult.rubricVersion == publicResult.rubricVersion
+        && privateResult.courseVersion == publicResult.courseVersion
+        && privateResult.assessmentVersion == publicResult.assessmentVersion
+        && privateResult.submissionSubmittedAt == publicResult.submissionSubmittedAt
+        && privateResult.scores == publicResult.scores
+        && privateResult.totalScore == publicResult.totalScore
+        && privateResult.decision == publicResult.decision
+        && privateResult.publicFeedback == publicResult.publicFeedback
+        && privateResult.reviewedAt == publicResult.reviewedAt;
+    }
+
+    function validPrivateReviewResultForWrite(data, resultId) {
+      return data.keys().hasAll(['versionId'])
+        ? validVersionedPrivateReviewResultFast(data, resultId)
+        : validLegacyPrivateReviewResultFast(data, resultId);
+    }
+
+    function validPublicReviewResultForWrite(data, resultId) {
+      return data.keys().hasAll(['versionId'])
+        ? validVersionedPublicReviewResultFast(data, resultId)
+        : validLegacyPublicReviewResultFast(data, resultId);
+    }
+
+    function samePublicReviewForWrite(privateResult, publicResult) {
+      return privateResult.keys().hasAll(['versionId'])
+        ? sameVersionedPublicReviewFast(privateResult, publicResult)
+        : sameLegacyPublicReviewFast(privateResult, publicResult);
+    }
+
     function validReviewAssignment(data, assignmentId) {
+      let submission = get(/databases/$(database)/documents/users/$(data.learnerUid)/submissions/$(data.submissionId)).data;
       return data.keys().hasOnly([
           'assignmentId', 'learnerUid', 'submissionId', 'reviewerUid',
           'status', 'assignedAt', 'assignedBy'
@@ -880,7 +1563,6 @@ service cloud.firestore {
         && data.learnerUid is string
         && data.learnerUid.size() >= 1
         && data.learnerUid.size() <= 128
-        && validSubmissionId(data.submissionId)
         && assignmentId == data.learnerUid + '--' + data.submissionId
         && data.reviewerUid is string
         && data.reviewerUid.size() >= 1
@@ -890,7 +1572,8 @@ service cloud.firestore {
         && data.status == 'assigned'
         && data.assignedAt == request.time
         && data.assignedBy == request.auth.uid
-        && get(/databases/$(database)/documents/users/$(data.learnerUid)/submissions/$(data.submissionId)).data.status == 'submitted';
+        && submission.status == 'submitted'
+        && validSubmissionId(submission, data.submissionId);
     }
 
     function validCredentialId(credentialId) {
@@ -916,7 +1599,7 @@ service cloud.firestore {
         && data.consentVersion == 'efbi-certificate-public-v1'
         && data.consentAcceptedAt == request.time
         && data.finalReviewId == uid + '--' + data.submissionId
-        && validSubmissionId(data.submissionId)
+        && validLegacySubmissionId(data.submissionId)
         && data.courseVersion is int
         && data.assessmentVersion == 1
         && data.reviewedAt is timestamp
@@ -970,7 +1653,7 @@ service cloud.firestore {
         && data.courseId == 'ai-foundations'
         && data.courseTitle == 'AI Foundations for Ethiopia'
         && data.finalReviewId is string
-        && validSubmissionId(data.submissionId)
+        && validLegacySubmissionId(data.submissionId)
         && data.courseVersion is int
         && data.courseVersion >= 1
         && data.courseVersion <= 10000
@@ -1539,26 +2222,27 @@ service cloud.firestore {
         allow create: if owns(uid)
           && verified()
           && learnerWritesAllowed(uid)
-          && completedAiFoundations(uid)
+          && completedSubmissionCourse(uid, request.resource.data)
           && validSubmissionDraft(request.resource.data, submissionId, uid)
           && request.resource.data.createdAt == request.time
           && (
-            submissionId == 'ai-foundations-project'
-            || (submissionId == 'ai-foundations-project-revision-1' && revisionIsAllowed(uid))
+            originalSubmission(request.resource.data, submissionId)
+            || (
+              revisionSubmission(request.resource.data, submissionId)
+              && revisionIsAllowed(uid, request.resource.data)
+            )
           );
         allow update: if owns(uid)
           && verified()
           && learnerWritesAllowed(uid)
-          && completedAiFoundations(uid)
-          && resource.data.status == 'draft'
-          && sameSubmissionIdentity()
           && (
-            submissionId == 'ai-foundations-project'
-            || (submissionId == 'ai-foundations-project-revision-1' && revisionIsAllowed(uid))
-          )
-          && (
-            validSubmissionDraft(request.resource.data, submissionId, uid)
-            || validFinalSubmission(request.resource.data, submissionId, uid)
+            request.resource.data.keys().hasAll(['versionId'])
+            ? (
+              submissionId == request.resource.data.versionId + '--project'
+              ? versionedOriginalSubmissionUpdateAllowed(uid, submissionId)
+              : versionedRevisionSubmissionUpdateAllowed(uid, submissionId)
+            )
+            : legacySubmissionUpdateAllowed(uid, submissionId)
           );
         allow delete: if evidenceDeletionAllowed(uid);
       }
@@ -1570,12 +2254,12 @@ service cloud.firestore {
         allow create: if reviewer()
           && learnerWritesAllowed(uid)
           && request.resource.data.learnerUid == uid
-          && validPublicReviewResult(request.resource.data, resultId)
-          && validPrivateReviewResult(
+          && validPublicReviewResultForWrite(request.resource.data, resultId)
+          && validPrivateReviewResultForWrite(
             getAfter(/databases/$(database)/documents/reviewResults/$(resultId)).data,
             resultId
           )
-          && samePublicReview(
+          && samePublicReviewForWrite(
             getAfter(/databases/$(database)/documents/reviewResults/$(resultId)).data,
             request.resource.data
           );
@@ -1894,12 +2578,12 @@ service cloud.firestore {
         || (reviewer() && resource.data.reviewerUid == request.auth.uid);
       allow create: if reviewer()
         && learnerWritesAllowed(request.resource.data.learnerUid)
-        && validPrivateReviewResult(request.resource.data, resultId)
-        && validPublicReviewResult(
+        && validPrivateReviewResultForWrite(request.resource.data, resultId)
+        && validPublicReviewResultForWrite(
           getAfter(/databases/$(database)/documents/users/$(request.resource.data.learnerUid)/reviewResults/$(resultId)).data,
           resultId
         )
-        && samePublicReview(
+        && samePublicReviewForWrite(
           request.resource.data,
           getAfter(/databases/$(database)/documents/users/$(request.resource.data.learnerUid)/reviewResults/$(resultId)).data
         );

@@ -23,6 +23,7 @@ const emptyScores: ScoreForm = { localProblem: '', usefulSolution: '', evidence:
 
 type SubmittedProject = {
   key: string; learnerUid: string; submissionId: string; courseId: string; courseVersion: number; assessmentVersion: number
+  versionId?: string
   projectTitle: string; problemStatement: string; intendedUsers: string; solutionSummary: string; evidence: string[]
   reflection: string; aiUseDisclosure: string; submittedAt: unknown; revisionNumber: number
 }
@@ -44,7 +45,10 @@ function asScores(value: unknown): Scores {
   return { localProblem: safeNumber(data.localProblem), usefulSolution: safeNumber(data.usefulSolution), evidence: safeNumber(data.evidence), safetyResponsibility: safeNumber(data.safetyResponsibility), explanationReflection: safeNumber(data.explanationReflection) }
 }
 function asProject(learnerUid: string, submissionId: string, data: Record<string, unknown>): SubmittedProject {
-  return { key: `${learnerUid}--${submissionId}`, learnerUid, submissionId, courseId: safeString(data.courseId), courseVersion: safeNumber(data.courseVersion), assessmentVersion: safeNumber(data.assessmentVersion), projectTitle: safeString(data.projectTitle), problemStatement: safeString(data.problemStatement), intendedUsers: safeString(data.intendedUsers), solutionSummary: safeString(data.solutionSummary), evidence: Array.isArray(data.evidence) ? data.evidence.filter((value): value is string => typeof value === 'string') : [], reflection: safeString(data.reflection), aiUseDisclosure: safeString(data.aiUseDisclosure), submittedAt: data.submittedAt, revisionNumber: safeNumber(data.revisionNumber) }
+  const project: SubmittedProject = { key: `${learnerUid}--${submissionId}`, learnerUid, submissionId, courseId: safeString(data.courseId), courseVersion: safeNumber(data.courseVersion), assessmentVersion: safeNumber(data.assessmentVersion), projectTitle: safeString(data.projectTitle), problemStatement: safeString(data.problemStatement), intendedUsers: safeString(data.intendedUsers), solutionSummary: safeString(data.solutionSummary), evidence: Array.isArray(data.evidence) ? data.evidence.filter((value): value is string => typeof value === 'string') : [], reflection: safeString(data.reflection), aiUseDisclosure: safeString(data.aiUseDisclosure), submittedAt: data.submittedAt, revisionNumber: safeNumber(data.revisionNumber) }
+  const versionId = safeString(data.versionId)
+  if (versionId) project.versionId = versionId
+  return project
 }
 function asAssignment(id: string, data: Record<string, unknown>): ReviewAssignment {
   return { assignmentId: safeString(data.assignmentId) || id, learnerUid: safeString(data.learnerUid), submissionId: safeString(data.submissionId), reviewerUid: safeString(data.reviewerUid), status: safeString(data.status), assignedAt: data.assignedAt }
@@ -137,7 +141,7 @@ export default function ReviewManager({ user, role }: { user: User; role: Studio
       const services = await getAdminFirebase(); if (!services) throw new Error('Firebase configuration is missing.')
       const { doc, serverTimestamp, writeBatch } = services.firestoreSdk
       const reviewedAt = serverTimestamp()
-      const shared = { assignmentId: selectedAssignment.assignmentId, learnerUid: selected.learnerUid, submissionId: selected.submissionId, rubricVersion: 1, courseVersion: selected.courseVersion, assessmentVersion: selected.assessmentVersion, submissionSubmittedAt: selected.submittedAt, scores: numericScores, totalScore, decision, publicFeedback: publicFeedback.trim(), reviewedAt }
+      const shared = { assignmentId: selectedAssignment.assignmentId, learnerUid: selected.learnerUid, submissionId: selected.submissionId, ...(selected.versionId ? { courseId: selected.courseId, versionId: selected.versionId } : {}), rubricVersion: 1, courseVersion: selected.courseVersion, assessmentVersion: selected.assessmentVersion, submissionSubmittedAt: selected.submittedAt, scores: numericScores, totalScore, decision, publicFeedback: publicFeedback.trim(), reviewedAt }
       const batch = writeBatch(services.db)
       batch.set(doc(services.db, 'reviewResults', selectedAssignment.assignmentId), { ...shared, reviewerUid: user.uid, concern, privateNote: privateNote.trim() })
       batch.set(doc(services.db, 'users', selected.learnerUid, 'reviewResults', selectedAssignment.assignmentId), shared)

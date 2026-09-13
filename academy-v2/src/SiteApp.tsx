@@ -40,7 +40,7 @@ export default function SiteApp() {
           <Route path="account" element={<AccountPage />} />
           <Route path="learn/:courseId" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />
           <Route path="learn/:courseId/:lessonSlug" element={<RequireVerifiedUser><LearningPage /></RequireVerifiedUser>} />
-          <Route path="submit/ai-foundations" element={<RequireVerifiedUser><SubmissionPage /></RequireVerifiedUser>} />
+          <Route path="submit/:courseId" element={<RequireVerifiedUser><SubmissionPage /></RequireVerifiedUser>} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

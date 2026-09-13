@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useAuth } from './auth-context'
 import { CertificateRequestPanel } from './certificate-request'
 import { Icon } from './icons'
+import { loadCourseCatalog } from './lib/catalog'
+import { readProgressBinding } from './lib/progress'
 import {
   draftErrors,
   emptySubmissionForm,
@@ -11,14 +13,14 @@ import {
   readLearnerReviewResult,
   readSubmission,
   readSubmissionEligibility,
-  revisionSubmissionId,
   saveSubmissionDraft,
   saveSubmissionRevisionDraft,
-  submissionId,
+  submissionRecordIds,
   submitProject,
   submitProjectRevision,
   type LearnerReviewResult,
   type ProjectSubmission,
+  type SubmissionCourse,
   type SubmissionForm,
 } from './lib/submission'
 import './submission.css'
@@ -59,7 +61,10 @@ function ProjectRecord({ submission, title }: { submission: ProjectSubmission; t
 }
 
 export function SubmissionPage() {
+  const { courseId: courseIdParam } = useParams()
+  const routeCourseId = courseIdParam?.trim() ?? ''
   const { user } = useAuth()
+  const [course, setCourse] = useState<SubmissionCourse | null>(null)
   const [state, setState] = useState<LoadState>('loading')
   const [submission, setSubmission] = useState<ProjectSubmission | null>(null)
   const [reviewResult, setReviewResult] = useState<LearnerReviewResult | null>(null)
@@ -74,25 +79,42 @@ export function SubmissionPage() {
   const [finalConfirm, setFinalConfirm] = useState(false)
 
   useEffect(() => {
-    if (!user) return
+    if (!user || !routeCourseId) return
     let active = true
-    void Promise.all([
-      readSubmissionEligibility(user.uid),
-      readSubmission(user.uid, submissionId),
-      readLearnerReviewResult(user.uid, submissionId),
-      readSubmission(user.uid, revisionSubmissionId),
-      readLearnerReviewResult(user.uid, revisionSubmissionId),
-    ]).then(([eligible, saved, result, savedRevision, revisionResult]) => {
+    void (async () => {
+      const binding = await readProgressBinding({ uid: user.uid, courseId: routeCourseId })
+      const catalog = await loadCourseCatalog(routeCourseId, {
+        preferredVersionId: binding.kind === 'versioned' ? binding.versionId : undefined,
+        legacy: binding.kind === 'legacy',
+      })
+      if (!catalog || catalog.assessmentType !== 'project') throw new Error('This course has no project assessment.')
+      const nextCourse: SubmissionCourse = {
+        courseId: catalog.courseId,
+        courseTitle: catalog.courseTitle,
+        courseVersion: catalog.courseVersion ?? 1,
+        assessmentVersion: catalog.assessmentVersion ?? 1,
+        lessonCount: catalog.lessons.length,
+        ...(catalog.versionId ? { versionId: catalog.versionId } : {}),
+      }
+      const ids = submissionRecordIds(nextCourse)
+      const [eligible, saved, result, savedRevision, revisionResult] = await Promise.all([
+        readSubmissionEligibility(user.uid, nextCourse),
+        readSubmission(user.uid, ids.original),
+        readLearnerReviewResult(user.uid, ids.original),
+        readSubmission(user.uid, ids.revision),
+        readLearnerReviewResult(user.uid, ids.revision),
+      ])
       if (!active) return
+      setCourse(nextCourse)
       if (!eligible) { setState('ineligible'); return }
       setSubmission(saved); setReviewResult(result); setRevision(savedRevision); setRevisionReviewResult(revisionResult)
       if (savedRevision?.status === 'draft') setForm(formFromSubmission(savedRevision))
       else if (saved?.status === 'submitted' && result?.decision === 'revision_requested' && !savedRevision) setForm(formFromSubmission(saved))
       else if (saved) setForm(formFromSubmission(saved))
       setState('ready')
-    }).catch(() => { if (active) setState('error') })
+    })().catch(() => { if (active) setState('error') })
     return () => { active = false }
-  }, [user])
+  }, [user, routeCourseId])
 
   const revisionDraftMode = submission?.status === 'submitted' && reviewResult?.decision === 'revision_requested' && (!revision || revision.status === 'draft')
   const locked = submission?.status === 'submitted' && !revisionDraftMode
@@ -113,17 +135,17 @@ export function SubmissionPage() {
 
   async function saveDraft(event?: FormEvent) {
     event?.preventDefault()
-    if (!user || locked || draftValidation.length) return
+    if (!user || !course || locked || draftValidation.length) return
     setBusy(true); setError('')
     try {
       if (revisionDraftMode) {
         if (!submission || !reviewResult) throw new Error('The original review could not be found.')
-        const saved = await saveSubmissionRevisionDraft(user.uid, form, revision, submission, reviewResult)
+        const saved = await saveSubmissionRevisionDraft(user.uid, course, form, revision, submission, reviewResult)
         setRevision(saved)
         if (saved) setForm(formFromSubmission(saved))
         setMessage('Revision draft saved to your EFBI account.')
       } else {
-        const saved = await saveSubmissionDraft(user.uid, form, submission)
+        const saved = await saveSubmissionDraft(user.uid, course, form, submission)
         setSubmission(saved)
         if (saved) setForm(formFromSubmission(saved))
         setMessage('Draft saved to your EFBI account.')
@@ -134,15 +156,15 @@ export function SubmissionPage() {
   }
 
   async function submitFinal() {
-    if (!user || !activeDraft || locked || finalValidation.length || !consent || !finalConfirm || dirty) return
+    if (!user || !course || !activeDraft || locked || finalValidation.length || !consent || !finalConfirm || dirty) return
     setBusy(true); setError('')
     try {
       if (revisionDraftMode) {
         if (!submission || !revision || !reviewResult) throw new Error('Save the revision draft before submitting it.')
-        const saved = await submitProjectRevision(user.uid, form, revision, submission, reviewResult)
+        const saved = await submitProjectRevision(user.uid, course, form, revision, submission, reviewResult)
         setRevision(saved); setMessage('Your one revision was submitted for a new human review.')
       } else {
-        const saved = await submitProject(user.uid, form, activeDraft)
+        const saved = await submitProject(user.uid, course, form, activeDraft)
         setSubmission(saved); setMessage('Your project was submitted for assignment to a reviewer.')
       }
       setDirty(false); setConsent(false); setFinalConfirm(false)
@@ -152,17 +174,17 @@ export function SubmissionPage() {
 
   if (state === 'loading') return <main className="submission-page"><section className="shell submission-state"><div className="submission-spinner" /><h1>Checking your project access…</h1></section></main>
   if (state === 'error') return <main className="submission-page"><section className="shell submission-state"><h1>Your project workspace could not open.</h1><p>Check your connection and try again.</p><button className="button button--primary" onClick={() => window.location.reload()}>Retry</button></section></main>
-  if (state === 'ineligible') return <main className="submission-page"><section className="shell submission-state"><Icon name="shield" /><p className="eyebrow-label">Project locked</p><h1>Finish all four lessons first.</h1><p>Your course progress must reach 100% before EFBI accepts a project draft.</p><Link className="button button--primary" to="/learn/ai-foundations">Continue learning</Link></section></main>
+  if (state === 'ineligible') return <main className="submission-page"><section className="shell submission-state"><Icon name="shield" /><p className="eyebrow-label">Project locked</p><h1>Finish every lesson first.</h1><p>Your progress in this course version must be complete before EFBI accepts a project draft.</p><Link className="button button--primary" to={`/learn/${routeCourseId}`}>Continue learning</Link></section></main>
 
   if (locked && submission) {
     const showingRevision = revision?.status === 'submitted'
     const current = showingRevision ? revision : submission
     const currentResult = showingRevision ? revisionReviewResult : reviewResult
-    return <main className="submission-page"><section className="shell"><header className="submission-hero"><div><p className="eyebrow-label">{showingRevision ? 'Project revision submitted' : 'Project submitted'}</p><h1>{current.projectTitle}</h1><p>Submitted {submittedDate(current.submittedAt)}. {currentResult ? 'Your human review is complete.' : 'Your work is locked while EFBI assigns and completes a review.'}</p></div><span className="submission-status submission-status--submitted">{currentResult ? 'Reviewed' : 'Submitted'}</span></header>{currentResult && <LearnerReviewPanel result={currentResult} isRevision={showingRevision} />}{currentResult?.decision === 'approved' && user && <CertificateRequestPanel uid={user.uid} defaultName={user.displayName ?? ''} result={currentResult} />}<ProjectRecord submission={current} title={showingRevision ? 'Revision · Version 2' : 'Your project record · Version 1'} />{showingRevision && <details className="version-history"><summary><span><strong>Version history</strong><small>Open the preserved original submission and first review</small></span><span>Version 1</span></summary>{reviewResult && <LearnerReviewPanel result={reviewResult} />}<ProjectRecord submission={submission} title="Original submission · Version 1" /></details>}{message && <p className="form-status form-status--success">{message}</p>}<Link className="button button--outline" to="/account">Back to account</Link></section></main>
+    return <main className="submission-page"><section className="shell"><header className="submission-hero"><div><p className="eyebrow-label">{course?.courseTitle} · {showingRevision ? 'Project revision submitted' : 'Project submitted'}</p><h1>{current.projectTitle}</h1><p>Submitted {submittedDate(current.submittedAt)}. {currentResult ? 'Your human review is complete.' : 'Your work is locked while EFBI assigns and completes a review.'}</p></div><span className="submission-status submission-status--submitted">{currentResult ? 'Reviewed' : 'Submitted'}</span></header>{currentResult && <LearnerReviewPanel result={currentResult} isRevision={showingRevision} />}{currentResult?.decision === 'approved' && user && current.courseId === 'ai-foundations' && !current.versionId && <CertificateRequestPanel uid={user.uid} defaultName={user.displayName ?? ''} result={currentResult} />}<ProjectRecord submission={current} title={showingRevision ? 'Revision · Version 2' : 'Your project record · Version 1'} />{showingRevision && <details className="version-history"><summary><span><strong>Version history</strong><small>Open the preserved original submission and first review</small></span><span>Version 1</span></summary>{reviewResult && <LearnerReviewPanel result={reviewResult} />}<ProjectRecord submission={submission} title="Original submission · Version 1" /></details>}{message && <p className="form-status form-status--success">{message}</p>}<Link className="button button--outline" to="/account">Back to account</Link></section></main>
   }
 
   return <main className="submission-page"><section className="shell">
-    <header className="submission-hero"><div><p className="eyebrow-label">AI Foundations · {revisionDraftMode ? 'One project revision' : 'Final project'}</p><h1>{revisionDraftMode ? 'Improve your submitted project.' : 'Show what you built.'}</h1><p>{revisionDraftMode ? 'Use the reviewer’s feedback. Your original submission and review stay permanently preserved.' : 'Save a private draft, add evidence, and submit only when the work is ready for a person to review.'}</p></div><span className="submission-status">{revisionDraftMode ? revision ? 'Revision draft saved' : 'Revision available' : submission ? 'Draft saved' : 'New draft'}</span></header>
+    <header className="submission-hero"><div><p className="eyebrow-label">{course?.courseTitle} · {revisionDraftMode ? 'One project revision' : 'Final project'}</p><h1>{revisionDraftMode ? 'Improve your submitted project.' : 'Show what you built.'}</h1><p>{revisionDraftMode ? 'Use the reviewer’s feedback. Your original submission and review stay permanently preserved.' : 'Save a private draft, add evidence, and submit only when the work is ready for a person to review.'}</p></div><span className="submission-status">{revisionDraftMode ? revision ? 'Revision draft saved' : 'Revision available' : submission ? 'Draft saved' : 'New draft'}</span></header>
     {revisionDraftMode && reviewResult && <LearnerReviewPanel result={reviewResult} />}
     <div className="submission-layout"><form className="submission-form" onSubmit={(event) => void saveDraft(event)}>
       <section><div className="submission-section-heading"><span>01</span><div><h2>The need</h2><p>Describe one specific problem and the people affected.</p></div></div><label>Project title <small>{form.projectTitle.length}/100</small><input value={form.projectTitle} onChange={(event) => updateField('projectTitle', event.target.value)} maxLength={100} placeholder="A clear name for your project" /></label><label>What problem did you choose? <small>{form.problemStatement.length}/1200</small><textarea value={form.problemStatement} onChange={(event) => updateField('problemStatement', event.target.value)} maxLength={1200} placeholder="Explain what is happening, where, and why it matters." /></label><label>Who is this for? <small>{form.intendedUsers.length}/600</small><textarea className="submission-textarea--short" value={form.intendedUsers} onChange={(event) => updateField('intendedUsers', event.target.value)} maxLength={600} placeholder="Describe the students, teachers, families, or community members." /></label></section>

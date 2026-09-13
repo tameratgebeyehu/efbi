@@ -458,8 +458,18 @@ The first three multi-course checkpoints are complete in the development codebas
 22. Closed enrollment now blocks new accounts without blocking an already verified learner from continuing an available course.
 23. The account page routes verified learners to the active-course catalog instead of assuming every learner belongs only to AI Foundations.
 24. Learner lint and the production build pass after the catalog migration. No Hosting or rules deployment was performed.
+25. Project-assessment courses now open a dynamic `/submit/:courseId` workspace after the learner completes every lesson in the exact version they started.
+26. Versioned project and revision identifiers derive from the immutable course release, while the existing AI Foundations identifiers and records remain compatible.
+27. Firestore binds each versioned submission to the learner's completed progress, immutable course version, assessment version, and project assessment mode.
+28. Practice-only courses, incomplete progress, invented submission IDs, cross-course data, and cross-version data are rejected.
+29. Admin Studio can assign and review submitted work from any valid activated project course; private and learner-safe review records remain atomic and immutable.
+30. Versioned reviews bind the learner, reviewer assignment, submission timestamp, course, release, course version, assessment version, scores, and public feedback.
+31. A `revision_requested` result unlocks exactly one version-bound revision. The original submission and review remain permanent, and a second revision cannot be created.
+32. Legacy and versioned authorization paths use separate direct validators so Firestore stays below its evaluation ceiling without weakening the original pilot controls.
+33. Eighty Firestore authorization and lifecycle tests pass, including valid multi-course submission and review flows plus incomplete-course, practice-only, cross-course, cross-version, and extra-revision attacks.
+34. Learner and Admin Studio lint and production builds pass. No Hosting or Firestore rules deployment was performed, enrollment remains closed, and no synthetic test data left the emulator.
 
-Remaining Phase 23 work: generalize submissions, reviews, certificates, and deletion inventory while retaining the tested pilot compatibility path, then prove the complete lifecycle with two synthetic courses.
+Remaining Phase 23 work: generalize certificates and deletion inventory while retaining the tested pilot compatibility path, then prove the complete lifecycle with two synthetic courses. The new submission and review rules must not be deployed until deletion covers their dynamic records.
 
 
 ## Recovery commands
