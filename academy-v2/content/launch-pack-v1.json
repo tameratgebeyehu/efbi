@@ -1,0 +1,198 @@
+{
+  "packId": "efbi-launch-pack-v1",
+  "title": "EFBI first launch drafts",
+  "reviewStatus": "owner-review-required",
+  "programs": [
+    {
+      "programId": "artificial-intelligence",
+      "title": "Artificial Intelligence",
+      "shortTitle": "AI",
+      "description": "Learn how AI works and use it responsibly to solve real problems.",
+      "outcome": "Build a small AI-supported solution and explain how it works.",
+      "level": "beginner",
+      "durationWeeks": 8,
+      "accent": "green",
+      "order": 1
+    },
+    {
+      "programId": "ai-assisted-app-development",
+      "title": "AI-Assisted App Development",
+      "shortTitle": "AI + App",
+      "description": "Use AI tools to plan, build, test, and improve useful applications.",
+      "outcome": "Create an app prototype for a clear school or community need.",
+      "level": "intermediate",
+      "durationWeeks": 6,
+      "accent": "gold",
+      "order": 2
+    },
+    {
+      "programId": "web-development",
+      "title": "Web Development",
+      "shortTitle": "Web",
+      "description": "Build responsive websites with HTML, CSS, JavaScript, and React.",
+      "outcome": "Publish a responsive website and explain your design choices.",
+      "level": "intermediate",
+      "durationWeeks": 10,
+      "accent": "blue",
+      "order": 3
+    },
+    {
+      "programId": "mobile-app-development",
+      "title": "Mobile App Development",
+      "shortTitle": "Mobile",
+      "description": "Design and build focused applications for phones and tablets.",
+      "outcome": "Test and present a useful mobile application prototype.",
+      "level": "intermediate",
+      "durationWeeks": 8,
+      "accent": "red",
+      "order": 4
+    }
+  ],
+  "courses": [
+    {
+      "courseId": "ai-foundations",
+      "title": "AI Foundations for Ethiopia",
+      "summary": "Understand AI, ask better questions, use it responsibly, and build one small local solution.",
+      "description": "A beginner-friendly introduction to artificial intelligence for Ethiopian learners. Short written lessons, practical checks, and one guided project help learners move from curiosity to responsible action.",
+      "category": "artificial-intelligence",
+      "level": "beginner",
+      "language": "English",
+      "estimatedMinutes": 90
+    }
+  ],
+  "lessons": [
+    {
+      "lessonId": "understanding-ai",
+      "courseId": "ai-foundations",
+      "order": 1,
+      "title": "Understanding artificial intelligence",
+      "summary": "Learn what AI is, where it appears in daily life, and where its limits begin.",
+      "durationMinutes": 10,
+      "videoYoutubeId": "",
+      "bodyMarkdown": "## What is artificial intelligence?\n\nArtificial intelligence is technology that learns patterns from examples. It can use those patterns to predict, classify, recommend, or create something new. It does not understand the world in the same way a person does.\n\n## Where do we meet AI?\n\nYou may already use AI when a phone suggests the next word, a map estimates travel time, an email service filters spam, or an app recommends a video. Ethiopian students can also use it to explore an idea, organize information, or test an early solution.\n\n## Why can AI be wrong?\n\nAI can repeat mistakes or bias from its data. It may invent a confident answer when it lacks reliable information. Check important claims with trusted sources, and never enter passwords, identity documents, health details, or another person's private information.\n\n## Keep a person responsible\n\nTreat AI as a tool, not the final decision-maker. You bring the goal, local context, judgment, and responsibility.",
+      "questions": [
+        {
+          "prompt": "Which description of artificial intelligence is most accurate?",
+          "options": ["Technology that learns patterns from examples", "A person living inside a computer", "A source that is always correct"],
+          "correctOption": 0,
+          "explanation": "AI systems learn patterns from data and use them to produce outputs."
+        },
+        {
+          "prompt": "Why should an important AI answer be checked?",
+          "options": ["AI can sound confident while being wrong", "Every AI answer is written by a teacher", "Checking makes the internet faster"],
+          "correctOption": 0,
+          "explanation": "Confidence is not proof, so important claims need reliable evidence."
+        },
+        {
+          "prompt": "Which information should stay out of an AI prompt?",
+          "options": ["A general project topic", "A requested answer format", "A private password or identity number"],
+          "correctOption": 2,
+          "explanation": "Passwords and identity numbers are private and unnecessary for ordinary learning."
+        }
+      ]
+    },
+    {
+      "lessonId": "prompting-with-purpose",
+      "courseId": "ai-foundations",
+      "order": 2,
+      "title": "Prompting with purpose",
+      "summary": "Ask clearer questions, improve weak answers, and check the result before using it.",
+      "durationMinutes": 15,
+      "videoYoutubeId": "",
+      "bodyMarkdown": "## A prompt is an instruction\n\nA prompt is the message you give an AI tool. Useful prompts state the task, include only context that changes the answer, and describe the form of a good response. Clear language works better than unnecessary technical words.\n\n## Use task, context, and format\n\nStart with what you want the tool to do: explain, compare, plan, rewrite, or create. Add the learner level or situation, then ask for a format such as three steps or five practice questions.\n\nInstead of saying Help me study, try: Create five short photosynthesis questions for a Grade 10 learner. Put the answers after the questions.\n\n## Improve one thing at a time\n\nThe first answer can be a draft. Say what is missing: use simpler language, give an Ethiopian example, or shorten this to 100 words. Small changes make improvement easier to judge.\n\n## Check before using\n\nA better prompt can still produce a wrong answer. Verify names, dates, statistics, quotations, and safety advice with a reliable source. Keep private information out of every prompt.",
+      "questions": [
+        {
+          "prompt": "Which prompt gives the clearest direction?",
+          "options": ["Help me study science", "Create five short photosynthesis questions for a Grade 10 learner", "Tell me everything you know"],
+          "correctOption": 1,
+          "explanation": "It gives a specific task, amount, subject, and learner context."
+        },
+        {
+          "prompt": "An AI answer includes a statistic without a reliable source. What should you do?",
+          "options": ["Use it because it sounds confident", "Verify the statistic before using it", "Hide the statistic in a longer paragraph"],
+          "correctOption": 1,
+          "explanation": "Important claims need evidence even when an answer sounds convincing."
+        },
+        {
+          "prompt": "The first AI answer is too broad. What is the best next step?",
+          "options": ["Add the missing context and desired format", "Repeat the same prompt without changes", "Add private details about another person"],
+          "correctOption": 0,
+          "explanation": "A focused revision helps the tool respond better without exposing private data."
+        }
+      ]
+    },
+    {
+      "lessonId": "responsible-use",
+      "courseId": "ai-foundations",
+      "order": 3,
+      "title": "Responsible use",
+      "summary": "Protect people, question unreliable results, and know when human judgment must lead.",
+      "durationMinutes": 20,
+      "videoYoutubeId": "",
+      "bodyMarkdown": "## Protect people and information\n\nBefore entering information into an AI tool, ask whether it belongs to you and whether it needs to be shared. Use a general description when a real identity is unnecessary.\n\n## Do not confuse confidence with truth\n\nAI can invent facts, sources, quotations, or instructions while sounding certain. Pause before sharing anything that could affect education, health, safety, money, or reputation. If you cannot confirm a claim, say it is uncertain or leave it out.\n\n## Look for unfair results\n\nAI learns from data created by people and institutions. Missing communities, old assumptions, and unequal examples can produce biased results. Ask who may be missing or harmed, test more than one example, and include local context.\n\n## Be honest about assistance\n\nFollow your school's rules and explain meaningful AI help in your work. A person should make the final decision when a result affects rights, safety, opportunities, or another person's future.",
+      "questions": [
+        {
+          "prompt": "What is the safest way to summarize a file containing student phone numbers?",
+          "options": ["Upload the complete file", "Remove personal details and use only what is needed", "Ask the AI to promise secrecy"],
+          "correctOption": 1,
+          "explanation": "Removing identifiers and sharing only necessary information reduces privacy risk."
+        },
+        {
+          "prompt": "What should you do with an AI health claim whose source cannot be found?",
+          "options": ["Share it quickly", "Treat it as correct after rewriting it", "Verify it with a trustworthy source or qualified person"],
+          "correctOption": 2,
+          "explanation": "Health and safety claims require reliable evidence and qualified human judgment."
+        },
+        {
+          "prompt": "Which decision should not be left to an AI system alone?",
+          "options": ["Suggesting poster titles", "Choosing which student receives a scholarship", "Turning a paragraph into bullet points"],
+          "correctOption": 1,
+          "explanation": "High-impact decisions about a person's opportunity require accountable human review."
+        }
+      ]
+    },
+    {
+      "lessonId": "build-an-ethiopian-solution",
+      "courseId": "ai-foundations",
+      "order": 4,
+      "title": "Build an Ethiopian solution",
+      "summary": "Choose one local problem, build a small first solution, test it safely, and reflect.",
+      "durationMinutes": 45,
+      "videoYoutubeId": "",
+      "bodyMarkdown": "## Start with a real problem\n\nLook for a repeated difficulty in your school or community. Speak with people who experience it, ask permission before taking notes or photographs, and avoid collecting private information that the project does not need.\n\n## Make the first goal small\n\nWrite one sentence naming the people, the problem, and the improvement you want. Help one school science club share its weekly meeting topic is testable; solve every education problem is not.\n\n## Build the smallest useful version\n\nYour first version can be a paper sketch, spreadsheet, simple web page, or clickable prototype. Build only what is needed to test the central idea. If AI helps, check its output and keep notes about its contribution.\n\n## Test safely and improve\n\nAsk a few intended users to try the prototype. Let them choose whether to participate and use sample information instead of real personal records. Notice repeated confusion, make one useful improvement, and test again.\n\n## Show honest evidence\n\nDocument the problem, intended users, first version, feedback, change, remaining limitation, and any meaningful AI assistance. A small project with clear evidence is stronger than a large unsupported claim.",
+      "questions": [
+        {
+          "prompt": "Which is the strongest first project goal?",
+          "options": ["Solve every education problem in Ethiopia", "Help one science club share its weekly meeting topic", "Build a large app before speaking with users"],
+          "correctOption": 1,
+          "explanation": "A focused group and testable problem make a practical first project."
+        },
+        {
+          "prompt": "What is the safest way to test an early student-information prototype?",
+          "options": ["Use sample records and ask participants for consent", "Copy real student records", "Collect every detail in case it becomes useful"],
+          "correctOption": 0,
+          "explanation": "Sample data and informed participation avoid unnecessary privacy risk."
+        },
+        {
+          "prompt": "What belongs in an honest project reflection?",
+          "options": ["Only a final screenshot", "Problem, feedback, changes, limits, and meaningful AI help", "Future features presented as finished work"],
+          "correctOption": 1,
+          "explanation": "Clear evidence and honest limitations show what was actually learned and built."
+        }
+      ]
+    }
+  ],
+  "articles": [
+    {
+      "postId": "welcome-to-efbi-academy",
+      "title": "Why EFBI Academy starts with building",
+      "excerpt": "EFBI helps learners understand an idea, practice it, and turn it into something useful.",
+      "category": "EFBI",
+      "authorName": "Tamerat Gebeyehu",
+      "readingMinutes": 3,
+      "featured": true,
+      "tone": "green",
+      "bodyMarkdown": "Learning becomes powerful when it leads to action. EFBI Academy was created to give Ethiopian students a clear place to understand technology, practice safely, and build work they can explain with confidence.\n\n## Start small and finish\n\nA finished small project teaches more than a large idea that never becomes real. Each EFBI course breaks a subject into short lessons, useful checks, and a focused building task. Learners can see their progress and return without losing their place.\n\n## Use technology responsibly\n\nTechnical skill matters, but judgment matters too. EFBI asks learners to check information, protect private data, explain meaningful AI assistance, and consider the people affected by a solution.\n\n## Build for a real need\n\nThe strongest projects begin with listening. A learner identifies one clear school or community problem, creates the smallest useful version, tests it with sample information, and improves it from honest feedback.\n\nEFBI courses are free. The goal is simple: help more students move from watching technology to using it thoughtfully, building with it, and sharing what they learn."
+    }
+  ]
+}

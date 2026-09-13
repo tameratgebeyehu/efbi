@@ -36,3 +36,5 @@ npm run test:admin-recovery
 - Do not point `www.efbi.site` at the rebuilt academy without an approved rollback and exact release evidence.
 
 Start with `PROJECT_STATUS.md`, `LAUNCH_ROADMAP.md`, `PHASE_27G_RELEASE_EVIDENCE.md`, and `MANUAL_RELEASE_CHECKLIST.md`.
+
+The first reviewable educational pack and its safe Admin Studio workflow are documented in `LAUNCH_CONTENT_PACK.md`.

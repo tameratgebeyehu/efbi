@@ -6,6 +6,7 @@ Automated Phase 27G evidence is recorded in `PHASE_27G_RELEASE_EVIDENCE.md`. It 
 
 ## 1. Visual and real-device check
 
+- Import the versioned pack through localhost Admin Studio, then review every draft using the workflow in `LAUNCH_CONTENT_PACK.md`.
 - Check Home, Programs, Courses, one Course Detail, Certificates, Verify, Blog, About, Contact, Privacy, Join, Sign in, Account, one protected Lesson, and Project Submission.
 - Use one real phone, one tablet-sized browser, and one desktop browser.
 - Confirm there is no horizontal scrolling, clipped text, overlapping control, unreadable contrast, or button that is too small to tap.

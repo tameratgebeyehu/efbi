@@ -171,6 +171,32 @@ try {
   await waitForPage(client, (state) => state.text.includes('Good morning, builder.'), 'Verified administrator dashboard')
   assert.equal(await client.evaluate(`document.querySelectorAll('main').length`), 1, 'Admin Studio must contain exactly one main landmark.')
 
+  await clickButton(client, 'Launch drafts')
+  await waitForPage(client, (state) => state.text.includes('Launch content drafts') && state.text.includes('Import 10 missing drafts'), 'Launch draft importer')
+  assert.equal(await client.evaluate(`document.querySelectorAll('main').length`), 1, 'Launch draft importer must preserve one main landmark.')
+  await setFieldByLabel(client, 'Type IMPORT LAUNCH DRAFTS', 'IMPORT LAUNCH DRAFTS')
+  await clickSelector(client, '.launch-pack-action .confirm-check input[type="checkbox"]')
+  await clickButton(client, 'Import 10 missing drafts')
+  await waitForPage(client, (state) => state.text.includes('10 audited launch drafts were imported') && state.text.includes('All drafts imported'), 'Audited launch draft import', 30000)
+
+  const importedCounts = {}
+  for (const collectionName of ['programDrafts', 'courseDrafts', 'lessonDrafts', 'blogDrafts', 'adminAudit']) {
+    importedCounts[collectionName] = (await adminDb.collection(collectionName).get()).size
+  }
+  assert.deepEqual(importedCounts, { programDrafts: 4, courseDrafts: 1, lessonDrafts: 4, blogDrafts: 1, adminAudit: 10 }, 'The launch pack did not create the exact audited draft inventory.')
+  for (const collectionName of ['programDrafts', 'courseDrafts', 'lessonDrafts', 'blogDrafts']) {
+    const snapshot = await adminDb.collection(collectionName).get()
+    assert.equal(snapshot.docs.every((document) => document.data().status === 'draft' && document.data().revision === 1), true, `${collectionName} must contain only revision-one drafts.`)
+  }
+  for (const collectionName of ['publishedPrograms', 'publishedPosts', 'courseReleases', 'lessonReleases', 'activeCourses', 'publicCourseCatalog']) {
+    assert.equal((await adminDb.collection(collectionName).get()).empty, true, `Draft import must not write ${collectionName}.`)
+  }
+  await client.send('Page.reload', { ignoreCache: true })
+  await waitForPage(client, (state) => state.text.includes('Good morning, builder.'), 'Restored administrator session after draft import')
+  await clickButton(client, 'Launch drafts')
+  await waitForPage(client, (state) => state.text.includes('All drafts imported'), 'Idempotent launch draft state')
+  console.log('✓ launch pack imported exactly ten audited drafts without publishing or overwriting content')
+
   for (const [index, editor] of editors.entries()) {
     const sentinel = `Recovered ${editor.nav.toLowerCase()} text ${index + 1}`
     await clickButton(client, editor.nav)
