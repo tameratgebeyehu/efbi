@@ -65,13 +65,15 @@ Phase 25C development checkpoint complete: Admin Studio shows safeguarding owner
 
 1. Define which courses use practice questions only and which require a final project or exam. **Complete for launch: practice-only or reviewed project; final exams deferred.**
 2. Generalize reviewer assignment, one-revision policy, scoring, and certificate eligibility by course version. **Complete in the development codebase.**
-3. Add administrator views for pending reviews and certificate requests across courses. **Complete in the development codebase; queue refinements remain.**
+3. Add administrator views for pending reviews and certificate requests across courses. **Complete in the development codebase, including workload counts and course, status, and text filters.**
 4. Verify revocation, replacement, deletion exceptions, and public lookup for multiple courses.
 5. Decide whether appeals are required for the first public release; otherwise label them as a later feature. **Complete: no separate appeal at first launch; one revision and operational-error support remain.**
 
 Exit check: a synthetic learner completes each launch assessment type and receives only an administrator-issued, verifiable certificate.
 
 Phase 26A development checkpoint complete: course activation and learner pages now distinguish learning-only courses from reviewed-project certificate pathways. Browser practice remains non-certificate activity, final exams are deferred, and outdated review/certificate wording is corrected.
+
+Phase 26B development checkpoint complete: protected review and certificate workspaces now show multi-course workload summaries and responsive filters. Administrators and reviewers can narrow queues without changing permanent records or weakening role boundaries.
 
 ## Phase 27 — launch content, quality, and security
 

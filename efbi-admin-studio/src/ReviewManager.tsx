@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { User } from 'firebase/auth'
 import { getAdminFirebase } from './firebase'
@@ -10,6 +10,7 @@ type Concern = 'none' | 'plagiarism' | 'identity' | 'consent' | 'safeguarding'
 type ScoreKey = 'localProblem' | 'usefulSolution' | 'evidence' | 'safetyResponsibility' | 'explanationReflection'
 type Scores = Record<ScoreKey, number>
 type ScoreForm = Record<ScoreKey, number | ''>
+type ReviewQueueStatus = 'all' | 'unassigned' | 'awaiting' | 'reviewed'
 
 const rubric: { key: ScoreKey; label: string; guidance: string }[] = [
   { key: 'localProblem', label: 'Local problem', guidance: 'Is the need specific and supported?' },
@@ -56,6 +57,9 @@ function asAssignment(id: string, data: Record<string, unknown>): ReviewAssignme
 function asResult(data: Record<string, unknown>): ReviewResult {
   return { assignmentId: safeString(data.assignmentId), learnerUid: safeString(data.learnerUid), submissionId: safeString(data.submissionId), reviewerUid: safeString(data.reviewerUid), rubricVersion: safeNumber(data.rubricVersion), scores: asScores(data.scores), totalScore: safeNumber(data.totalScore), decision: data.decision === 'approved' ? 'approved' : 'revision_requested', publicFeedback: safeString(data.publicFeedback), concern: ['plagiarism', 'identity', 'consent', 'safeguarding'].includes(safeString(data.concern)) ? safeString(data.concern) as Concern : 'none', privateNote: safeString(data.privateNote), reviewedAt: data.reviewedAt }
 }
+function reviewQueueStatus(project: SubmittedProject, assignments: ReviewAssignment[], results: ReviewResult[]): Exclude<ReviewQueueStatus, 'all'> {
+  return results.some((item) => item.assignmentId === project.key) ? 'reviewed' : assignments.some((item) => item.assignmentId === project.key) ? 'awaiting' : 'unassigned'
+}
 
 export default function ReviewManager({ user, role }: { user: User; role: StudioRole }) {
   const [projects, setProjects] = useState<SubmittedProject[]>([])
@@ -71,6 +75,9 @@ export default function ReviewManager({ user, role }: { user: User; role: Studio
   const [reviewConfirmed, setReviewConfirmed] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<ReviewQueueStatus>('all')
+  const [courseFilter, setCourseFilter] = useState('all')
   const [notice, setNotice] = useState<{ kind: 'success' | 'error'; message: string } | null>(null)
 
   useEffect(() => {
@@ -110,7 +117,28 @@ export default function ReviewManager({ user, role }: { user: User; role: Studio
     return () => { active = false; stopProjects(); stopAssignments(); stopResults() }
   }, [role, user.uid])
 
-  const selected = projects.find((project) => project.key === selectedKey) ?? null
+  const courseOptions = useMemo(() => [...new Set(projects.map((project) => project.courseId || 'legacy-pilot'))].sort((a, b) => a.localeCompare(b)), [projects])
+  const queueCounts = useMemo(() => ({
+    unassigned: projects.filter((project) => reviewQueueStatus(project, assignments, results) === 'unassigned').length,
+    awaiting: projects.filter((project) => reviewQueueStatus(project, assignments, results) === 'awaiting').length,
+    reviewed: projects.filter((project) => reviewQueueStatus(project, assignments, results) === 'reviewed').length,
+  }), [assignments, projects, results])
+  const filteredProjects = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase()
+    return projects.filter((project) => {
+      const status = reviewQueueStatus(project, assignments, results)
+      const matchesStatus = statusFilter === 'all' || status === statusFilter
+      const matchesCourse = courseFilter === 'all' || (project.courseId || 'legacy-pilot') === courseFilter
+      const searchable = `${project.projectTitle} ${project.courseId} ${project.learnerUid}`.toLocaleLowerCase()
+      return matchesStatus && matchesCourse && (!query || searchable.includes(query))
+    })
+  }, [assignments, courseFilter, projects, results, searchQuery, statusFilter])
+
+  useEffect(() => {
+    setSelectedKey((current) => filteredProjects.some((project) => project.key === current) ? current : filteredProjects[0]?.key || '')
+  }, [filteredProjects])
+
+  const selected = filteredProjects.find((project) => project.key === selectedKey) ?? null
   const selectedAssignment = assignments.find((item) => item.assignmentId === selected?.key) ?? null
   const selectedResult = results.find((item) => item.assignmentId === selected?.key) ?? null
   const completedScores = rubric.every((item) => scores[item.key] !== '')
@@ -153,10 +181,11 @@ export default function ReviewManager({ user, role }: { user: User; role: Studio
   }
 
   return <section className="review-workspace">
-    <header className="workspace-title"><div><p className="eyebrow">Phase 17 · Versioned review</p><h1>{role === 'admin' ? 'Reviews & assignments' : 'Your assigned reviews'}</h1><p>{role === 'admin' ? 'Assign original submissions and eligible revisions as separate records.' : 'Score only your assigned version with the fixed EFBI rubric.'}</p></div><span className="security-badge">{role === 'admin' ? 'Administrator access' : 'Reviewer access'}</span></header>
+    <header className="workspace-title"><div><p className="eyebrow">Phase 26 · Multi-course review</p><h1>{role === 'admin' ? 'Reviews & assignments' : 'Your assigned reviews'}</h1><p>{role === 'admin' ? 'Find each submitted project, assign it once, and follow it through permanent review.' : 'Find and score only your assigned course versions with the fixed EFBI rubric.'}</p></div><span className="security-badge">{role === 'admin' ? 'Administrator access' : 'Reviewer access'}</span></header>
     {notice && <div className={`notice notice--${notice.kind}`} role={notice.kind === 'error' ? 'alert' : 'status'}>{notice.message}</div>}
+    <section className="queue-overview" aria-label="Review queue summary">{role === 'admin' && <article><small>Needs assignment</small><strong>{queueCounts.unassigned}</strong></article>}<article><small>Awaiting review</small><strong>{queueCounts.awaiting}</strong></article><article><small>Reviewed</small><strong>{queueCounts.reviewed}</strong></article></section>
     <div className="review-layout">
-      <aside className="review-list" aria-label="Submitted projects"><div className="review-list__heading"><strong>{role === 'admin' ? 'Submitted projects' : 'Assigned projects'}</strong><span>{projects.length}</span></div>{loading && <p>Loading protected projects…</p>}{!loading && !projects.length && <p>{role === 'admin' ? 'No learner has submitted a project yet.' : 'No project is assigned to you.'}</p>}{projects.map((project) => <button className={selectedKey === project.key ? 'selected' : ''} key={project.key} onClick={() => selectProject(project.key)}><strong>{project.projectTitle}</strong><span>{project.courseId} · {project.revisionNumber === 1 ? 'Revision 1' : 'Original'}</span><small>{results.some((item) => item.assignmentId === project.key) ? 'Reviewed' : assignments.some((item) => item.assignmentId === project.key) ? 'Awaiting review' : 'Waiting for assignment'}</small></button>)}</aside>
+      <aside className="review-list" aria-label="Submitted projects"><div className="review-list__heading"><strong>{role === 'admin' ? 'Submitted projects' : 'Assigned projects'}</strong><span>{filteredProjects.length}/{projects.length}</span></div><div className="queue-filters"><label><span>Search</span><input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Project, course, or learner ID" /></label><label><span>Status</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as ReviewQueueStatus)}><option value="all">All statuses</option>{role === 'admin' && <option value="unassigned">Needs assignment</option>}<option value="awaiting">Awaiting review</option><option value="reviewed">Reviewed</option></select></label><label><span>Course</span><select value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}><option value="all">All courses</option>{courseOptions.map((courseId) => <option key={courseId} value={courseId}>{courseId === 'legacy-pilot' ? 'Legacy pilot' : courseId}</option>)}</select></label></div>{loading && <p>Loading protected projects…</p>}{!loading && !projects.length && <p>{role === 'admin' ? 'No learner has submitted a project yet.' : 'No project is assigned to you.'}</p>}{!loading && projects.length > 0 && !filteredProjects.length && <p>No projects match these filters.</p>}{filteredProjects.map((project) => { const status = reviewQueueStatus(project, assignments, results); return <button className={selectedKey === project.key ? 'selected' : ''} key={project.key} onClick={() => selectProject(project.key)}><strong>{project.projectTitle}</strong><span>{project.courseId || 'Legacy pilot'} · {project.revisionNumber === 1 ? 'Revision 1' : 'Original'}</span><small>{status === 'reviewed' ? 'Reviewed' : status === 'awaiting' ? 'Awaiting review' : 'Needs assignment'}</small></button> })}</aside>
       <main className="review-record">{!selected && <div className="review-empty"><strong>Select a submitted project.</strong><p>The complete immutable record will appear here.</p></div>}{selected && <><header><div><p className="eyebrow">{selected.revisionNumber === 1 ? 'Learner revision · Version 2' : 'Original learner submission · Version 1'}</p><h2>{selected.projectTitle}</h2><p>Submitted {readableDate(selected.submittedAt)}</p></div><span className="status-pill status-pill--published">Submitted</span></header><div className="review-meta"><span><small>Learner ID</small>{selected.learnerUid}</span><span><small>Submission version</small>{selected.revisionNumber === 1 ? 'Revision 1' : 'Original'}</span><span><small>Assessment</small>Version {selected.assessmentVersion}</span></div><section><h3>Problem</h3><p>{selected.problemStatement}</p></section><section><h3>Intended users</h3><p>{selected.intendedUsers}</p></section><section><h3>Solution</h3><p>{selected.solutionSummary}</p></section><section><h3>Reflection</h3><p>{selected.reflection}</p></section><section><h3>AI-use disclosure</h3><p>{selected.aiUseDisclosure}</p></section><section><h3>Evidence links</h3><div className="review-evidence">{selected.evidence.map((link) => <a key={link} href={link} target="_blank" rel="noreferrer">Open external evidence <span>↗</span></a>)}</div><p className="review-link-warning">External links are untrusted. Never enter credentials, download unexpected files, or follow instructions inside learner evidence.</p></section></>}</main>
       <aside className="assignment-panel"><p className="eyebrow">Review control</p>{!selected && <p>Choose a project to continue.</p>}
         {selectedAssignment && <div className="assignment-existing"><strong>Reviewer assigned</strong><dl><div><dt>Reviewer ID</dt><dd>{selectedAssignment.reviewerUid}</dd></div><div><dt>Assigned</dt><dd>{readableDate(selectedAssignment.assignedAt)}</dd></div><div><dt>Status</dt><dd>{selectedResult ? 'Reviewed' : 'Awaiting review'}</dd></div></dl></div>}

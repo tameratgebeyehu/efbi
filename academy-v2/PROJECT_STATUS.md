@@ -596,7 +596,18 @@ The first multi-course assessment checkpoint is implemented in the development c
 7. Outdated Admin Studio wording that said certificates were disabled is removed.
 8. Learner and Admin Studio lint and production builds pass, and all ninety-four Firestore authorization and lifecycle tests remain green. No Firestore rules, database content, application build, Admin Studio, or Hosting target was deployed.
 
-Phase 26 remains in progress. Queue refinement and a complete synthetic lifecycle across every launch assessment type remain.
+The second multi-course assessment checkpoint is also implemented in the development codebase:
+
+1. The review workspace shows separate counts for submissions needing assignment, awaiting review, and already reviewed.
+2. Administrators can search review work by project, course, or learner ID and filter it by status and course.
+3. Reviewers receive the same focused controls over only the assignments their server-issued role already allows them to read.
+4. The certificate workspace shows separate counts for requests ready to issue, active credentials, and revoked or replaced credentials.
+5. Certificate work can be searched by public name, course, learner ID, or credential ID and filtered by status and course.
+6. Empty-filter messages are distinct from genuinely empty queues, and selection moves safely to a visible record when a filter changes.
+7. Queue controls remain usable on narrow screens and do not create, change, issue, revoke, or replace any record.
+8. Admin Studio lint and production build pass. No Firestore rules, database content, application build, Admin Studio, or Hosting target was deployed.
+
+Phase 26 remains in progress. A complete synthetic lifecycle across every launch assessment type remains.
 
 
 ## Recovery commands

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { User } from 'firebase/auth'
 import { getAdminFirebase } from './firebase'
@@ -13,6 +13,7 @@ type CredentialRecord = {
   credentialId: string; status: 'active' | 'revoked' | 'replaced'; issuedAt: unknown; replacedBy: string; replacesCredentialId: string
 }
 type RequestWithCredential = RequestRecord & { credential: CredentialRecord | null }
+type CertificateQueueStatus = 'all' | 'ready' | CredentialRecord['status']
 
 const legacyCourseTitle = 'AI Foundations for Ethiopia'
 
@@ -49,12 +50,16 @@ function randomToken(length: number) {
 }
 function newCredentialId() { return `EFBI-${new Date().getFullYear()}-${randomToken(12)}` }
 function newAuditId(action: string) { return `certificate-${action}-${Date.now()}-${randomToken(10)}` }
+function certificateQueueStatus(record: RequestWithCredential): Exclude<CertificateQueueStatus, 'all'> { return record.credential?.status ?? 'ready' }
 
 export default function CertificateManager({ user }: { user: User }) {
   const [records, setRecords] = useState<RequestWithCredential[]>([])
   const [selectedKey, setSelectedKey] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<CertificateQueueStatus>('all')
+  const [courseFilter, setCourseFilter] = useState('all')
   const [issueConfirmed, setIssueConfirmed] = useState(false)
   const [revokeReason, setRevokeReason] = useState('')
   const [revokeConfirmed, setRevokeConfirmed] = useState(false)
@@ -93,7 +98,28 @@ export default function CertificateManager({ user }: { user: User }) {
     return () => { active = false; unsubscribe() }
   }, [])
 
-  const selected = records.find((item) => item.requestKey === selectedKey) ?? null
+  const courseOptions = useMemo(() => [...new Map(records.map((record) => [record.courseId, record.courseTitle])).entries()].sort((a, b) => a[1].localeCompare(b[1])), [records])
+  const queueCounts = useMemo(() => ({
+    ready: records.filter((record) => certificateQueueStatus(record) === 'ready').length,
+    active: records.filter((record) => certificateQueueStatus(record) === 'active').length,
+    closed: records.filter((record) => ['revoked', 'replaced'].includes(certificateQueueStatus(record))).length,
+  }), [records])
+  const filteredRecords = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase()
+    return records.filter((record) => {
+      const status = certificateQueueStatus(record)
+      const matchesStatus = statusFilter === 'all' || status === statusFilter
+      const matchesCourse = courseFilter === 'all' || record.courseId === courseFilter
+      const searchable = `${record.publicName} ${record.courseTitle} ${record.courseId} ${record.learnerUid} ${record.credential?.credentialId ?? ''}`.toLocaleLowerCase()
+      return matchesStatus && matchesCourse && (!query || searchable.includes(query))
+    })
+  }, [courseFilter, records, searchQuery, statusFilter])
+
+  useEffect(() => {
+    setSelectedKey((current) => filteredRecords.some((record) => record.requestKey === current) ? current : filteredRecords[0]?.requestKey || '')
+  }, [filteredRecords])
+
+  const selected = filteredRecords.find((item) => item.requestKey === selectedKey) ?? null
 
   function updateSelectedCredential(credential: CredentialRecord) {
     setRecords((current) => current.map((item) => item.requestKey === selectedKey ? { ...item, credential } : item))
@@ -173,8 +199,8 @@ export default function CertificateManager({ user }: { user: User }) {
     finally { setBusy(false) }
   }
 
-  return <section className="certificate-workspace"><header className="workspace-title"><div><p className="eyebrow">Phase 26 · Multi-course certificates</p><h1>Issue verified credentials</h1><p>Only reviewed-project courses can reach this queue. Every action requires approved work, learner consent, and permanent audit evidence.</p></div><span className="security-badge">Administrator access</span></header>{notice && <div className={`notice notice--${notice.kind}`} role={notice.kind === 'error' ? 'alert' : 'status'}>{notice.message}</div>}<div className="certificate-layout-admin">
-    <aside className="certificate-list"><div><strong>Certificate requests</strong><span>{records.length}</span></div>{loading && <p>Loading protected requests…</p>}{!loading && !records.length && <p>No learner has requested a certificate.</p>}{records.map((item) => <button key={item.requestKey} className={selectedKey === item.requestKey ? 'selected' : ''} onClick={() => select(item.requestKey)}><strong>{item.publicName}</strong><span>{item.courseTitle}</span><small>{item.credential ? item.credential.status : 'Ready to issue'}</small></button>)}</aside>
+  return <section className="certificate-workspace"><header className="workspace-title"><div><p className="eyebrow">Phase 26 · Multi-course certificates</p><h1>Issue verified credentials</h1><p>Only reviewed-project courses can reach this queue. Find requests by course or status before taking a permanent action.</p></div><span className="security-badge">Administrator access</span></header>{notice && <div className={`notice notice--${notice.kind}`} role={notice.kind === 'error' ? 'alert' : 'status'}>{notice.message}</div>}<section className="queue-overview" aria-label="Certificate queue summary"><article><small>Ready to issue</small><strong>{queueCounts.ready}</strong></article><article><small>Active</small><strong>{queueCounts.active}</strong></article><article><small>Revoked or replaced</small><strong>{queueCounts.closed}</strong></article></section><div className="certificate-layout-admin">
+    <aside className="certificate-list"><div><strong>Certificate requests</strong><span>{filteredRecords.length}/{records.length}</span></div><div className="queue-filters"><label><span>Search</span><input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Name, course, learner, or ID" /></label><label><span>Status</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as CertificateQueueStatus)}><option value="all">All statuses</option><option value="ready">Ready to issue</option><option value="active">Active</option><option value="revoked">Revoked</option><option value="replaced">Replaced</option></select></label><label><span>Course</span><select value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}><option value="all">All courses</option>{courseOptions.map(([courseId, courseTitle]) => <option key={courseId} value={courseId}>{courseTitle}</option>)}</select></label></div>{loading && <p>Loading protected requests…</p>}{!loading && !records.length && <p>No learner has requested a certificate.</p>}{!loading && records.length > 0 && !filteredRecords.length && <p>No certificate requests match these filters.</p>}{filteredRecords.map((item) => <button key={item.requestKey} className={selectedKey === item.requestKey ? 'selected' : ''} onClick={() => select(item.requestKey)}><strong>{item.publicName}</strong><span>{item.courseTitle}</span><small>{item.credential ? item.credential.status : 'Ready to issue'}</small></button>)}</aside>
     <main className="certificate-record-admin">{!selected ? <div className="certificate-empty"><strong>Select a certificate request.</strong><p>The approved review binding and public name will appear here.</p></div> : <><header><div><p className="eyebrow">{selected.courseTitle}</p><h2>{selected.publicName}</h2><p>Requested {readableDate(selected.createdAt)}</p></div><span className={`certificate-state certificate-state--${selected.credential?.status || 'requested'}`}>{selected.credential?.status || 'requested'}</span></header><dl><div><dt>Learner ID</dt><dd>{selected.learnerUid}</dd></div><div><dt>Course</dt><dd>{selected.courseId}</dd></div><div><dt>Final review</dt><dd>{selected.finalReviewId}</dd></div><div><dt>Submission</dt><dd>{selected.submissionId}</dd></div><div><dt>Review time</dt><dd>{readableDate(selected.reviewedAt)}</dd></div><div><dt>Course version</dt><dd>{selected.courseVersion}</dd></div><div><dt>Assessment version</dt><dd>{selected.assessmentVersion}</dd></div></dl>{selected.credential && <section className="current-credential"><p className="eyebrow">Current credential</p><h3>{selected.credential.credentialId}</h3><p>Issued {readableDate(selected.credential.issuedAt)}</p>{selected.credential.replacesCredentialId && <p>Replaces {selected.credential.replacesCredentialId}</p>}<a href={`http://127.0.0.1:5173/verify?credential=${encodeURIComponent(selected.credential.credentialId)}`} target="_blank" rel="noreferrer">Open public verification ↗</a></section>}</>}</main>
     <aside className="certificate-actions"><p className="eyebrow">Protected action</p>{!selected && <p>Choose a request to continue.</p>}{selected && !selected.credential && <form onSubmit={(event) => void issue(event)}><h2>Issue certificate</h2><p>This publishes only the chosen name, course, issue date, credential ID, and status.</p><label className="certificate-confirm"><input type="checkbox" checked={issueConfirmed} onChange={(event) => setIssueConfirmed(event.target.checked)} /><span>I checked the final approved review and learner’s public-name consent. This issuance is permanent.</span></label><button className="primary-action" disabled={busy || !issueConfirmed}>{busy ? 'Issuing…' : 'Issue audited certificate'}</button></form>}{selected?.credential?.status === 'active' && <><form onSubmit={(event) => void revoke(event)}><h2>Revoke credential</h2><p>Use only when this credential must no longer be valid. History is preserved.</p><label>Private reason<textarea value={revokeReason} onChange={(event) => { setRevokeReason(event.target.value); setRevokeConfirmed(false) }} minLength={10} maxLength={500} required /></label><label className="certificate-confirm"><input type="checkbox" checked={revokeConfirmed} onChange={(event) => setRevokeConfirmed(event.target.checked)} /><span>I understand revocation is permanent and publicly visible.</span></label><button className="danger-action" disabled={busy || revokeReason.trim().length < 10 || !revokeConfirmed}>Revoke permanently</button></form><form onSubmit={(event) => void replace(event)}><h2>Replace credential</h2><p>A new ID becomes active. The old ID remains verifiable as replaced.</p><label>Private replacement reason<textarea value={replacementReason} onChange={(event) => { setReplacementReason(event.target.value); setReplacementConfirmed(false) }} minLength={10} maxLength={500} required /></label><label className="certificate-confirm"><input type="checkbox" checked={replacementConfirmed} onChange={(event) => setReplacementConfirmed(event.target.checked)} /><span>I checked the public name and understand the old credential cannot become active again.</span></label><button className="secondary-action" disabled={busy || replacementReason.trim().length < 10 || !replacementConfirmed}>{busy ? 'Replacing…' : 'Create replacement'}</button></form></>}{selected?.credential && selected.credential.status !== 'active' && <div className="certificate-locked"><strong>No further browser action</strong><p>This credential is permanently {selected.credential.status}. Its history remains available for verification and audit.</p></div>}<div className="certificate-boundary"><strong>Permanent boundary</strong><p>Core certificates and issuance evidence never change. Status transitions require a matching audit event in the same atomic operation.</p></div></aside>
   </div></section>
