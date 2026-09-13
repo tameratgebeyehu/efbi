@@ -3304,3 +3304,101 @@ test('a versioned course certificate can be replaced without changing its course
   assert.equal((await getDoc(doc(admin, 'certificateClaims', 'alice--web-basics'))).data().currentCredentialId, certificateIdTwo)
   assert.equal((await getDoc(doc(admin, 'certificateIssuances', certificateIdTwo))).data().versionId, versionedProject.versionId)
 })
+
+test('Phase 26 keeps learning-only completion separate from the reviewed-project certificate lifecycle', async () => {
+  const practiceCourse = {
+    versionId: 'scholarship-starter--v1',
+    courseId: 'scholarship-starter',
+    courseTitle: 'Scholarship Starter',
+    courseVersion: 1,
+    assessmentVersion: 1,
+    assessmentType: 'practice-only',
+    lessonIds: ['understand-the-process', 'plan-next-steps'],
+  }
+  const admin = verifiedUser('admin-user', { admin: true })
+  await assertSucceeds(publishCourseFoundation(admin, practiceCourse))
+  await assertSucceeds(publishCourseFoundation(admin, versionedProject))
+
+  const learner = verifiedUser('alice')
+  for (const course of [practiceCourse, versionedProject]) {
+    const progressReference = doc(learner, 'users', 'alice', 'progress', course.courseId)
+    await assertSucceeds(setDoc(progressReference, versionedProgressRecord({
+      ...course,
+      lessonCount: course.lessonIds.length,
+      completedLessonIds: [course.lessonIds[0]],
+    })))
+    const started = await getDoc(progressReference)
+    await assertSucceeds(setDoc(progressReference, versionedProgressRecord({
+      ...course,
+      lessonCount: course.lessonIds.length,
+      completedLessonIds: course.lessonIds,
+      createdAt: started.data().createdAt,
+    })))
+  }
+
+  const practiceSubmissionId = practiceCourse.versionId + '--project'
+  await assertFails(setDoc(
+    doc(learner, 'users', 'alice', 'submissions', practiceSubmissionId),
+    versionedSubmissionDraft({
+      submissionId: practiceSubmissionId,
+      courseId: practiceCourse.courseId,
+      versionId: practiceCourse.versionId,
+    }),
+  ))
+
+  const projectSubmissionId = versionedProject.versionId + '--project'
+  const projectReference = doc(learner, 'users', 'alice', 'submissions', projectSubmissionId)
+  await assertSucceeds(setDoc(projectReference, versionedSubmissionDraft()))
+  const projectDraft = await getDoc(projectReference)
+  await assertSucceeds(setDoc(projectReference, versionedFinalSubmission(projectDraft.data().createdAt)))
+  const submittedProject = await getDoc(projectReference)
+
+  const assignmentId = 'alice--' + projectSubmissionId
+  await assertSucceeds(setDoc(doc(admin, 'reviewAssignments', assignmentId), {
+    assignmentId,
+    learnerUid: 'alice',
+    submissionId: projectSubmissionId,
+    reviewerUid: 'reviewer-user',
+    status: 'assigned',
+    assignedAt: serverTimestamp(),
+    assignedBy: 'admin-user',
+  }))
+
+  const reviewer = verifiedUser('reviewer-user', { reviewer: true })
+  const review = writeBatch(reviewer)
+  review.set(doc(reviewer, 'reviewResults', assignmentId), versionedPrivateReviewResult(submittedProject.data().submittedAt))
+  review.set(doc(reviewer, 'users', 'alice', 'reviewResults', assignmentId), versionedPublicReviewResult(submittedProject.data().submittedAt))
+  await assertSucceeds(review.commit())
+  const approvedResult = await getDoc(doc(learner, 'users', 'alice', 'reviewResults', assignmentId))
+  assert.equal(approvedResult.data().decision, 'approved')
+
+  const practiceRequest = versionedCertificateRequest(approvedResult.data().reviewedAt, {
+    requestId: practiceCourse.courseId,
+    courseId: practiceCourse.courseId,
+    courseTitle: practiceCourse.courseTitle,
+    versionId: practiceCourse.versionId,
+    finalReviewId: assignmentId,
+    submissionId: practiceSubmissionId,
+    courseVersion: practiceCourse.courseVersion,
+    assessmentVersion: practiceCourse.assessmentVersion,
+  })
+  await assertFails(setDoc(
+    doc(learner, 'users', 'alice', 'certificateRequests', practiceCourse.courseId),
+    practiceRequest,
+  ))
+
+  await assertSucceeds(setDoc(
+    doc(learner, 'users', 'alice', 'certificateRequests', versionedProject.courseId),
+    versionedCertificateRequest(approvedResult.data().reviewedAt),
+  ))
+  const issuance = writeBatch(admin)
+  addVersionedCertificatePackage(issuance, admin, approvedResult.data().reviewedAt, certificateIdOne, 'certificate-phase26-issued-0001')
+  await assertSucceeds(issuance.commit())
+
+  const visitor = environment.unauthenticatedContext().firestore()
+  const publicProjectCertificate = await assertSucceeds(getDoc(doc(visitor, 'certificates', certificateIdOne)))
+  assert.equal(publicProjectCertificate.data().courseId, versionedProject.courseId)
+  assert.equal(publicProjectCertificate.data().publicName, 'Alice Learner')
+  const practiceClaim = await getDoc(doc(admin, 'certificateClaims', 'alice--' + practiceCourse.courseId))
+  assert.equal(practiceClaim.exists(), false)
+})

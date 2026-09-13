@@ -61,7 +61,7 @@ Phase 25B development checkpoint complete: one responsive Privacy & Support page
 
 Phase 25C development checkpoint complete: Admin Studio shows safeguarding ownership, unresolved launch gates, incident priorities, an ordered response checklist, and the minimum incident record. It deliberately leaves the safeguarding lead and trusted backup unassigned.
 
-## Phase 26 — assessments and certificates across courses
+## Phase 26 — assessments and certificates across courses — complete in development
 
 1. Define which courses use practice questions only and which require a final project or exam. **Complete for launch: practice-only or reviewed project; final exams deferred.**
 2. Generalize reviewer assignment, one-revision policy, scoring, and certificate eligibility by course version. **Complete in the development codebase.**
@@ -74,6 +74,8 @@ Exit check: a synthetic learner completes each launch assessment type and receiv
 Phase 26A development checkpoint complete: course activation and learner pages now distinguish learning-only courses from reviewed-project certificate pathways. Browser practice remains non-certificate activity, final exams are deferred, and outdated review/certificate wording is corrected.
 
 Phase 26B development checkpoint complete: protected review and certificate workspaces now show multi-course workload summaries and responsive filters. Administrators and reviewers can narrow queues without changing permanent records or weakening role boundaries.
+
+Phase 26C exit check complete: an isolated synthetic learner completed both supported course paths. The learning-only course rejected project submission and certificate creation, while the reviewed-project course completed human review, learner request, administrator issuance, and anonymous public verification. All ninety-five authorization and lifecycle tests pass.
 
 ## Phase 27 — launch content, quality, and security
 

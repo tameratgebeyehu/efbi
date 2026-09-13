@@ -607,7 +607,17 @@ The second multi-course assessment checkpoint is also implemented in the develop
 7. Queue controls remain usable on narrow screens and do not create, change, issue, revoke, or replace any record.
 8. Admin Studio lint and production build pass. No Firestore rules, database content, application build, Admin Studio, or Hosting target was deployed.
 
-Phase 26 remains in progress. A complete synthetic lifecycle across every launch assessment type remains.
+The Phase 26 exit check is complete:
+
+1. One synthetic learner completed an activated learning-only course and an activated reviewed-project course through the real versioned progress rules.
+2. The learning-only course rejected project submission and rejected a certificate request even after every lesson was complete.
+3. The reviewed-project course accepted one deliberate final submission, one immutable reviewer assignment, and one rubric-bound approved result.
+4. The learner deliberately requested the reviewed-project certificate, an administrator issued it atomically with its claim, status, and audit evidence, and an unauthenticated visitor verified the public record by exact credential ID.
+5. No certificate claim exists for the learning-only course.
+6. All ninety-five Firestore authorization and lifecycle tests pass. The Admin Studio lint and production build also pass.
+7. No Firestore rules, synthetic data, database content, application build, Admin Studio, or Hosting target was deployed.
+
+Phase 26 is complete in the development codebase. Phase 27 launch content, quality, browser/device checks, and controlled security review are next. Phase 25's external safeguarding and privacy gates still remain before public enrollment.
 
 
 ## Recovery commands
