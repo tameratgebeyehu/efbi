@@ -29,24 +29,24 @@ function TextBlocks({ text, fallback }: { text: string; fallback: string }) {
 
 function ProgramPreview({ item }: { item: Extract<OwnerPreviewItem, { kind: 'program' }> }) {
   const { content } = item
-  return <main className={`owner-preview-public owner-preview-public--program accent-${content.accent}`}>
+  return <section className={`owner-preview-public owner-preview-public--program accent-${content.accent}`}>
     <section className="owner-preview-hero"><span>EFBI program</span><h1>{display(content.title, 'Program title')}</h1><p>{display(content.description, 'The public program description will appear here.')}</p></section>
     <section className="owner-preview-program-card"><div><small>{display(content.shortTitle, 'EFBI')}</small><span>{content.level} · {content.durationWeeks || 0} weeks</span></div><h2>What learners will work toward</h2><p>{display(content.outcome, 'The learner outcome will appear here.')}</p><button type="button" disabled>Explore courses</button></section>
-  </main>
+  </section>
 }
 
 function CoursePreview({ item }: { item: Extract<OwnerPreviewItem, { kind: 'course' }> }) {
   const { content } = item
-  return <main className="owner-preview-public owner-preview-public--course">
+  return <section className="owner-preview-public owner-preview-public--course">
     <section className="owner-preview-hero"><span>{categoryLabel(content.category)}</span><h1>{display(content.title, 'Course title')}</h1><p>{display(content.summary, 'A short course summary will appear here.')}</p><div className="owner-preview-meta"><b>{content.level}</b><b>{display(content.language, 'Language')}</b><b>{content.estimatedMinutes || 0} minutes</b></div></section>
     <section className="owner-preview-reading"><span>About this course</span><TextBlocks text={content.description} fallback="The complete course description will appear here." /><button type="button" disabled>Start learning</button></section>
-  </main>
+  </section>
 }
 
 function LessonPreview({ item }: { item: Extract<OwnerPreviewItem, { kind: 'lesson' }> }) {
   const { content } = item
   const videoId = /^[A-Za-z0-9_-]{11}$/.test(content.videoYoutubeId) ? content.videoYoutubeId : ''
-  return <main className="owner-preview-public owner-preview-public--lesson">
+  return <section className="owner-preview-public owner-preview-public--lesson">
     <section className="owner-preview-hero"><span>Lesson {content.order || 0} · {content.durationMinutes || 0} min</span><h1>{display(content.title, 'Lesson title')}</h1><p>{display(content.summary, 'A short lesson summary will appear here.')}</p></section>
     <section className="owner-preview-reading">
       {videoId && <div className="owner-preview-video"><iframe src={`https://www.youtube-nocookie.com/embed/${videoId}`} title={`Preview video for ${display(content.title, 'this lesson')}`} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>}
@@ -54,15 +54,15 @@ function LessonPreview({ item }: { item: Extract<OwnerPreviewItem, { kind: 'less
       <TextBlocks text={content.bodyMarkdown} fallback="The written lesson will appear here." />
       <section className="owner-preview-checks"><span>Practice checks · {content.questions.length}</span>{content.questions.length === 0 && <p>No practice questions in this lesson.</p>}{content.questions.map((question, index) => <article key={index}><strong>{index + 1}. {display(question.prompt, 'Question prompt')}</strong><ol>{question.options.map((option, optionIndex) => <li key={optionIndex}>{display(option, `Option ${optionIndex + 1}`)}</li>)}</ol><small>Owner answer key: option {question.correctOption + 1} · {display(question.explanation, 'Explanation')}</small></article>)}</section>
     </section>
-  </main>
+  </section>
 }
 
 function ArticlePreview({ item }: { item: Extract<OwnerPreviewItem, { kind: 'article' }> }) {
   const { content } = item
-  return <main className={`owner-preview-public owner-preview-public--article tone-${content.tone}`}>
+  return <section className={`owner-preview-public owner-preview-public--article tone-${content.tone}`}>
     <section className="owner-preview-hero"><span>{display(content.category, 'Article')}</span>{content.featured && <b>Featured</b>}<h1>{display(content.title, 'Article title')}</h1><p>{display(content.excerpt, 'The article excerpt will appear here.')}</p><div className="owner-preview-meta"><b>By {display(content.authorName, 'Author')}</b><b>{content.readingMinutes || 0} min read</b></div></section>
     <article className="owner-preview-reading"><TextBlocks text={content.bodyMarkdown} fallback="The full article will appear here." /></article>
-  </main>
+  </section>
 }
 
 function PreviewContent({ item }: { item: OwnerPreviewItem }) {

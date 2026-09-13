@@ -10,12 +10,12 @@ const collectionNames = [
 ] as const
 
 const manualChecks = [
-  ['Responsive pages', 'Inspect the exact release visually on real phone, tablet, and desktop hardware.', '58 automated checks pass'],
+  ['Responsive pages', 'Inspect the exact release visually on real phone, tablet, and desktop hardware.', '58 local checks pass'],
   ['Keyboard & screen reader', 'Check real focus order, visible focus, labels, headings, and useful spoken announcements.', 'Human check open'],
   ['Slow or interrupted use', 'Confirm the tested video fallback and editor recovery once on the owner computer and real connection.', 'Automated recovery passes'],
   ['Account journeys', 'Confirm the real inbox and operator-console steps with a dedicated pilot account before enrollment.', 'Synthetic lifecycle passes'],
-  ['Firebase operations', 'Review App Check metrics, authorized domains, operator roles, quotas, and recovery access.', 'Operations review open'],
-  ['Security review', 'Repeat the final rules, browser, and lifecycle gates on the release commit, then obtain controlled external review.', 'External review open'],
+  ['Firebase operations', 'Cloud domains, enrollment, and roles have an automated preflight. App Check metrics, quotas, alerts, and recovery access still need Console review.', 'Partial automated pass'],
+  ['Security review', 'Source, dependency, rules, browser, and lifecycle gates run locally. Controlled external review remains open.', 'Automated gates pass'],
 ] as const
 
 function text(value: unknown) { return typeof value === 'string' ? value : '' }

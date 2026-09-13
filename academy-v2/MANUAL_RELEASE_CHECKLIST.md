@@ -2,6 +2,8 @@
 
 Use this only after the exact release commit passes the automated checks. Write the date, commit, device or browser, result, and a short note for every item. Do not use real student data.
 
+Automated Phase 27G evidence is recorded in `PHASE_27G_RELEASE_EVIDENCE.md`. It does not complete the human items below.
+
 ## 1. Visual and real-device check
 
 - Check Home, Programs, Courses, one Course Detail, Certificates, Verify, Blog, About, Contact, Privacy, Join, Sign in, Account, one protected Lesson, and Project Submission.

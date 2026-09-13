@@ -248,13 +248,26 @@ export async function runBrowserCheck() {
   let profileDirectory
 
   try {
-  const port = await reservePort()
-  const baseUrl = `http://127.0.0.1:${port}`
-  let previewOutput = ''
-  previewProcess = spawn(process.execPath, [path.join(projectRoot, 'node_modules', 'vite', 'bin', 'vite.js'), '--configLoader', 'native', '--mode', 'public-preview', '--host', '127.0.0.1', '--port', String(port), '--strictPort', '--clearScreen', 'false'], { cwd: projectRoot, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] })
-  previewProcess.stdout.on('data', (chunk) => { previewOutput += chunk })
-  previewProcess.stderr.on('data', (chunk) => { previewOutput += chunk })
-  await waitForServer(baseUrl, previewProcess, () => previewOutput)
+  const baseFlag = process.argv.indexOf('--base-url')
+  const requestedBaseUrl = baseFlag >= 0 ? process.argv[baseFlag + 1] : ''
+  let baseUrl
+
+  if (requestedBaseUrl) {
+    const parsed = new URL(requestedBaseUrl)
+    assert.equal(['http:', 'https:'].includes(parsed.protocol), true, 'The external browser-check URL must use HTTP or HTTPS.')
+    assert.equal(parsed.username || parsed.password, '', 'The external browser-check URL must not contain credentials.')
+    baseUrl = parsed.toString().replace(/\/$/, '')
+    const response = await fetch(baseUrl)
+    assert.equal(response.ok, true, `The external preview returned HTTP ${response.status}.`)
+  } else {
+    const port = await reservePort()
+    baseUrl = `http://127.0.0.1:${port}`
+    let previewOutput = ''
+    previewProcess = spawn(process.execPath, [path.join(projectRoot, 'node_modules', 'vite', 'bin', 'vite.js'), '--configLoader', 'native', '--mode', 'public-preview', '--host', '127.0.0.1', '--port', String(port), '--strictPort', '--clearScreen', 'false'], { cwd: projectRoot, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] })
+    previewProcess.stdout.on('data', (chunk) => { previewOutput += chunk })
+    previewProcess.stderr.on('data', (chunk) => { previewOutput += chunk })
+    await waitForServer(baseUrl, previewProcess, () => previewOutput)
+  }
 
   profileDirectory = await mkdtemp(path.join(os.tmpdir(), 'efbi-browser-check-'))
   browserProcess = spawn(findBrowser(), ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--disable-background-networking', '--disable-component-update', '--disable-sync', '--metrics-recording-only', '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=0', `--user-data-dir=${profileDirectory}`, 'about:blank'], { windowsHide: true, stdio: 'ignore' })
@@ -271,6 +284,7 @@ export async function runBrowserCheck() {
   await inspectMobileMenu(client, baseUrl)
   console.log('✓ phone navigation opens and reports its state')
   console.log(`✓ ${routes.length * viewports.length + 1} browser checks passed`)
+  if (requestedBaseUrl) console.log(`✓ checked hosted preview at ${baseUrl}`)
   } finally {
     if (client) {
       try { await client.send('Browser.close') } catch { /* Browser may already be closed. */ }

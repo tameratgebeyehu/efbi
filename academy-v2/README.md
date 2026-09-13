@@ -1,32 +1,38 @@
-# React + TypeScript + Vite
+# EFBI Academy v2
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The Ethiopian Future Builders Initiative Academy is a free learning platform for Ethiopian students. This directory contains the public React application, Firebase rules, emulator tests, and launch operations documentation. The private Admin Studio lives in `../efbi-admin-studio` and must remain localhost-only.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```powershell
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Local Firebase values belong in ignored `.env.local` files. Never commit a password, App Check debug token, service-account key, or learner record.
+
+## Core checks
+
+```powershell
+npm run lint
+npm run build
+npm run test:browser
+npm run test:source-security
+npm run test:hosting-config
+npm run test:rules
+npm run test:account-flow
+npm run test:admin-recovery
+```
+
+`npm run check:cloud-readiness` is read-only and checks the approved Doha development project. It intentionally fails while required public content is absent or a cloud security boundary is wrong.
+
+`npm run secure:cloud-preview -- --confirm "secure-preview:efbi-academy-dev-doha"` is a narrow owner utility. It can add the approved localhost Authentication domain and close enrollment; it cannot open enrollment, grant roles, publish content, or deploy.
+
+## Release boundary
+
+- Use `npm run build:preview` for the read-only development Hosting candidate.
+- Keep enrollment closed until every launch gate is approved.
+- Never deploy Admin Studio.
+- Do not point `www.efbi.site` at the rebuilt academy without an approved rollback and exact release evidence.
+
+Start with `PROJECT_STATUS.md`, `LAUNCH_ROADMAP.md`, `PHASE_27G_RELEASE_EVIDENCE.md`, and `MANUAL_RELEASE_CHECKLIST.md`.

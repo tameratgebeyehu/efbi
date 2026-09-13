@@ -721,6 +721,23 @@ The recovery and complete deletion rehearsal is implemented in the development c
 
 Phase 27 remains in progress. Human visual/touch/keyboard/screen-reader confirmation, production Firebase operational review, real launch-content approval, and the final controlled security review remain open.
 
+## Phase 27G — cloud preflight and release hardening
+
+The automated cloud and source-security checkpoint is complete in the development codebase:
+
+1. A read-only cloud preflight inventories Authentication domains, password sign-in, enrollment state, operator claims, and public launch-content counts without printing learner accounts or private records.
+2. It found the development enrollment switch open and localhost absent from authorized domains. A confirmation-gated, close-only utility added localhost and closed enrollment. It cannot open enrollment or grant a role.
+3. The verified cloud state contains only the two Firebase development domains plus localhost, password sign-in is required, enrollment is closed, and `efbi.academy@gmail.com` is the only operator with only the administrator claim.
+4. Cloud content readiness remains blocked: no programs, courses, releases, lessons, catalog entries, or articles have been published.
+5. The currently hosted development preview is safely read-only but stale. It fails the newer Programs heading-order assertion and does not yet carry the new response headers.
+6. Firebase Hosting source now adds Content Security Policy, clickjacking denial, MIME protection, referrer and permissions controls, opener isolation, HSTS, and immutable caching. The preview build is checked for local Firebase values and the App Check debug token.
+7. A repeatable source-security gate covers 47 TypeScript files. It found and corrected nested `main` landmarks in Reviews, Certificates, and owner previews, and standardizes explicit `noopener noreferrer` on every new-tab link.
+8. Production dependencies remain free of reported vulnerabilities. Learner and Admin Studio lint pass.
+9. `PHASE_27G_RELEASE_EVIDENCE.md` records completed evidence, blockers, commands, and the no-deployment boundary.
+10. No Hosting build, Firestore rules, content, App Check enforcement, operator role, or custom domain was deployed.
+
+Phase 27 remains in progress. Real launch content, real-device and assistive-technology approval, App Check/quota/alert/recovery Console review, and independent controlled security review remain open.
+
 
 ## Recovery commands
 
@@ -735,6 +752,9 @@ npm run dev
 npm run test:browser
 npm run test:account-flow
 npm run test:admin-recovery
+npm run test:source-security
+npm run test:hosting-config
+npm run check:cloud-readiness
 ```
 
 The first complete v2 checkpoint is commit `80a911d` on branch `codex/academy-v2`.

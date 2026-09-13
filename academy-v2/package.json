@@ -12,6 +12,11 @@
     "emulators": "firebase emulators:start --only auth,firestore --project demo-efbi",
     "test:rules": "firebase emulators:exec --only firestore --project demo-efbi \"node --test tests/firestore.rules.test.mjs\"",
     "test:browser": "node tools/browser-check.mjs",
+    "test:development-hosting": "node tools/browser-check.mjs --base-url https://efbi-academy-dev-doha.web.app",
+    "test:hosting-config": "npm run build:preview && node tools/hosting-security-check.mjs",
+    "test:source-security": "node tools/source-security-check.mjs",
+    "check:cloud-readiness": "node tools/cloud-readiness-check.cjs",
+    "secure:cloud-preview": "node tools/secure-cloud-preview.cjs",
     "test:account-flow": "firebase emulators:exec --only auth,firestore --project demo-efbi \"node tools/account-flow-check.mjs\"",
     "test:admin-recovery": "firebase emulators:exec --only auth,firestore --project demo-efbi \"node tools/admin-recovery-check.mjs\"",
     "manage:roles": "node tools/manage-role.cjs"

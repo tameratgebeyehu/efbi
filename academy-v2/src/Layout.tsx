@@ -69,8 +69,8 @@ export function Layout() {
             <Brand footer />
             <p>Free, practical learning for young Ethiopian builders.</p>
             <div className="social-links" aria-label="EFBI contact shortcuts">
-              <a href="https://t.me/EFBI_Academy" target="_blank" rel="noreferrer" aria-label="EFBI Telegram channel"><Icon name="send" /></a>
-              <a href="https://t.me/+HhBFWhYdfChhYTlk" target="_blank" rel="noreferrer" aria-label="EFBI student community"><Icon name="users" /></a>
+              <a href="https://t.me/EFBI_Academy" target="_blank" rel="noopener noreferrer" aria-label="EFBI Telegram channel"><Icon name="send" /></a>
+              <a href="https://t.me/+HhBFWhYdfChhYTlk" target="_blank" rel="noopener noreferrer" aria-label="EFBI student community"><Icon name="users" /></a>
               <a href="mailto:efbi.academy@gmail.com" aria-label="Email EFBI"><Icon name="mail" /></a>
             </div>
           </div>
