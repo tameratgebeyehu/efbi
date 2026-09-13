@@ -214,7 +214,7 @@ export function CoursesPage() {
           <div className="catalog-heading"><div><p className="eyebrow-label">Your course catalog</p><h2 id="active-courses-title">Active EFBI courses</h2></div><p>Only reviewed versions activated by EFBI appear here.</p></div>
           {!catalogReady && <p className="catalog-loading" role="status">Checking active courses…</p>}
           {catalogReady && additionalCourses.length === 0 && <div className="catalog-empty"><Icon name="book" /><div><strong>AI Foundations is the active pilot.</strong><p>More courses will appear here after EFBI reviews and activates their complete lesson sets.</p></div></div>}
-          {additionalCourses.length > 0 && <div className="active-course-grid">{additionalCourses.map((course) => <article key={course.courseId}><div className="active-course-number">V{course.courseVersion}</div><div className="course-tags"><span>{course.level}</span><span>{course.lessonCount} lessons</span><span>{course.assessmentType === 'project' ? 'Final project' : 'Practice course'}</span></div><h3>{course.courseTitle}</h3><p>{course.courseDescription}</p><Link className="button button--outline" to={`/courses/${course.courseId}`}>View course <Icon name="arrow" /></Link></article>)}</div>}
+          {additionalCourses.length > 0 && <div className="active-course-grid">{additionalCourses.map((course) => <article key={course.courseId}><div className="active-course-number">V{course.courseVersion}</div><div className="course-tags"><span>{course.level}</span><span>{course.lessonCount} lessons</span><span>{course.assessmentType === 'project' ? 'Reviewed project certificate' : 'Learning only · no certificate'}</span></div><h3>{course.courseTitle}</h3><p>{course.courseDescription}</p><Link className="button button--outline" to={`/courses/${course.courseId}`}>View course <Icon name="arrow" /></Link></article>)}</div>}
         </section>}
         <div className="catalog-heading"><div><p className="eyebrow-label">Coming next</p><h2>More courses are on the way</h2></div><p>We’ll open each course after its lessons and learning tools are ready.</p></div>
         <div className="course-roadmap">{programs.slice(1).map((program, index) => <article key={program.slug}><span>{String(index + 2).padStart(2, '0')}</span><div><h3>{program.title}</h3><p>{program.description}</p></div><small>{program.level}</small></article>)}</div>
@@ -247,13 +247,13 @@ export function CourseDetailPage() {
   const catalog = verified ? resolved?.catalog ?? null : fallback
   if (!catalog) return <Navigate to="/courses" replace />
   const versionLabel = catalog.courseVersion ? `Version ${catalog.courseVersion}` : 'Pilot course'
-  const assessmentLabel = catalog.assessmentType === 'project' ? 'Final project' : 'Practice activities'
+  const assessmentLabel = catalog.assessmentType === 'project' ? 'Reviewed project certificate' : 'Learning only · no certificate'
   return (
     <>
       <PageHero eyebrow={`${versionLabel} · ${catalog.level}`} title={catalog.courseTitle} description={catalog.courseDescription} className="page-hero--course-detail"><div className="page-stat"><strong>{catalog.lessons.length}</strong><span>lessons</span></div></PageHero>
       <section className="section shell course-detail-grid">
         <div>
-          <SectionHeading eyebrow="Course outline" title="A clear path from idea to project" description="Each lesson ends with one practical step." />
+          <SectionHeading eyebrow="Course outline" title={catalog.assessmentType === 'project' ? 'A clear path from lessons to a project' : 'A focused learning path'} description={catalog.assessmentType === 'project' ? 'Finish the lessons, then show what you built in one reviewed project.' : 'Finish each lesson and use the practice activities to check your understanding.'} />
           <ol className="curriculum-list">{catalog.lessons.map((item) => <li key={item.slug}><span>{item.number}</span><div><h3>{item.title}</h3><p>{item.detail}</p></div><Icon name="chevron" /></li>)}</ol>
           <div className="video-note"><Icon name="play" /><div><strong>All {catalog.lessons.length} lessons are ready</strong><p>Verified learners can complete this version and save their progress. Videos load only when the learner chooses to connect to YouTube.</p></div></div>
         </div>
@@ -266,11 +266,11 @@ export function CourseDetailPage() {
 export function CertificationPage() {
   return (
     <>
-      <PageHero eyebrow="Certificates" title="A certificate you earn." description="Finish the lessons, complete a reviewed assessment, and submit your project." className="page-hero--certification"><Icon className="page-hero-icon" name="shield" /></PageHero>
+      <PageHero eyebrow="Certificates" title="A certificate you earn." description="Certificates are available only for courses marked as a reviewed project pathway." className="page-hero--certification"><Icon className="page-hero-icon" name="shield" /></PageHero>
       <section className="section shell certification-grid">
         <div>
           <SectionHeading eyebrow="How it works" title="Complete the course. Show your work." />
-          <ol className="requirement-list"><li><span>01</span><div><h3>Finish every lesson</h3><p>Your progress is saved in your account.</p></div></li><li><span>02</span><div><h3>Complete the final assessment</h3><p>This reviewed assessment is separate from the practice questions inside lessons.</p></div></li><li><span>03</span><div><h3>Submit your project</h3><p>Use what you learned in a practical task.</p></div></li><li><span>04</span><div><h3>Receive approval</h3><p>EFBI reviews your work before issuing the certificate.</p></div></li></ol>
+          <ol className="requirement-list"><li><span>01</span><div><h3>Finish every lesson</h3><p>Your progress is saved in your account.</p></div></li><li><span>02</span><div><h3>Submit your final project</h3><p>Show how you used the course in a practical task.</p></div></li><li><span>03</span><div><h3>Pass human review</h3><p>An assigned reviewer checks the project with the fixed EFBI rubric. One revision may be requested.</p></div></li><li><span>04</span><div><h3>Request your certificate</h3><p>Choose the public name, then an administrator checks and issues the verifiable credential.</p></div></li></ol>
         </div>
         <div className="certificate-mock" aria-label="Sample EFBI certificate">
           <div className="certificate-accent" aria-hidden="true"><i /><i /><i /></div>

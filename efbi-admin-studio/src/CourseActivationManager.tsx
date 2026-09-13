@@ -247,9 +247,10 @@ export default function CourseActivationManager({ user }: { user: User }) {
           <label>Course<select value={courseId} onChange={(event) => chooseCourse(event.target.value)} disabled={loading || busy}><option value="">Choose a published course</option>{courseOptions.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}</select></label>
           <label>Release version<select value={releaseVersion} onChange={(event) => chooseVersion(event.target.value)} disabled={!courseId || busy}><option value="">Choose a matching version</option>{versionOptions.map((version) => <option key={version} value={version}>Version {version}</option>)}</select></label>
           <div className="field-grid">
-            <label>Assessment type<select value={assessmentType} onChange={(event) => { setAssessmentType(event.target.value as 'practice-only' | 'project'); setConfirmed(false) }} disabled={busy}><option value="practice-only">Practice only</option><option value="project">Final project</option></select></label>
-            <label>Assessment version<input type="number" min={1} max={10000} step={1} value={assessmentVersion} onChange={(event) => { setAssessmentVersion(event.target.value); setConfirmed(false) }} disabled={busy} /></label>
+            <label>Completion path<select value={assessmentType} onChange={(event) => { const next = event.target.value as 'practice-only' | 'project'; setAssessmentType(next); if (next === 'practice-only') setAssessmentVersion('1'); setConfirmed(false) }} disabled={busy}><option value="practice-only">Lessons + practice · no certificate</option><option value="project">Lessons + reviewed final project</option></select></label>
+            <label>{assessmentType === 'project' ? 'Project instructions version' : 'Assessment version'}<input type="number" min={1} max={10000} step={1} value={assessmentVersion} onChange={(event) => { setAssessmentVersion(event.target.value); setConfirmed(false) }} disabled={busy || assessmentType === 'practice-only'} /></label>
           </div>
+          <div className="assessment-choice-note"><strong>{assessmentType === 'project' ? 'Certificate pathway' : 'Learning-only pathway'}</strong><p>{assessmentType === 'project' ? 'After every lesson, the learner submits one project for human review. Approval, a learner certificate request, and administrator issuance are all required.' : 'The learner completes lessons and browser-only practice. This version has no final submission, review, or certificate.'}</p></div>
         </section>
 
         <section className="activation-checks" aria-live="polite">
@@ -269,7 +270,7 @@ export default function CourseActivationManager({ user }: { user: User }) {
           <h2>{currentActive ? `Currently active: version ${currentActive.courseVersion}` : 'No active version yet'}</h2>
           {currentActive && <p>{currentActive.courseTitle} · {currentActive.lessonCount} lessons · {currentActive.assessmentType === 'project' ? 'Final project' : 'Practice only'}</p>}
           <div className="activation-boundary"><strong>What activation changes</strong><p>New learners start this version. Existing learners remain locked to the version they already started.</p></div>
-          <label className="confirm-check"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} disabled={!releaseReady || busy} />I checked the course, every lesson, their order, and the assessment setting.</label>
+          <label className="confirm-check"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} disabled={!releaseReady || busy} />I checked the course, every lesson, their order, and understand what this completion path allows learners to do.</label>
           <button className="publish-action" type="button" disabled={!releaseReady || !confirmed || busy} onClick={() => void activate()}>{busy ? 'Activating…' : `Activate version ${selectedVersion || '—'}`}</button>
           <small>Activation writes the immutable course version, active pointer, and audit event together. If one fails, none are saved.</small>
         </aside>

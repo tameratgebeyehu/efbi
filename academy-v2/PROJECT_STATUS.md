@@ -583,6 +583,21 @@ The third age, privacy, and learner-support checkpoint is implemented in the dev
 
 Phase 25 remains in progress. The user must still name a safeguarding lead and trusted backup. EFBI must also build a local referral directory, obtain external review, rehearse the response, review the final DPIA, and approve the 12–15 guardian route before that age group enrolls.
 
+## Phase 26A — assessment paths and certificate eligibility
+
+The first multi-course assessment checkpoint is implemented in the development codebase:
+
+1. Activated course versions use one of two clear launch paths: lessons with browser-only practice and no certificate, or lessons followed by a reviewed final project.
+2. Final scored exams are explicitly deferred rather than simulated with insecure browser practice questions.
+3. Admin Studio explains the consequence of each completion path before activation and fixes learning-only assessment versions at version 1.
+4. Learner catalog cards, Course Detail, final-lesson completion, and the Certification page state whether a course can lead to a certificate.
+5. Reviewed-project certification remains a multi-step flow: exact-version lesson completion, immutable project submission, assigned human review, fixed scoring, one possible revision, learner public-name request, and administrator-only issuance.
+6. The first public release has no separate appeal process. One revision remains available, while technical, identity, safety, and certificate errors use the support route without rewriting immutable review history.
+7. Outdated Admin Studio wording that said certificates were disabled is removed.
+8. Learner and Admin Studio lint and production builds pass, and all ninety-four Firestore authorization and lifecycle tests remain green. No Firestore rules, database content, application build, Admin Studio, or Hosting target was deployed.
+
+Phase 26 remains in progress. Queue refinement and a complete synthetic lifecycle across every launch assessment type remain.
+
 
 ## Recovery commands
 
