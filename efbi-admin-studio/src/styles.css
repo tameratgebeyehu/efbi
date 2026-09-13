@@ -464,6 +464,36 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 @media (max-width: 900px) { .safety-readiness-grid, .incident-priority-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .incident-record { grid-template-columns: 1fr; } }
 @media (max-width: 620px) { .safety-readiness-grid, .incident-priority-grid, .incident-steps ol { grid-template-columns: 1fr; } .safety-blocker { align-items: start; flex-direction: column; } }
 
+.launch-readiness-workspace { min-width: 0; }
+.launch-readiness-state { display: flex; justify-content: space-between; gap: 24px; align-items: center; margin-bottom: 20px; padding: 17px 20px; color: #24513a; border: 1px solid #bcd9c7; background: #eff8f2; }
+.launch-readiness-state--blocked { color: #7e382f; border-color: #e1bcb5; background: #fff3f0; }
+.launch-readiness-state strong { color: inherit; }
+.launch-readiness-state p { margin: 5px 0 0; color: var(--muted); font-size: .73rem; line-height: 1.5; }
+.launch-readiness-state > span { flex: 0 0 auto; padding: 6px 9px; color: inherit; background: rgba(255,255,255,.7); font-size: .66rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
+.launch-inventory-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 30px; }
+.launch-inventory-card { min-width: 0; display: grid; gap: 8px; padding: 18px; border: 1px solid var(--line); background: #fff; }
+.launch-inventory-card small { color: var(--muted); font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.launch-inventory-card > strong { color: var(--deep); font-size: 2rem; }
+.launch-inventory-card p { margin: 0; color: var(--muted); font-size: .7rem; line-height: 1.55; }
+.launch-inventory-card > span { width: fit-content; margin-top: 4px; padding: 4px 7px; color: #66551e; background: #fff5d7; font-size: .62rem; font-weight: 850; text-transform: uppercase; }
+.launch-inventory-card--ready > span { color: var(--green); background: var(--green-soft); }
+.launch-inventory-card--blocked { border-color: #e1c2bc; }
+.launch-inventory-card--blocked > span { color: #933f34; background: #fff0ed; }
+.launch-findings { display: grid; gap: 14px; margin: 0 0 36px; padding: 22px; border: 1px solid #e1c2bc; background: #fff8f6; }
+.launch-findings h2 { margin: 5px 0 0; color: var(--deep); font-size: 1.45rem; }
+.launch-findings article { padding: 16px; border: 1px solid #ead3ce; background: #fff; }
+.launch-findings article > strong { color: #863c32; font-size: .78rem; }
+.launch-findings ul { display: grid; gap: 7px; margin: 12px 0 0; padding-left: 20px; color: #5d514d; font-size: .72rem; line-height: 1.5; overflow-wrap: anywhere; }
+.manual-launch-checks { margin: 36px 0; }
+.manual-launch-checks > div:last-child { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.manual-launch-checks article { min-width: 0; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 13px; align-items: start; padding: 17px; border: 1px solid var(--line); background: #fff; }
+.manual-launch-checks article > span { display: grid; width: 30px; height: 30px; place-items: center; color: var(--green); background: var(--soft); font-size: .67rem; font-weight: 850; }
+.manual-launch-checks h3 { margin: 0 0 6px; color: var(--deep); font-size: .84rem; }
+.manual-launch-checks article p { margin: 0; color: var(--muted); font-size: .7rem; line-height: 1.55; }
+.manual-launch-checks article small { padding: 4px 7px; color: #7b5d12; background: #fff4d7; font-size: .62rem; font-weight: 850; text-transform: uppercase; }
+@media (max-width: 900px) { .launch-inventory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .manual-launch-checks > div:last-child { grid-template-columns: 1fr; } }
+@media (max-width: 620px) { .launch-readiness-state { align-items: flex-start; flex-direction: column; } .launch-inventory-grid { grid-template-columns: 1fr; } .manual-launch-checks article { grid-template-columns: 34px minmax(0, 1fr); } .manual-launch-checks article small { grid-column: 2; width: fit-content; } }
+
 .activation-workspace { min-width: 0; }
 .activation-grid { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(340px, 1fr) minmax(270px, .72fr); gap: 18px; align-items: start; }
 .activation-form, .activation-checks, .activation-action { min-width: 0; padding: 24px; border: 1px solid var(--line); background: #fff; }

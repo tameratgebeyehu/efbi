@@ -88,6 +88,8 @@ Phase 26C exit check complete: an isolated synthetic learner completed both supp
 
 Exit check: there are no critical accessibility, security, content, or account-flow failures.
 
+Phase 27A development checkpoint complete: Admin Studio now includes a protected, read-only Launch readiness workspace. It inventories public programs and articles, active courses and referenced lessons, validates active course-version-release links, flags likely placeholder text, counts unfinished private drafts separately, and keeps device, accessibility, failure, account, Firebase, and security checks visibly open for human evidence.
+
 ## Phase 28 — controlled internet launch
 
 1. Deploy the tested build to development Hosting with enrollment still closed.

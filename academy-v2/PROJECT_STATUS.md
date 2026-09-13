@@ -619,6 +619,22 @@ The Phase 26 exit check is complete:
 
 Phase 26 is complete in the development codebase. Phase 27 launch content, quality, browser/device checks, and controlled security review are next. Phase 25's external safeguarding and privacy gates still remain before public enrollment.
 
+## Phase 27A — launch content readiness inventory
+
+The first launch-quality checkpoint is implemented in the development codebase:
+
+1. Admin Studio has a separate administrator-only **Launch readiness** workspace.
+2. The workspace reads the real public-program, public-article, active-course, course-version, course-release, and lesson-release records without modifying them.
+3. It validates every active course pointer against its immutable course version, matching course release, declared lesson count, and every referenced lesson release.
+4. It reports likely placeholder markers in the exact active or public records that need human review.
+5. Private drafts are counted separately and are never treated as launch content.
+6. The page keeps responsive/device, keyboard/screen-reader, slow/interrupted use, account-flow, Firebase-operations, and final-security checks visibly open because software cannot honestly sign them off by itself.
+7. Automated success is clearly separated from permission to deploy or open enrollment.
+8. The dashboard is responsive, and Admin Studio lint and production build pass.
+9. No Firestore rules, database content, application build, Admin Studio, or Hosting target was deployed.
+
+Phase 27 remains in progress. Real launch content entry and correction, manual browser/device/accessibility tests, failure and recovery exercises, Firebase operational review, and the final controlled security check remain.
+
 
 ## Recovery commands
 
