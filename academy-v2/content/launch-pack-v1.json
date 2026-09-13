@@ -51,9 +51,9 @@
   "courses": [
     {
       "courseId": "ai-foundations",
-      "title": "AI Foundations for Ethiopia",
-      "summary": "Understand AI, ask better questions, use it responsibly, and build one small local solution.",
-      "description": "A beginner-friendly introduction to artificial intelligence for Ethiopian learners. Short written lessons, practical checks, and one guided project help learners move from curiosity to responsible action.",
+      "title": "AI for Ethiopia",
+      "summary": "Start with AI basics and learn practical, responsible ways students and teachers can use it.",
+      "description": "A beginner-friendly course for Ethiopian students and educators. The first four modules include EFBI videos, complete written lessons, and practice questions. Modules 5–12 will be added only when their learning material is ready and reviewed.",
       "category": "artificial-intelligence",
       "level": "beginner",
       "language": "English",
@@ -62,14 +62,44 @@
   ],
   "lessons": [
     {
-      "lessonId": "understanding-ai",
+      "lessonId": "welcome-to-ai-for-ethiopia",
       "courseId": "ai-foundations",
       "order": 1,
-      "title": "Understanding artificial intelligence",
-      "summary": "Learn what AI is, where it appears in daily life, and where its limits begin.",
+      "title": "Welcome to AI for Ethiopia",
+      "summary": "Meet the course, understand how to study each module, and begin with clear expectations.",
       "durationMinutes": 10,
-      "videoYoutubeId": "",
-      "bodyMarkdown": "## What is artificial intelligence?\n\nArtificial intelligence is technology that learns patterns from examples. It can use those patterns to predict, classify, recommend, or create something new. It does not understand the world in the same way a person does.\n\n## Where do we meet AI?\n\nYou may already use AI when a phone suggests the next word, a map estimates travel time, an email service filters spam, or an app recommends a video. Ethiopian students can also use it to explore an idea, organize information, or test an early solution.\n\n## Why can AI be wrong?\n\nAI can repeat mistakes or bias from its data. It may invent a confident answer when it lacks reliable information. Check important claims with trusted sources, and never enter passwords, identity documents, health details, or another person's private information.\n\n## Keep a person responsible\n\nTreat AI as a tool, not the final decision-maker. You bring the goal, local context, judgment, and responsibility.",
+      "videoYoutubeId": "Bh2XmeaZsBc",
+      "bodyMarkdown": "## Welcome\n\nAI for Ethiopia is an introduction to artificial intelligence for students, teachers, and curious beginners. You do not need programming experience to begin.\n\n## How each module works\n\nWatch the EFBI video, read the lesson, and complete the short practice check. The written lesson contains the main ideas, so you can continue when video access is slow or unavailable.\n\n## What is ready now\n\nThe first four modules introduce the course, explain AI, show practical student uses, and explore lesson-planning support for teachers. Modules 5–12 are still being produced and will not appear as finished lessons until EFBI reviews them.\n\n## Learn with care\n\nAsk questions, test ideas, and check important information. Never place passwords, identity documents, private school records, or another person's personal information into an AI tool.",
+      "questions": [
+        {
+          "prompt": "What should you do if the lesson video is unavailable?",
+          "options": ["Use the complete written lesson", "Share your password to unlock it", "Mark the lesson complete without learning"],
+          "correctOption": 0,
+          "explanation": "Every module keeps its main learning in the written lesson so video problems do not stop progress."
+        },
+        {
+          "prompt": "Which statement about Modules 5–12 is correct?",
+          "options": ["They are already finished", "They will appear after EFBI produces and reviews them", "Learners must create them"],
+          "correctOption": 1,
+          "explanation": "Future modules should not be presented as complete before their material has been produced and reviewed."
+        },
+        {
+          "prompt": "Which information should never be entered into an ordinary AI learning prompt?",
+          "options": ["A general study topic", "A preferred answer format", "A private password or identity document"],
+          "correctOption": 2,
+          "explanation": "Passwords and identity documents are private and unnecessary for ordinary learning."
+        }
+      ]
+    },
+    {
+      "lessonId": "what-is-ai",
+      "courseId": "ai-foundations",
+      "order": 2,
+      "title": "What is artificial intelligence?",
+      "summary": "Understand AI in simple language, recognize familiar examples, and learn why its answers can be wrong.",
+      "durationMinutes": 25,
+      "videoYoutubeId": "h7D-j8S1upg",
+      "bodyMarkdown": "## A simple definition\n\nArtificial intelligence is technology that learns patterns from examples. It can use those patterns to predict, classify, recommend, or create something new. It does not understand the world in the same way a person does.\n\n## AI in daily life\n\nYou may already use AI when a phone suggests the next word, a map estimates travel time, an email service filters spam, or an app recommends a video. AI can also help a learner organize ideas or practice a subject.\n\n## Why AI can be wrong\n\nAn AI system learns from data created or collected by people. Missing examples, old assumptions, and errors in that data can affect its output. Some tools can also invent a confident answer when they do not have reliable information.\n\n## Keep a person responsible\n\nTreat AI as a tool, not the final decision-maker. You bring the goal, Ethiopian context, judgment, and responsibility. Check important claims with trusted sources before using or sharing them.",
       "questions": [
         {
           "prompt": "Which description of artificial intelligence is most accurate?",
@@ -78,106 +108,76 @@
           "explanation": "AI systems learn patterns from data and use them to produce outputs."
         },
         {
+          "prompt": "Which is a familiar example of AI in daily life?",
+          "options": ["A phone suggesting the next word", "A paper notebook", "A chair without electronics"],
+          "correctOption": 0,
+          "explanation": "Word suggestions are based on patterns a system learned from language examples."
+        },
+        {
           "prompt": "Why should an important AI answer be checked?",
           "options": ["AI can sound confident while being wrong", "Every AI answer is written by a teacher", "Checking makes the internet faster"],
           "correctOption": 0,
           "explanation": "Confidence is not proof, so important claims need reliable evidence."
-        },
-        {
-          "prompt": "Which information should stay out of an AI prompt?",
-          "options": ["A general project topic", "A requested answer format", "A private password or identity number"],
-          "correctOption": 2,
-          "explanation": "Passwords and identity numbers are private and unnecessary for ordinary learning."
         }
       ]
     },
     {
-      "lessonId": "prompting-with-purpose",
+      "lessonId": "ai-for-ethiopian-students",
       "courseId": "ai-foundations",
-      "order": 2,
-      "title": "Prompting with purpose",
-      "summary": "Ask clearer questions, improve weak answers, and check the result before using it.",
-      "durationMinutes": 15,
-      "videoYoutubeId": "",
-      "bodyMarkdown": "## A prompt is an instruction\n\nA prompt is the message you give an AI tool. Useful prompts state the task, include only context that changes the answer, and describe the form of a good response. Clear language works better than unnecessary technical words.\n\n## Use task, context, and format\n\nStart with what you want the tool to do: explain, compare, plan, rewrite, or create. Add the learner level or situation, then ask for a format such as three steps or five practice questions.\n\nInstead of saying Help me study, try: Create five short photosynthesis questions for a Grade 10 learner. Put the answers after the questions.\n\n## Improve one thing at a time\n\nThe first answer can be a draft. Say what is missing: use simpler language, give an Ethiopian example, or shorten this to 100 words. Small changes make improvement easier to judge.\n\n## Check before using\n\nA better prompt can still produce a wrong answer. Verify names, dates, statistics, quotations, and safety advice with a reliable source. Keep private information out of every prompt.",
+      "order": 3,
+      "title": "How students in Ethiopia can use AI",
+      "summary": "Use AI to study and create while protecting privacy, checking answers, and keeping your work honest.",
+      "durationMinutes": 30,
+      "videoYoutubeId": "1fqpgrk1rAg",
+      "bodyMarkdown": "## Use AI as a learning partner\n\nA student can ask for a simpler explanation, create practice questions, compare two ideas, plan a study session, or get feedback on a draft. AI should help you think and practice, not replace your learning.\n\n## Give clear instructions\n\nState the task, add only useful context, and describe the answer format. Instead of saying Help me study, try: Create five short photosynthesis questions for a Grade 10 learner. Put the answers after the questions.\n\n## Check the result\n\nA clear prompt can still produce a wrong answer. Verify names, dates, statistics, quotations, scholarship requirements, and safety advice with a reliable source. Ask a teacher or qualified person when the decision matters.\n\n## Protect privacy and academic honesty\n\nDo not share passwords, identity numbers, school records, health details, or private information about another person. Follow your school's rules, write in your own voice, and explain meaningful AI assistance when required.",
       "questions": [
         {
           "prompt": "Which prompt gives the clearest direction?",
-          "options": ["Help me study science", "Create five short photosynthesis questions for a Grade 10 learner", "Tell me everything you know"],
+          "options": ["Help me study", "Create five short photosynthesis questions for a Grade 10 learner", "Tell me everything"],
           "correctOption": 1,
           "explanation": "It gives a specific task, amount, subject, and learner context."
         },
         {
-          "prompt": "An AI answer includes a statistic without a reliable source. What should you do?",
-          "options": ["Use it because it sounds confident", "Verify the statistic before using it", "Hide the statistic in a longer paragraph"],
+          "prompt": "An AI answer gives a scholarship deadline without a source. What should you do?",
+          "options": ["Apply using that date immediately", "Verify it on the official scholarship website", "Share it with everyone first"],
           "correctOption": 1,
-          "explanation": "Important claims need evidence even when an answer sounds convincing."
+          "explanation": "Application requirements and deadlines should be checked against an official source."
         },
         {
-          "prompt": "The first AI answer is too broad. What is the best next step?",
-          "options": ["Add the missing context and desired format", "Repeat the same prompt without changes", "Add private details about another person"],
-          "correctOption": 0,
-          "explanation": "A focused revision helps the tool respond better without exposing private data."
+          "prompt": "What is a responsible way to use AI for an assignment?",
+          "options": ["Submit its answer without reading it", "Use it to practice, then write and check your own work", "Give it another student's private records"],
+          "correctOption": 1,
+          "explanation": "AI can support practice, but the learner remains responsible for understanding and checking the work."
         }
       ]
     },
     {
-      "lessonId": "responsible-use",
-      "courseId": "ai-foundations",
-      "order": 3,
-      "title": "Responsible use",
-      "summary": "Protect people, question unreliable results, and know when human judgment must lead.",
-      "durationMinutes": 20,
-      "videoYoutubeId": "",
-      "bodyMarkdown": "## Protect people and information\n\nBefore entering information into an AI tool, ask whether it belongs to you and whether it needs to be shared. Use a general description when a real identity is unnecessary.\n\n## Do not confuse confidence with truth\n\nAI can invent facts, sources, quotations, or instructions while sounding certain. Pause before sharing anything that could affect education, health, safety, money, or reputation. If you cannot confirm a claim, say it is uncertain or leave it out.\n\n## Look for unfair results\n\nAI learns from data created by people and institutions. Missing communities, old assumptions, and unequal examples can produce biased results. Ask who may be missing or harmed, test more than one example, and include local context.\n\n## Be honest about assistance\n\nFollow your school's rules and explain meaningful AI help in your work. A person should make the final decision when a result affects rights, safety, opportunities, or another person's future.",
-      "questions": [
-        {
-          "prompt": "What is the safest way to summarize a file containing student phone numbers?",
-          "options": ["Upload the complete file", "Remove personal details and use only what is needed", "Ask the AI to promise secrecy"],
-          "correctOption": 1,
-          "explanation": "Removing identifiers and sharing only necessary information reduces privacy risk."
-        },
-        {
-          "prompt": "What should you do with an AI health claim whose source cannot be found?",
-          "options": ["Share it quickly", "Treat it as correct after rewriting it", "Verify it with a trustworthy source or qualified person"],
-          "correctOption": 2,
-          "explanation": "Health and safety claims require reliable evidence and qualified human judgment."
-        },
-        {
-          "prompt": "Which decision should not be left to an AI system alone?",
-          "options": ["Suggesting poster titles", "Choosing which student receives a scholarship", "Turning a paragraph into bullet points"],
-          "correctOption": 1,
-          "explanation": "High-impact decisions about a person's opportunity require accountable human review."
-        }
-      ]
-    },
-    {
-      "lessonId": "build-an-ethiopian-solution",
+      "lessonId": "ai-for-teachers",
       "courseId": "ai-foundations",
       "order": 4,
-      "title": "Build an Ethiopian solution",
-      "summary": "Choose one local problem, build a small first solution, test it safely, and reflect.",
-      "durationMinutes": 45,
-      "videoYoutubeId": "",
-      "bodyMarkdown": "## Start with a real problem\n\nLook for a repeated difficulty in your school or community. Speak with people who experience it, ask permission before taking notes or photographs, and avoid collecting private information that the project does not need.\n\n## Make the first goal small\n\nWrite one sentence naming the people, the problem, and the improvement you want. Help one school science club share its weekly meeting topic is testable; solve every education problem is not.\n\n## Build the smallest useful version\n\nYour first version can be a paper sketch, spreadsheet, simple web page, or clickable prototype. Build only what is needed to test the central idea. If AI helps, check its output and keep notes about its contribution.\n\n## Test safely and improve\n\nAsk a few intended users to try the prototype. Let them choose whether to participate and use sample information instead of real personal records. Notice repeated confusion, make one useful improvement, and test again.\n\n## Show honest evidence\n\nDocument the problem, intended users, first version, feedback, change, remaining limitation, and any meaningful AI assistance. A small project with clear evidence is stronger than a large unsupported claim.",
+      "title": "How teachers can use AI for lesson planning",
+      "summary": "Draft useful lesson ideas with AI, then adapt every result for learners, curriculum, safety, and local context.",
+      "durationMinutes": 25,
+      "videoYoutubeId": "mkLStuyRPjM",
+      "bodyMarkdown": "## Start with the learning goal\n\nAI can help a teacher brainstorm examples, draft a lesson outline, create practice questions, or suggest different explanations. Begin with the subject, learner level, available time, and the skill students should demonstrate.\n\n## Treat the output as a draft\n\nCheck every fact, answer key, quotation, and instruction. Adapt language, examples, and activities for the Ethiopian curriculum, the classroom, learner needs, and available materials. Remove anything inaccurate or unsuitable.\n\n## Protect students\n\nDo not place student names, grades, disability information, behavior notes, phone numbers, or other private records into an AI tool. Use fictional or anonymous examples when testing an idea.\n\n## Keep teaching human\n\nA teacher remains responsible for the lesson and for decisions that affect a student. AI cannot know the full classroom context, notice every learner's needs, or replace professional judgment, care, and feedback.",
       "questions": [
         {
-          "prompt": "Which is the strongest first project goal?",
-          "options": ["Solve every education problem in Ethiopia", "Help one science club share its weekly meeting topic", "Build a large app before speaking with users"],
-          "correctOption": 1,
-          "explanation": "A focused group and testable problem make a practical first project."
-        },
-        {
-          "prompt": "What is the safest way to test an early student-information prototype?",
-          "options": ["Use sample records and ask participants for consent", "Copy real student records", "Collect every detail in case it becomes useful"],
+          "prompt": "What should a teacher provide first when requesting a lesson plan?",
+          "options": ["The learning goal and learner level", "Private student records", "A request to make every decision"],
           "correctOption": 0,
-          "explanation": "Sample data and informed participation avoid unnecessary privacy risk."
+          "explanation": "A clear learning goal and learner context help produce a more relevant first draft."
         },
         {
-          "prompt": "What belongs in an honest project reflection?",
-          "options": ["Only a final screenshot", "Problem, feedback, changes, limits, and meaningful AI help", "Future features presented as finished work"],
+          "prompt": "What should happen before an AI-generated answer key is used?",
+          "options": ["A teacher checks every answer", "Students receive it immediately", "The tool promises it is accurate"],
+          "correctOption": 0,
+          "explanation": "The teacher remains responsible for checking accuracy and suitability."
+        },
+        {
+          "prompt": "Which information is safest to use while testing a classroom activity?",
+          "options": ["Real student health records", "Fictional or anonymous examples", "A list of student phone numbers"],
           "correctOption": 1,
-          "explanation": "Clear evidence and honest limitations show what was actually learned and built."
+          "explanation": "Fictional or anonymous examples protect learners from unnecessary privacy risk."
         }
       ]
     }

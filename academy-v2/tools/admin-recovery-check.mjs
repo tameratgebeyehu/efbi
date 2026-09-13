@@ -188,6 +188,22 @@ try {
     const snapshot = await adminDb.collection(collectionName).get()
     assert.equal(snapshot.docs.every((document) => document.data().status === 'draft' && document.data().revision === 1), true, `${collectionName} must contain only revision-one drafts.`)
   }
+  const importedCourse = (await adminDb.doc('courseDrafts/ai-foundations').get()).data()
+  assert.equal(importedCourse?.title, 'AI for Ethiopia', 'The launch course title did not match the owner-supplied series.')
+  const importedLessons = (await adminDb.collection('lessonDrafts').get()).docs
+    .map((document) => document.data())
+    .sort((left, right) => left.order - right.order)
+  assert.deepEqual(
+    importedLessons.map((lesson) => [lesson.order, lesson.lessonId, lesson.videoYoutubeId]),
+    [
+      [1, 'welcome-to-ai-for-ethiopia', 'Bh2XmeaZsBc'],
+      [2, 'what-is-ai', 'h7D-j8S1upg'],
+      [3, 'ai-for-ethiopian-students', '1fqpgrk1rAg'],
+      [4, 'ai-for-teachers', 'mkLStuyRPjM'],
+    ],
+    'The launch lessons did not preserve the verified EFBI module order and YouTube IDs.',
+  )
+  assert.equal(importedLessons.reduce((total, lesson) => total + lesson.durationMinutes, 0), importedCourse?.estimatedMinutes, 'The course time must equal the four current modules.')
   for (const collectionName of ['publishedPrograms', 'publishedPosts', 'courseReleases', 'lessonReleases', 'activeCourses', 'publicCourseCatalog']) {
     assert.equal((await adminDb.collection(collectionName).get()).empty, true, `Draft import must not write ${collectionName}.`)
   }
@@ -195,7 +211,7 @@ try {
   await waitForPage(client, (state) => state.text.includes('Good morning, builder.'), 'Restored administrator session after draft import')
   await clickButton(client, 'Launch drafts')
   await waitForPage(client, (state) => state.text.includes('All drafts imported'), 'Idempotent launch draft state')
-  console.log('✓ launch pack imported exactly ten audited drafts without publishing or overwriting content')
+  console.log('✓ launch pack imported the four verified EFBI video modules as ten audited drafts without publishing or overwriting content')
 
   for (const [index, editor] of editors.entries()) {
     const sentinel = `Recovered ${editor.nav.toLowerCase()} text ${index + 1}`

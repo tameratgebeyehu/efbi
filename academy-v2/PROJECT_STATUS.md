@@ -742,21 +742,21 @@ Phase 27 remains in progress. Real launch content, real-device and assistive-tec
 
 The first reviewable content pack is implemented in the development codebase:
 
-1. `content/launch-pack-v1.json` contains the four owner-approved programs, one 90-minute AI Foundations course, four complete written lessons, twelve explained practice questions, and one founder article.
-2. The copy is concise and practical. It covers AI basics, prompting, responsible use, and a small local problem-solving project without making unsupported outcome claims.
-3. Video IDs are deliberately empty until the owner supplies EFBI-owned or otherwise approved videos with useful captions. Written lessons remain complete without YouTube.
+1. `content/launch-pack-v1.json` contains the four owner-approved programs, one 90-minute **AI for Ethiopia** course, four complete current modules, twelve explained practice questions, and one founder article.
+2. The copy is concise and practical. It welcomes learners, explains AI, shows responsible student uses, and introduces AI-assisted lesson planning for teachers without making unsupported outcome claims.
+3. The four owner-supplied EFBI YouTube videos are stored as clean verified IDs in their correct module order. Written lessons remain complete without YouTube, and Modules 5–12 remain unavailable until their material is produced and reviewed.
 4. Admin Studio has a protected **Launch drafts** workspace. It validates the pack with the same content models used by the normal editors.
 5. Import requires the exact `IMPORT LAUNCH DRAFTS` phrase and a review acknowledgement.
 6. Each missing item is created through the signed-in administrator and deployed Firestore rules as a private revision-one draft paired with its own immutable audit event.
 7. Existing IDs are skipped. An interrupted import can resume safely and cannot overwrite saved content.
 8. The importer has no publication, activation, enrollment, certificate, deletion, or role-management capability.
-9. The emulator browser journey created exactly 4 program drafts, 1 course draft, 4 lesson drafts, 1 article draft, and 10 audit events. It confirmed that all public release and catalog collections stayed empty.
+9. The emulator browser journey created exactly 4 program drafts, 1 course draft, 4 lesson drafts, 1 article draft, and 10 audit events. It verified the exact four EFBI video IDs, module order, and 90-minute total while every public release and catalog collection stayed empty.
 10. The same journey then passed all four editor recovery checks and the complete synthetic deletion flow.
 11. The full local gate remains green: 58 browser checks, 96 Firestore rule tests, the isolated learner account journey, both application lint and production builds, the preview security-header check, the 48-file source-security scan, and a zero-vulnerability production dependency audit.
 12. `LAUNCH_CONTENT_PACK.md` explains video review, safe import, owner review order, practice-only activation, and remaining human decisions.
 13. No development-cloud draft, release, public content, Hosting build, Firestore rules, or custom domain was deployed.
 
-Phase 27 remains in progress. The owner must import and review the drafts, approve or edit every lesson and answer, add only approved videos if desired, publish through the normal workspaces, and complete the remaining human and Console checks.
+Phase 27 remains in progress. The owner must import and review the drafts, watch each video beside its written lesson, approve or edit every answer, publish through the normal workspaces, and complete the remaining human and Console checks. Modules 5–12 can be added in a later reviewed pack.
 
 
 ## Recovery commands

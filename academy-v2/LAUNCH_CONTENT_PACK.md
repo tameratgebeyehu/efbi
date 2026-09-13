@@ -7,21 +7,28 @@ Updated: 2026-09-14
 `content/launch-pack-v1.json` is the first owner-review pack:
 
 - four programs: Artificial Intelligence, AI-Assisted App Development, Web Development, and Mobile App Development;
-- one beginner course: **AI Foundations for Ethiopia**;
-- four written lessons totaling 90 minutes;
+- one beginner course: **AI for Ethiopia**;
+- four current video-and-written modules totaling about 90 minutes;
 - twelve browser-only practice questions with explanations; and
 - one founder article: **Why EFBI Academy starts with building**.
 
-The language is short, practical, and written for learners. The course covers understanding AI, clearer prompting, responsible use, and one small Ethiopian problem-solving project.
+The language is short and practical. The current course welcomes learners, explains AI, shows responsible student uses, and introduces AI-assisted lesson planning for teachers. Modules 5–12 remain future work and are not represented as available lessons.
 
-## Video boundary
+## Owner-supplied EFBI videos
 
-Every lesson intentionally has an empty `videoYoutubeId`. No random or unreviewed YouTube video is treated as EFBI material.
+The owner supplied these public videos from the EFBI YouTube channel:
 
-Before adding a video, the owner must confirm:
+1. Module 1 — [Welcome to AI for Ethiopia](https://www.youtube.com/watch?v=Bh2XmeaZsBc) — `Bh2XmeaZsBc`
+2. Module 2 — [What is AI?](https://www.youtube.com/watch?v=h7D-j8S1upg) — `h7D-j8S1upg`
+3. Module 3 — [How to use AI as a student in Ethiopia](https://www.youtube.com/watch?v=1fqpgrk1rAg) — `1fqpgrk1rAg`
+4. Module 4 — [AI for teachers](https://www.youtube.com/watch?v=mkLStuyRPjM) — `mkLStuyRPjM`
+
+Only the clean eleven-character IDs are stored. Share-tracking and start-time parameters are excluded. Every module still has a complete written lesson for learners who cannot load YouTube.
+
+Before adding Modules 5–12, the owner must confirm:
 
 1. EFBI owns it or has permission to embed it;
-2. its lesson claims are accurate and age-appropriate;
+2. its claims are accurate and age-appropriate;
 3. spoken and visual content match the written lesson;
 4. captions are useful;
 5. the exact eleven-character YouTube ID is recorded; and
@@ -43,19 +50,19 @@ The importer cannot publish programs or articles, publish course or lesson relea
 
 1. Review and publish each Program through **Programs**.
 2. Review the course wording through **Courses**, mark it ready, and publish its immutable release.
-3. Review every lesson and answer through **Lessons**, add only approved videos, mark each ready, and publish.
+3. Watch each EFBI video alongside its written lesson, review every answer, mark each lesson ready, and publish.
 4. Review and publish the founder article through **Blog**.
 5. Use **Activation** to bind the exact course release and four lesson releases into a learning-only course version.
 6. Use **Launch readiness** to confirm the public records and release links.
 
-For the first launch, keep AI Foundations as `practice-only` unless EFBI has a qualified reviewer and deliberately approves the reviewed-project assessment route. Practice questions never issue a certificate.
+For the first launch, keep AI for Ethiopia as `practice-only` unless EFBI has a qualified reviewer and deliberately approves the reviewed-project assessment route. Practice questions never issue a certificate.
 
 ## Required human decisions
 
 The owner must still:
 
 - approve every sentence and answer;
-- decide whether the first course needs EFBI-produced videos before launch;
+- confirm that each supplied video matches its written lesson and has useful captions;
 - confirm that examples feel useful to Ethiopian learners;
 - correct anything that overpromises outcomes;
 - preview phone and desktop layouts; and
