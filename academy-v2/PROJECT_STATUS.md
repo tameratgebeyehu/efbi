@@ -686,6 +686,23 @@ The automated browser checkpoint is complete in the development codebase:
 
 Phase 27 remains in progress. Real launch content entry and correction, hands-on visual/device/accessibility checks, failure and recovery exercises, account journeys, Firebase operational review, and the final controlled security check remain.
 
+## Phase 27E — isolated account and failure recovery
+
+The automated account and media-failure checkpoint is complete in the development codebase:
+
+1. `npm run test:account-flow` starts only the local Firebase Authentication and Firestore emulators under the reserved `demo-efbi` project.
+2. The test opens enrollment in emulator-only data, creates a synthetic 16+ learner, writes the approved private profile, and confirms the unverified-account boundary.
+3. It reads and completes the emulator's local verification action, confirms that the protected account unlocks, and opens a protected lesson.
+4. It confirms exactly one `main` landmark on the protected lesson. Nested landmarks were removed from learning, submission, and transient loading views.
+5. A user-requested YouTube connection is deliberately blocked. The lesson now shows a clear failure message and retry control while the complete written lesson remains available.
+6. The same synthetic learner signs out, receives the privacy-safe password-reset response, and signs back in successfully.
+7. Synthetic Authentication and Firestore records, the temporary browser profile, the test server, and emulator processes are removed when the journey ends.
+8. Admin Studio now follows `VITE_USE_FIREBASE_EMULATORS=true`, skips App Check in emulator mode, and connects both Authentication and Firestore locally. This prevents local Studio testing from accidentally reaching production services.
+9. The reusable browser harness still passes all fifty-eight public-preview checks. All ninety-six Firestore authorization and lifecycle tests pass. Learner and Admin Studio lint and production builds pass.
+10. No Firebase rules, database content, application build, Admin Studio, or Hosting target was deployed.
+
+Phase 27 remains in progress. Manual interrupted-editor recovery, learner deletion through the complete UI, visual/touch/keyboard/screen-reader checks, production Firebase operational review, real launch-content approval, and the final controlled security review remain open.
+
 
 ## Recovery commands
 
@@ -698,6 +715,7 @@ git log --oneline --decorate -5
 npm install
 npm run dev
 npm run test:browser
+npm run test:account-flow
 ```
 
 The first complete v2 checkpoint is commit `80a911d` on branch `codex/academy-v2`.

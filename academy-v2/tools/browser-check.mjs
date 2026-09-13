@@ -8,8 +8,8 @@ import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
-const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds))
+export const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+export const pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds))
 
 const routes = [
   { path: '/', text: 'Learn. Build.' },
@@ -39,7 +39,7 @@ const viewports = [
   { name: 'desktop', width: 1440, height: 1000 },
 ]
 
-function findBrowser() {
+export function findBrowser() {
   const candidates = [
     process.env.EFBI_BROWSER_PATH,
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -58,7 +58,7 @@ function findBrowser() {
   return browser
 }
 
-async function reservePort() {
+export async function reservePort() {
   const server = net.createServer()
   await new Promise((resolve, reject) => server.once('error', reject).listen(0, '127.0.0.1', resolve))
   const address = server.address()
@@ -67,7 +67,7 @@ async function reservePort() {
   return port
 }
 
-async function waitForServer(url, processReference, output) {
+export async function waitForServer(url, processReference, output) {
   for (let attempt = 0; attempt < 120; attempt += 1) {
     if (processReference.exitCode !== null) throw new Error(`Preview server stopped early.\n${output()}`)
     try {
@@ -79,7 +79,7 @@ async function waitForServer(url, processReference, output) {
   throw new Error(`Preview server did not start.\n${output()}`)
 }
 
-async function waitForDevtools(profileDirectory, processReference) {
+export async function waitForDevtools(profileDirectory, processReference) {
   const file = path.join(profileDirectory, 'DevToolsActivePort')
   for (let attempt = 0; attempt < 200; attempt += 1) {
     if (processReference.exitCode !== null) throw new Error('The browser stopped before its test connection was ready.')
@@ -92,7 +92,7 @@ async function waitForDevtools(profileDirectory, processReference) {
   throw new Error('The browser test connection did not become ready.')
 }
 
-async function waitForExit(processReference, milliseconds = 3000) {
+export async function waitForExit(processReference, milliseconds = 3000) {
   if (!processReference || processReference.exitCode !== null) return
   await Promise.race([
     new Promise((resolve) => processReference.once('exit', resolve)),
@@ -100,7 +100,7 @@ async function waitForExit(processReference, milliseconds = 3000) {
   ])
 }
 
-class DevtoolsClient {
+export class DevtoolsClient {
   constructor(socket) {
     this.socket = socket
     this.nextId = 1
@@ -149,14 +149,14 @@ class DevtoolsClient {
   close() { this.socket.close() }
 }
 
-async function openPage(devtoolsPort) {
+export async function openPage(devtoolsPort) {
   const response = await fetch(`http://127.0.0.1:${devtoolsPort}/json/new?about:blank`, { method: 'PUT' })
   assert.equal(response.ok, true, 'Chrome did not create a test page.')
   const target = await response.json()
   return DevtoolsClient.connect(target.webSocketDebuggerUrl)
 }
 
-async function waitForReact(client) {
+export async function waitForReact(client) {
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const state = await client.evaluate(`({ ready: document.readyState, text: document.body?.innerText?.trim().length ?? 0, main: Boolean(document.querySelector('#main-content')) })`)
     if (state.ready === 'complete' && state.text > 80 && state.main) { await pause(150); return }
@@ -241,12 +241,13 @@ async function inspectMobileMenu(client, baseUrl) {
   assert.deepEqual(result, { exists: true, expanded: 'true', open: true }, 'phone menu must open and announce its state')
 }
 
-let previewProcess
-let browserProcess
-let client
-let profileDirectory
+export async function runBrowserCheck() {
+  let previewProcess
+  let browserProcess
+  let client
+  let profileDirectory
 
-try {
+  try {
   const port = await reservePort()
   const baseUrl = `http://127.0.0.1:${port}`
   let previewOutput = ''
@@ -270,16 +271,21 @@ try {
   await inspectMobileMenu(client, baseUrl)
   console.log('✓ phone navigation opens and reports its state')
   console.log(`✓ ${routes.length * viewports.length + 1} browser checks passed`)
-} finally {
-  if (client) {
-    try { await client.send('Browser.close') } catch { /* Browser may already be closed. */ }
-    client.close()
+  } finally {
+    if (client) {
+      try { await client.send('Browser.close') } catch { /* Browser may already be closed. */ }
+      client.close()
+    }
+    await waitForExit(browserProcess)
+    if (browserProcess && browserProcess.exitCode === null) { browserProcess.kill(); await waitForExit(browserProcess, 1000) }
+    if (previewProcess && previewProcess.exitCode === null) { previewProcess.kill(); await waitForExit(previewProcess, 1000) }
+    if (profileDirectory) {
+      try { await rm(profileDirectory, { recursive: true, force: true, maxRetries: 4, retryDelay: 150 }) }
+      catch (error) { console.warn(`Browser checks finished, but temporary profile cleanup was delayed: ${error.message}`) }
+    }
   }
-  await waitForExit(browserProcess)
-  if (browserProcess && browserProcess.exitCode === null) { browserProcess.kill(); await waitForExit(browserProcess, 1000) }
-  if (previewProcess && previewProcess.exitCode === null) { previewProcess.kill(); await waitForExit(previewProcess, 1000) }
-  if (profileDirectory) {
-    try { await rm(profileDirectory, { recursive: true, force: true, maxRetries: 4, retryDelay: 150 }) }
-    catch (error) { console.warn(`Browser checks finished, but temporary profile cleanup was delayed: ${error.message}`) }
-  }
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await runBrowserCheck()
 }

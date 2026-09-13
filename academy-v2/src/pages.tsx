@@ -155,7 +155,7 @@ export function ProgramDetailPage() {
   const { slug } = useParams()
   const { programs, loading } = useProgramCatalog()
   const program = programs.find((item) => item.slug === slug)
-  if (!program && loading) return <main className="section shell" aria-live="polite">Loading program…</main>
+  if (!program && loading) return <section className="section shell" aria-live="polite">Loading program…</section>
   if (!program) return <Navigate to="/programs" replace />
   return (
     <>
@@ -335,7 +335,7 @@ export function BlogArticlePage() {
     return () => { active = false }
   }, [postId])
   if (!postId) return <Navigate to="/blog" replace />
-  if (!resolved || resolved.id !== postId) return <main className="section shell" aria-live="polite">Loading article…</main>
+  if (!resolved || resolved.id !== postId) return <section className="section shell" aria-live="polite">Loading article…</section>
   if (!resolved.post) return <Navigate to="/blog" replace />
   const post = resolved.post
   return <>

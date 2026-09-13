@@ -4,7 +4,7 @@ Updated: 2026-09-13
 
 ## Current position
 
-Phases 0–24 are complete in the development codebase. Phase 25 remains gated by external decisions, and Phase 26 is in progress. Phase 21's external privacy and safeguarding review remains a launch gate.
+Phases 0–24 and Phase 26 are complete in the development codebase. Phase 25 remains gated by external decisions, and Phase 27 is in progress. Phase 21's external privacy and safeguarding review remains a launch gate.
 
 The rebuilt source code is backed up on GitHub, but `www.efbi.site` still serves the maintenance site. The rebuilt academy has a separate development Hosting target at `https://efbi-academy-dev-doha.web.app`; it must not be published there with open enrollment until the preview safety switch exists.
 
@@ -95,6 +95,8 @@ Phase 27B development checkpoint complete: the learner site no longer presents u
 Phase 27C development checkpoint complete: every newly activated course now receives an atomic, read-only public catalog record. Signed-out visitors can discover activated courses and inspect a safe lesson outline before creating an account, while lesson text, videos, questions, answers, learner data, administrator identity, and internal audit references remain private. The Launch readiness workspace flags active versions that predate or do not match this public record. All ninety-six Firestore authorization and lifecycle tests pass, along with both application lint and production builds. Existing active versions created before this checkpoint require a newly reviewed version and activation before launch. Nothing was deployed.
 
 Phase 27D automated checkpoint complete: a dependency-free local Chromium launch check exercises nineteen public, closed-account, protected-redirect, and not-found routes at phone, tablet, and desktop widths. All fifty-eight checks pass. The suite validates rendered landmarks, headings, labels, image alternatives, duplicate IDs, horizontal overflow, browser errors, the skip link, closed-preview form boundaries, and the phone navigation state. It found and corrected a skipped heading level on the Programs page. Learner lint and the exact read-only production build pass. Human visual, keyboard, screen-reader, touch, and real-device confirmation remains required. Nothing was deployed.
+
+Phase 27E automated checkpoint complete: an emulator-only Chromium journey creates a synthetic 16+ learner through the real enrollment form, confirms the private profile and unverified boundary, completes the local email-verification action, opens a protected lesson, checks its landmark structure, deliberately blocks YouTube, preserves the written lesson with a retry path, signs out, requests a privacy-safe password reset, and signs back in. It removes all synthetic records and temporary processes afterward. Admin Studio now honors the same emulator switch as the learner app, preventing local Studio tests from reaching production services. All fifty-eight public browser checks, all ninety-six Firestore tests, and both applications' lint and production builds pass. Manual editor power-loss recovery, learner deletion UI, human accessibility/device checks, production Firebase review, real content approval, and final security review remain open. Nothing was deployed.
 
 ## Phase 28 — controlled internet launch
 

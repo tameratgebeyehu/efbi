@@ -31,9 +31,9 @@ export type AdminFirebase = {
 
 let servicesPromise: Promise<AdminFirebase | null> | null = null
 
-async function configureAppCheck(app: FirebaseApp) {
+async function configureAppCheck(app: FirebaseApp, useEmulators: boolean) {
   const siteKey = import.meta.env.VITE_FIREBASE_APP_CHECK_SITE_KEY?.trim()
-  if (!siteKey || typeof window === 'undefined') return
+  if (!siteKey || useEmulators || typeof window === 'undefined') return
 
   const globalState = globalThis as typeof globalThis & {
     FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string
@@ -64,13 +64,23 @@ export function getAdminFirebase() {
     const appSdk = await import('firebase/app')
     const existing = appSdk.getApps().find((candidate) => candidate.name === 'efbi-admin-studio')
     const app = existing ?? appSdk.initializeApp(firebaseConfig, 'efbi-admin-studio')
-    await configureAppCheck(app)
+    const useEmulators = import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true'
+    await configureAppCheck(app, useEmulators)
 
     const authSdk = await import('firebase/auth')
     const auth = authSdk.getAuth(app)
+    const globalState = globalThis as typeof globalThis & Record<string, boolean | undefined>
+    if (useEmulators && !globalState.__efbiAdminAuthEmulatorConnected) {
+      authSdk.connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
+      globalState.__efbiAdminAuthEmulatorConnected = true
+    }
     await authSdk.setPersistence(auth, authSdk.browserSessionPersistence)
     const firestoreSdk = await import('firebase/firestore')
     const db = firestoreSdk.getFirestore(app)
+    if (useEmulators && !globalState.__efbiAdminFirestoreEmulatorConnected) {
+      firestoreSdk.connectFirestoreEmulator(db, '127.0.0.1', 8080)
+      globalState.__efbiAdminFirestoreEmulatorConnected = true
+    }
     return { app, auth, authSdk, db, firestoreSdk }
   })()
 

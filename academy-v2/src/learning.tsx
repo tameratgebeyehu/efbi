@@ -57,13 +57,33 @@ function progressErrorMessage(error: unknown) {
 
 function LessonVideo({ lesson }: { lesson: CourseLesson }) {
   const [lowBandwidth, setLowBandwidth] = useState(readLowBandwidthPreference)
-  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [videoState, setVideoState] = useState<'idle' | 'loading' | 'ready' | 'failed'>('idle')
   const videoId = lesson.videoYoutubeId ?? getYouTubeVideoId(lesson.slug)
+
+  useEffect(() => {
+    if (videoState !== 'loading') return undefined
+    let active = true
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 12000)
+    void fetch('https://www.youtube-nocookie.com/generate_204', {
+      mode: 'no-cors',
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then(() => { if (active) setVideoState('ready') })
+      .catch(() => { if (active) setVideoState('failed') })
+      .finally(() => window.clearTimeout(timeout))
+    return () => {
+      active = false
+      controller.abort()
+      window.clearTimeout(timeout)
+    }
+  }, [videoState])
 
   function updateLowBandwidth(enabled: boolean) {
     saveLowBandwidthPreference(enabled)
     setLowBandwidth(enabled)
-    if (enabled) setVideoLoaded(false)
+    if (enabled) setVideoState('idle')
   }
 
   return (
@@ -73,7 +93,7 @@ function LessonVideo({ lesson }: { lesson: CourseLesson }) {
         <span>{lesson.duration}</span>
       </div>
 
-      {videoId && videoLoaded && !lowBandwidth ? (
+      {videoId && videoState === 'ready' && !lowBandwidth ? (
         <div className="video-frame">
           <iframe
             src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0`}
@@ -82,13 +102,14 @@ function LessonVideo({ lesson }: { lesson: CourseLesson }) {
             referrerPolicy="strict-origin-when-cross-origin"
             allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
+            onError={() => setVideoState('failed')}
           />
         </div>
       ) : (
         <div className="video-gate">
           <span className="video-gate-icon"><Icon name="play" /></span>
           {videoId ? (
-            lowBandwidth ? <><h3>Video is off in low-bandwidth mode.</h3><p>The full written lesson is available below and uses much less data.</p></> : <><h3>Load the video when you are ready.</h3><p>YouTube will receive connection data only after you choose to load it.</p><button className="button button--light" type="button" onClick={() => setVideoLoaded(true)}>Load video <Icon name="play" /></button></>
+            lowBandwidth ? <><h3>Video is off in low-bandwidth mode.</h3><p>The full written lesson is available below and uses much less data.</p></> : videoState === 'failed' ? <><h3>The video could not load.</h3><p>Check your connection and retry, or continue with the complete written lesson below.</p><button className="button button--light" type="button" onClick={() => setVideoState('loading')}>Retry video <Icon name="play" /></button></> : videoState === 'loading' ? <><h3>Connecting to YouTube…</h3><p role="status">This may take a moment on a slower connection. The written lesson is ready below.</p></> : <><h3>Load the video when you are ready.</h3><p>YouTube will receive connection data only after you choose to load it.</p><button className="button button--light" type="button" onClick={() => setVideoState('loading')}>Load video <Icon name="play" /></button></>
           ) : (
             <><h3>The video is being prepared.</h3><p>You can complete the full written lesson below today.</p></>
           )}
@@ -310,7 +331,7 @@ export function LearningPage() {
       </div>
 
       <div className="section shell lesson-layout">
-        <main className="lesson-main">
+        <div className="lesson-main">
           <header className="lesson-heading">
             <div className="lesson-number">{lesson.number}</div>
             <div>
@@ -372,7 +393,7 @@ export function LearningPage() {
               <><div><p className="eyebrow-label">{lessonComplete ? 'Learning complete' : 'Final lesson'}</p><h2>{lessonComplete ? `You completed all ${publishedLessons.length} lessons.` : 'Finish the final lesson.'}</h2><p>{lessonComplete ? catalog.assessmentType === 'project' ? 'Your lesson progress is saved. Your reviewed final project is the next step.' : 'Your lesson progress is saved. This learning-only course has no certificate.' : 'Mark this lesson complete after you finish its activities and reflection.'}</p></div>{lessonComplete && catalog.assessmentType === 'project' ? <Link className="button button--primary" to={`/submit/${courseId}`}>Open project workspace</Link> : <Link className="button button--outline" to={`/courses/${courseId}`}>{lessonComplete ? 'Return to course' : 'View course outline'}</Link>}</>
             )}
           </div>
-        </main>
+        </div>
 
         <aside className="lesson-sidebar" aria-label="Course lessons">
           <div className="lesson-sidebar-heading"><p className="eyebrow-label">Course outline</p><h2>{publishedLessons.length} practical lessons</h2></div>

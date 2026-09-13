@@ -13,6 +13,8 @@ Open `http://127.0.0.1:5174/`.
 
 The app reads the ignored Firebase environment files in `../academy-v2`. Access requires both a verified Firebase email and the `admin: true` custom claim. Authentication is saved only for the browser session.
 
+When `VITE_USE_FIREBASE_EMULATORS=true`, Admin Studio connects Authentication to `127.0.0.1:9099` and Firestore to `127.0.0.1:8080`, and it does not initialize App Check. Set the flag to `false` only when you intentionally need the configured live Firebase project.
+
 ## Checks
 
 ```powershell

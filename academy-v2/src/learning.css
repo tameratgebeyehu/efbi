@@ -26,7 +26,7 @@
 .lesson-media-header { min-height: 80px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 17px 22px; border-bottom: 1px solid var(--line); }
 .lesson-media-header h3 { margin: 4px 0 0; color: var(--green-dark); font-size: 1.2rem; }
 .lesson-media-header > span { color: var(--muted); font-size: .8rem; font-weight: 700; }
-.video-frame { aspect-ratio: 16 / 9; background: #061e15; }
+.video-frame { position: relative; aspect-ratio: 16 / 9; background: #061e15; }
 .video-frame iframe { width: 100%; height: 100%; display: block; border: 0; }
 .video-gate { min-height: 390px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 42px 28px; color: #fff; background: radial-gradient(circle at 72% 22%, rgba(232,182,56,.2), transparent 28%), linear-gradient(145deg, #073d2a, #061e15); text-align: center; }
 .video-gate-icon { width: 70px; height: 70px; display: grid; place-items: center; margin-bottom: 25px; color: var(--gold); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; background: rgba(255,255,255,.06); }
