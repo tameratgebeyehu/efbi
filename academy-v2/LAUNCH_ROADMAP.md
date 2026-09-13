@@ -94,6 +94,8 @@ Phase 27B development checkpoint complete: the learner site no longer presents u
 
 Phase 27C development checkpoint complete: every newly activated course now receives an atomic, read-only public catalog record. Signed-out visitors can discover activated courses and inspect a safe lesson outline before creating an account, while lesson text, videos, questions, answers, learner data, administrator identity, and internal audit references remain private. The Launch readiness workspace flags active versions that predate or do not match this public record. All ninety-six Firestore authorization and lifecycle tests pass, along with both application lint and production builds. Existing active versions created before this checkpoint require a newly reviewed version and activation before launch. Nothing was deployed.
 
+Phase 27D automated checkpoint complete: a dependency-free local Chromium launch check exercises nineteen public, closed-account, protected-redirect, and not-found routes at phone, tablet, and desktop widths. All fifty-eight checks pass. The suite validates rendered landmarks, headings, labels, image alternatives, duplicate IDs, horizontal overflow, browser errors, the skip link, closed-preview form boundaries, and the phone navigation state. It found and corrected a skipped heading level on the Programs page. Learner lint and the exact read-only production build pass. Human visual, keyboard, screen-reader, touch, and real-device confirmation remains required. Nothing was deployed.
+
 ## Phase 28 — controlled internet launch
 
 1. Deploy the tested build to development Hosting with enrollment still closed.

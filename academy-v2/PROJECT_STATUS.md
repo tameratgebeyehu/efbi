@@ -635,6 +635,8 @@ The first launch-quality checkpoint is implemented in the development codebase:
 
 Phase 27 remains in progress. Real launch content entry and correction, manual browser/device/accessibility tests, failure and recovery exercises, Firebase operational review, and the final controlled security check remain.
 
+## Phase 27B — public content cleanup
+
 The second launch-quality checkpoint is also implemented in the development codebase:
 
 1. The fallback program catalog now contains only the four owner-approved areas: Artificial Intelligence, AI-Assisted App Development, Web Development, and Mobile App Development.
@@ -667,6 +669,23 @@ The third launch-quality checkpoint is implemented in the development codebase:
 
 Phase 27 remains in progress. Real launch content entry and correction, manual browser/device/accessibility tests, failure and recovery exercises, Firebase operational review, and the final controlled security check remain.
 
+## Phase 27D — browser and responsive quality
+
+The automated browser checkpoint is complete in the development codebase:
+
+1. `npm run test:browser` starts an isolated read-only preview and an installed Chrome or Edge browser without adding a browser-testing dependency.
+2. It renders nineteen public, closed-account, protected-redirect, redirect, and not-found routes at 375px phone, 768px tablet, and 1440px desktop widths.
+3. It checks the main landmark, one page-level heading, heading order, document title, accessible names, image alternatives, unique IDs, skip-link target and focus, horizontal overflow, and browser-reported errors.
+4. It confirms that Join, Sign in, Account, and protected-route destinations expose no forms in read-only preview; owner setup redirects home; protected learning and submission routes fail closed to Sign in; missing articles return to the Blog; and the phone menu opens with the correct announced state.
+5. The first run found a real skipped heading level on the Programs page. An accessible **Available programs** section heading now connects the page title to its program-card headings.
+6. All fifty-seven route-and-viewport cases pass, and the phone-navigation interaction makes fifty-eight passing browser checks in total.
+7. Learner lint and the exact read-only production build pass. The existing large-chunk build notice remains a performance warning, not a build failure.
+8. This automation cannot approve visual polish, real touch behavior, keyboard order, screen-reader speech, or physical devices. Those human checks remain open.
+9. The Windows visual-control helper was unavailable because its sandbox could not apply local access controls. This is an environment limitation and does not count as visual approval or a website failure.
+10. No Firebase rules, database content, application build, or Hosting target was deployed.
+
+Phase 27 remains in progress. Real launch content entry and correction, hands-on visual/device/accessibility checks, failure and recovery exercises, account journeys, Firebase operational review, and the final controlled security check remain.
+
 
 ## Recovery commands
 
@@ -678,6 +697,7 @@ git status
 git log --oneline --decorate -5
 npm install
 npm run dev
+npm run test:browser
 ```
 
 The first complete v2 checkpoint is commit `80a911d` on branch `codex/academy-v2`.

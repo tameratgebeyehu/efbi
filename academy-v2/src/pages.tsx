@@ -145,7 +145,7 @@ export function ProgramsPage() {
       <PageHero eyebrow="Programs" title="Choose what you want to learn." description="Pick a path, practice the skills, and build something you can show." className="page-hero--programs">
         <div className="page-stat"><strong>{programs.length}</strong><span>learning paths</span></div>
       </PageHero>
-      <section className="section shell"><div className="program-grid">{programs.map((program) => <ProgramCard key={program.slug} program={program} />)}</div>{programs.length === 0 && <div className="catalog-empty"><Icon name="book" /><div><strong>No programs are published yet.</strong><p>EFBI will list each program only after its information has been reviewed and published.</p></div></div>}</section>
+      <section className="section shell" aria-labelledby="program-list-heading"><h2 className="sr-only" id="program-list-heading">Available programs</h2><div className="program-grid">{programs.map((program) => <ProgramCard key={program.slug} program={program} />)}</div>{programs.length === 0 && <div className="catalog-empty"><Icon name="book" /><div><strong>No programs are published yet.</strong><p>EFBI will list each program only after its information has been reviewed and published.</p></div></div>}</section>
       <section className="outcome-band"><div className="shell"><SectionHeading light eyebrow="What you will do" title="Learn it. Practice it. Build it." /><div className="outcome-grid"><article><strong>01</strong><h3>Understand</h3><p>Learn the idea in clear language.</p></article><article><strong>02</strong><h3>Practice</h3><p>Use it in guided exercises.</p></article><article><strong>03</strong><h3>Build</h3><p>Create work you can share.</p></article></div></div></section>
     </>
   )
