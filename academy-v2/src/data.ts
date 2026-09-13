@@ -51,6 +51,8 @@ export const programs: Program[] = [
     accent: 'red',
   },
 ]
+
+// End of the four owner-approved program fallbacks.
 export const values = [
   { number: '01', title: 'Innovation', description: 'We try new ideas and use technology to solve real problems.' },
   { number: '02', title: 'Leadership', description: 'We take responsibility and use our skills to help others.' },
