@@ -6,6 +6,24 @@
 .account-form input:focus { outline: 3px solid rgba(8, 115, 66, .13); border-color: var(--green); }
 .account-form label small { color: var(--muted); font-size: .82rem; font-weight: 500; }
 .account-form .button { width: 100%; margin-top: 4px; }
+.age-band-picker { display: grid; gap: 10px; margin: 30px 0 0; padding: 0; border: 0; }
+.age-band-picker legend { margin-bottom: 12px; color: var(--green-dark); font-weight: 850; }
+.age-band-picker label { display: grid; grid-template-columns: 20px 1fr; gap: 12px; align-items: start; padding: 16px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+.age-band-picker label:has(input:checked) { border-color: var(--green); box-shadow: inset 3px 0 var(--green); background: var(--green-soft); }
+.age-band-picker input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--green); }
+.age-band-picker span, .registration-check span { display: grid; gap: 4px; }
+.age-band-picker strong, .registration-check strong { color: var(--green-dark); }
+.age-band-picker small, .registration-check small { color: var(--muted); font-size: .82rem; line-height: 1.5; }
+.age-path-message { display: grid; grid-template-columns: 32px 1fr; gap: 14px; margin-top: 22px; padding: 20px; border: 1px solid #d9c98d; background: #fffaf0; }
+.age-path-message > svg { width: 25px; color: var(--green); }
+.age-path-message strong { color: var(--green-dark); }
+.age-path-message p { margin: 7px 0 11px; color: var(--muted); font-size: .9rem; line-height: 1.6; }
+.age-path-message a { color: var(--green); font-weight: 800; }
+.registration-privacy { padding: 18px; border: 1px solid #bdd8c6; background: var(--green-soft); }
+.registration-privacy strong { color: var(--green-dark); }
+.registration-privacy p { margin: 9px 0 0; color: #4d6256; font-size: .86rem; line-height: 1.6; }
+.account-form label.registration-check { grid-template-columns: 20px 1fr; gap: 11px; padding: 14px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+.account-form label.registration-check > input { width: 18px; height: 18px; min-height: 0; margin: 2px 0 0; padding: 0; accent-color: var(--green); }
 .text-button { justify-self: center; padding: 4px; border: 0; color: var(--green); background: transparent; font: inherit; font-weight: 700; cursor: pointer; }
 .account-switch { margin-top: 28px; color: var(--muted); text-align: center; }
 .account-switch a { color: var(--green); font-weight: 800; }

@@ -92,14 +92,14 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
       </aside>
       <main className="workspace">
         {section === 'enrollment' && role === 'admin' ? <EnrollmentManager user={user} /> : section === 'programs' && role === 'admin' ? <ProgramManager user={user} /> : section === 'blog' && role === 'admin' ? <BlogManager user={user} /> : section === 'courses' && role === 'admin' ? <CourseManager user={user} /> : section === 'lessons' && role === 'admin' ? <LessonManager user={user} /> : section === 'activation' && role === 'admin' ? <CourseActivationManager user={user} /> : section === 'reviews' ? <ReviewManager user={user} role={role} /> : section === 'certificates' && role === 'admin' ? <CertificateManager user={user} /> : section === 'audit' && role === 'admin' ? <AuditLog /> : section === 'retention' && role === 'admin' ? <RetentionManager user={user} /> : <>
-        <header><div><p className="eyebrow">Phase 24 workspace</p><h1>Good morning, builder.</h1><p>Content, review, privacy, and launch controls are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
+        <header><div><p className="eyebrow">Phase 25 workspace</p><h1>Good morning, builder.</h1><p>Content, review, privacy, and launch controls are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
         <section className="safety-grid" aria-label="Security status">
           <article><small>Network</small><strong>Localhost only</strong><p>Not published with the student website.</p></article>
           <article><small>Session</small><strong>Browser session</strong><p>No shared admin password or permanent browser role.</p></article>
           <article><small>Privacy</small><strong>Controlled deletion</strong><p>Learner requests are restricted, reviewed, and permanently recorded.</p></article>
         </section>
         <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Control areas</p><h2>Built in secure stages</h2></div><p>Only tested workflows are enabled. Later operations remain visibly locked.</p></div><div className="area-grid">{areas.map((area) => <article key={area.number}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>{area.status}</small></article>)}</div></section>
-        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Content operations complete</h2><p>Programs, courses, lessons, and articles now use private previews, reviewed versioned publishing, and an auditable history.</p></div><span className="next-step__badge">Phase 24 complete</span></section>
+        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Age-safe registration in progress</h2><p>Self-registration is limited to ages 16+, while the reviewed guardian-supported route for ages 12–15 remains closed.</p></div><span className="next-step__badge">Phase 25 active</span></section>
         </>}
       </main>
     </div>

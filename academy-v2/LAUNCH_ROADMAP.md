@@ -4,7 +4,7 @@ Updated: 2026-09-13
 
 ## Current position
 
-Phases 0–24 are complete in the development codebase. Phase 21's external privacy and safeguarding review remains a launch gate.
+Phases 0–24 are complete in the development codebase. Phase 25 is in progress. Phase 21's external privacy and safeguarding review remains a launch gate.
 
 The rebuilt source code is backed up on GitHub, but `www.efbi.site` still serves the maintenance site. The rebuilt academy has a separate development Hosting target at `https://efbi-academy-dev-doha.web.app`; it must not be published there with open enrollment until the preview safety switch exists.
 
@@ -45,15 +45,17 @@ Development exit check met. Launch content entry and final quality review remain
 
 ## Phase 25 — age, privacy, and learner support
 
-1. Block accounts for children under 12.
-2. Allow 16+ self-registration only when enrollment is explicitly opened.
+1. Block accounts for children under 12. **Complete in the development codebase.**
+2. Allow 16+ self-registration only when enrollment is explicitly opened. **Complete in the development codebase.**
 3. Build the reviewed parent/guardian route for learners aged 12–15 before their account is created.
-4. Add the short privacy notice and separate versioned choices; do not collect a full birth date by default.
+4. Add the short privacy notice and separate versioned choices; do not collect a full birth date by default. **Technical first version complete; final external review remains required.**
 5. Add clear routes for access, correction, deletion, consent withdrawal, and safety concerns.
 6. Name the first safeguarding contact and choose a trusted backup before ages 12–15 enroll.
 7. Finish the incident-response checklist and review the DPIA near launch.
 
 Exit check: every age path is understandable, tested, and collects only the minimum information.
+
+Phase 25A development checkpoint complete: the three age paths are explicit, only the 16+ path can create a profile, acknowledgements are versioned, and verified sign-ins without an approved learner profile cannot write learning records. The 12–15 route remains deliberately closed.
 
 ## Phase 26 — assessments and certificates across courses
 

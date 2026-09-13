@@ -535,6 +535,23 @@ The fourth and final content-operations checkpoint is also implemented in the de
 
 Phase 24 implementation is complete in the development codebase. Real launch content entry, browser/device QA, privacy gates, and controlled deployment remain later roadmap phases.
 
+## Phase 25A — age-gated learner registration
+
+The first age, privacy, and learner-support checkpoint is implemented in the development codebase:
+
+1. The Join page asks for an age band instead of a full date of birth.
+2. Visitors under 12 cannot create an account and are directed to public learning content.
+3. Learners aged 12–15 cannot create an account until the separately reviewed guardian-supported route exists.
+4. Learners aged 16 or older see the account form only when enrollment is open and must complete separate privacy and learner-safety acknowledgements.
+5. New learner profiles store the approved age band and exact acknowledgement versions and times, without birth dates, phone numbers, addresses, identity documents, health details, or payment data.
+6. A verified Firebase sign-in without an approved learner profile cannot enter protected learning routes or write progress, submissions, certificate requests, or deletion requests.
+7. Incomplete authentication accounts are removed when profile creation fails.
+8. Admin Studio clearly shows that self-registration is 16+ only and requires an explicit confirmation before enrollment is opened.
+9. Learner and Admin Studio lint and production builds pass. All ninety-four Firestore authorization and lifecycle tests pass.
+10. No Firestore rules, application build, database content, Admin Studio, or Hosting target was deployed.
+
+Phase 25 remains in progress. The 12–15 guardian route, learner privacy/support routes, safeguarding contacts, incident procedure, final DPIA review, external review, and controlled launch gates remain open.
+
 
 ## Recovery commands
 

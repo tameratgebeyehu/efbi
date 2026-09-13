@@ -80,7 +80,7 @@ export default function EnrollmentManager({ user }: { user: User }) {
       {notice && <p className={'notice notice--' + notice.kind} role={notice.kind === 'error' ? 'alert' : 'status'}>{notice.message}</p>}
       <section className="enrollment-state">
         <div><small>Server state</small><strong>{loading ? 'Loading' : settings.open ? 'Open' : 'Closed'}</strong><p>{settings.open ? 'A separately approved enrollment-enabled website build may create learner profiles.' : 'Learner profile creation is denied by Firestore rules.'}</p></div>
-        <dl><div><dt>Minimum age</dt><dd>{settings.minAge}+</dd></div><div><dt>Last change</dt><dd>{readableDate(settings.updatedAt)}</dd></div><div><dt>Changed by UID</dt><dd>{settings.updatedBy || 'No administrator change recorded'}</dd></div></dl>
+        <dl><div><dt>Intended minimum age</dt><dd>{settings.minAge}+</dd></div><div><dt>Self-registration</dt><dd>16+ only</dd></div><div><dt>Last change</dt><dd>{readableDate(settings.updatedAt)}</dd></div><div><dt>Changed by UID</dt><dd>{settings.updatedBy || 'No administrator change recorded'}</dd></div></dl>
       </section>
       {settings.open ? (
         <form className="enrollment-action enrollment-action--close" onSubmit={(event) => void changeEnrollment(event, false)}>
@@ -91,7 +91,7 @@ export default function EnrollmentManager({ user }: { user: User }) {
         <form className="enrollment-action" onSubmit={(event) => void changeEnrollment(event, true)}>
           <div><p className="eyebrow">Protected action</p><h2>Open enrollment</h2><p>Do this only after the age, privacy, support, and production checks are complete. Opening this switch alone does not publish an enrollment-enabled website.</p></div>
           <label>Type OPEN ENROLLMENT<input value={phrase} onChange={(event) => { setPhrase(event.target.value); setConfirmed(false) }} autoComplete="off" /></label>
-          <label className="confirm-check"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>I checked the launch gate and understand that this changes the server authorization boundary.</span></label>
+          <label className="confirm-check"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>I checked the launch gate, understand that self-registration is limited to ages 16+, and confirm that ages 12–15 remain closed until their guardian route is approved.</span></label>
           <button className="primary-action" disabled={busy || loading || phrase !== 'OPEN ENROLLMENT' || !confirmed}>{busy ? 'Opening…' : 'Open enrollment'}</button>
         </form>
       )}

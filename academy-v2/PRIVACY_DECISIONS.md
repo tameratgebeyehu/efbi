@@ -33,6 +33,15 @@ Primary source: https://justice.gov.et/wp-content/uploads/2025/04/seasiisia-seus
 8. Public certificate-name consent for a learner aged 12–15 requires a separately reviewed guardian authorization path.
 9. Public enrollment remains off until the authorization evidence, withdrawal process, security rules, tests, and safeguarding procedure are approved.
 
+## Phase 25A implementation record
+
+- The Join page now uses the approved age bands without collecting a date of birth.
+- Under-12 and 12–15 visitors cannot reach an account form.
+- The 16+ form requires separate, versioned privacy and learner-safety acknowledgements.
+- The learner profile contains only the approved minimum registration fields.
+- Firestore rejects under-16 profiles, incomplete acknowledgements, unexpected personal fields, and learning writes from verified sign-ins that have no approved profile.
+- These are technical safeguards, not external legal or safeguarding approval. The 12–15 route and public enrollment remain closed.
+
 ## Decisions still required
 
 - Named safeguarding contact and backup contact

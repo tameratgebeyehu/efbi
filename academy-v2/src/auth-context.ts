@@ -1,10 +1,13 @@
 import { createContext, useContext } from 'react'
 import type { User } from 'firebase/auth'
+import type { SelfRegistration } from './registration-policy'
 
 export type AuthContextValue = {
   user: User | null
   loading: boolean
-  signUp: (name: string, email: string, password: string) => Promise<void>
+  profileReady: boolean
+  profileLoading: boolean
+  signUp: (registration: SelfRegistration) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   sendPasswordReset: (email: string) => Promise<void>

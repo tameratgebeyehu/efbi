@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import type { User } from 'firebase/auth'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { DeletionRequestPanel } from './deletion-request'
@@ -6,6 +6,7 @@ import { Icon } from './icons'
 import { firebaseConfigured, getFirebaseFirestore, getFirebaseServices } from './lib/firebase'
 import { AuthContext, useAuth, type AuthContextValue } from './auth-context'
 import { accountAccessEnabled, learnerEnrollmentEnabled, ownerSetupEnabled, publicPreview } from './site-mode'
+import { learnerSafetyVersion, privacyNoticeVersion, selfRegistrationAgeBand, validSelfRegistration, type RegistrationAgeBand } from './registration-policy'
 import './auth.css'
 
 const ownerEmail = 'efbi.academy@gmail.com'
@@ -32,6 +33,9 @@ async function requireOpenEnrollment() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(accountAccessEnabled && firebaseConfigured)
+  const [profileReady, setProfileReady] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const profileCheck = useRef(0)
 
   useEffect(() => {
     let active = true
@@ -43,8 +47,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((services) => {
         if (!active || !services) return
         unsubscribe = services.authSdk.onAuthStateChanged(services.auth, (nextUser) => {
+          const check = ++profileCheck.current
           setUser(nextUser)
           setLoading(false)
+          setProfileReady(false)
+          if (!nextUser) { setProfileLoading(false); return }
+          setProfileLoading(true)
+          void getFirebaseFirestore().then(async (firestore) => {
+            if (!firestore) return false
+            const snapshot = await firestore.firestoreSdk.getDoc(firestore.firestoreSdk.doc(firestore.db, 'users', nextUser.uid))
+            if (!snapshot.exists()) return false
+            const profile = snapshot.data()
+            return profile.status === 'active'
+              && profile.ageBand === selfRegistrationAgeBand
+              && profile.privacyNoticeVersion === privacyNoticeVersion
+              && profile.learnerSafetyVersion === learnerSafetyVersion
+          }).then((ready) => {
+            if (active && check === profileCheck.current) { setProfileReady(ready); setProfileLoading(false) }
+          }).catch(() => {
+            if (active && check === profileCheck.current) { setProfileReady(false); setProfileLoading(false) }
+          })
         })
       })
       .catch((error: unknown) => {
@@ -61,21 +83,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(() => ({
     user,
     loading,
-    async signUp(name, email, password) {
+    profileReady,
+    profileLoading,
+    async signUp(registration) {
+      if (!validSelfRegistration(registration)) throw new Error('Self-registration is available only to learners aged 16 or older who complete both acknowledgements.')
       await requireOpenEnrollment()
       const { auth, authSdk } = await requireFirebase()
-      const credential = await authSdk.createUserWithEmailAndPassword(auth, email.trim(), password)
-      const displayName = name.trim()
-      await authSdk.updateProfile(credential.user, { displayName })
-      const firestore = await getFirebaseFirestore()
-      if (!firestore) throw new Error('Student profiles are not connected yet.')
-      const { db, firestoreSdk } = firestore
-      await firestoreSdk.setDoc(firestoreSdk.doc(db, 'users', credential.user.uid), {
-        displayName,
-        status: 'active',
-        createdAt: firestoreSdk.serverTimestamp(),
-        updatedAt: firestoreSdk.serverTimestamp(),
-      })
+      const credential = await authSdk.createUserWithEmailAndPassword(auth, registration.email.trim(), registration.password)
+      const displayName = registration.displayName.trim()
+      try {
+        await authSdk.updateProfile(credential.user, { displayName })
+        const firestore = await getFirebaseFirestore()
+        if (!firestore) throw new Error('Student profiles are not connected yet.')
+        const { db, firestoreSdk } = firestore
+        await firestoreSdk.setDoc(firestoreSdk.doc(db, 'users', credential.user.uid), {
+          displayName,
+          status: 'active',
+          ageBand: selfRegistrationAgeBand,
+          privacyNoticeVersion,
+          privacyAcceptedAt: firestoreSdk.serverTimestamp(),
+          learnerSafetyVersion,
+          learnerSafetyAcceptedAt: firestoreSdk.serverTimestamp(),
+          createdAt: firestoreSdk.serverTimestamp(),
+          updatedAt: firestoreSdk.serverTimestamp(),
+        })
+      } catch {
+        await credential.user.delete().catch(() => undefined)
+        throw new Error('The learner profile could not be completed. The unfinished sign-in was removed; please try again.')
+      }
+      profileCheck.current += 1
+      setProfileReady(true)
+      setProfileLoading(false)
       await authSdk.sendEmailVerification(credential.user)
     },
     async signIn(email, password) {
@@ -95,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!auth.currentUser) throw new Error('Sign in before requesting another verification email.')
       await authSdk.sendEmailVerification(auth.currentUser)
     },
-  }), [loading, user])
+  }), [loading, profileLoading, profileReady, user])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
@@ -157,6 +195,9 @@ export function JoinPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [ageBand, setAgeBand] = useState<RegistrationAgeBand>('')
+  const [privacyAccepted, setPrivacyAccepted] = useState(false)
+  const [learnerSafetyAccepted, setLearnerSafetyAccepted] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -167,11 +208,13 @@ export function JoinPage() {
     event.preventDefault()
     setError('')
     if (name.trim().length < 2) return setError('Enter the name you want shown in your learner account.')
+    if (ageBand !== selfRegistrationAgeBand) return setError('Self-registration is available only to learners aged 16 or older.')
     if (password.length < 10) return setError('Use a password with at least 10 characters.')
     if (password !== confirmPassword) return setError('The passwords do not match.')
+    if (!privacyAccepted || !learnerSafetyAccepted) return setError('Read and confirm both statements before creating an account.')
     setSubmitting(true)
     try {
-      await signUp(name, email, password)
+      await signUp({ displayName: name, email, password, ageBand, privacyAccepted, learnerSafetyAccepted })
       navigate('/account', { replace: true })
     } catch (cause) {
       setError(friendlyAuthError(cause))
@@ -184,16 +227,22 @@ export function JoinPage() {
     <AccessFrame>
       <p className="eyebrow-label">Join EFBI</p>
       <h1>Create your learner account.</h1>
-      <p>Save your progress and continue lessons from any device.</p>
+      <p>Start with your age group. EFBI does not ask for your birth date.</p>
       {!firebaseConfigured ? <SetupMessage /> : (
-        <form className="account-form" onSubmit={submit}>
+        <><fieldset className="age-band-picker"><legend>Which age group are you in?</legend><label><input type="radio" name="age-band" value="under-12" checked={ageBand === 'under-12'} onChange={() => setAgeBand('under-12')} /><span><strong>Under 12</strong><small>EFBI accounts are not available for this age group.</small></span></label><label><input type="radio" name="age-band" value="12-15" checked={ageBand === '12-15'} onChange={() => setAgeBand('12-15')} /><span><strong>12–15</strong><small>A parent, guardian, or tutor route is required.</small></span></label><label><input type="radio" name="age-band" value="16-plus" checked={ageBand === '16-plus'} onChange={() => setAgeBand('16-plus')} /><span><strong>16 or older</strong><small>You may create your own account when enrollment is open.</small></span></label></fieldset>
+        {ageBand === 'under-12' && <div className="age-path-message"><Icon name="shield" /><div><strong>You cannot create an EFBI account yet.</strong><p>You can still explore public programs and courses with a parent, guardian, or teacher. EFBI will not collect registration information from you.</p><Link to="/courses">Explore courses</Link></div></div>}
+        {ageBand === '12-15' && <div className="age-path-message"><Icon name="shield" /><div><strong>The guardian-supported route is not open yet.</strong><p>EFBI is keeping this age group closed until the authorization and safeguarding process is reviewed. A parent or guardian may contact EFBI, but should not send identity documents or sensitive information.</p><Link to="/contact">Contact EFBI</Link></div></div>}
+        {ageBand === '16-plus' && <form className="account-form" onSubmit={submit}>
           <label>Full name<input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} required /></label>
           <label>Email<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
           <label>Password<input type="password" autoComplete="new-password" minLength={10} value={password} onChange={(event) => setPassword(event.target.value)} required /><small>Use at least 10 characters.</small></label>
           <label>Confirm password<input type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required /></label>
+          <div className="registration-privacy"><strong>Before you create the account</strong><p>EFBI saves your name, email, course progress, and work you choose to submit. It does not ask for your birth date, phone number, home address, government ID, health details, or payment information.</p><p>Your learning data is used to provide the course, review work, issue a requested certificate, protect the service, and answer privacy requests. EFBI does not sell learner data.</p></div>
+          <label className="registration-check"><input type="checkbox" checked={privacyAccepted} onChange={(event) => setPrivacyAccepted(event.target.checked)} /><span><strong>I read this privacy summary.</strong><small>I understand what EFBI saves and why it is needed for my learner account.</small></span></label>
+          <label className="registration-check"><input type="checkbox" checked={learnerSafetyAccepted} onChange={(event) => setLearnerSafetyAccepted(event.target.checked)} /><span><strong>I will protect private information.</strong><small>I will not put passwords, identity numbers, private school records, health details, or another person’s information in projects or links.</small></span></label>
           {error && <p className="form-status form-status--error" role="alert">{error}</p>}
-          <button className="button button--primary" disabled={submitting}>{submitting ? 'Creating account…' : 'Create account'}</button>
-        </form>
+          <button className="button button--primary" disabled={submitting || !privacyAccepted || !learnerSafetyAccepted}>{submitting ? 'Creating account…' : 'Create account'}</button>
+        </form>}</>
       )}
       <p className="account-switch">Already have an account? <Link to="/signin">Sign in</Link></p>
     </AccessFrame>
@@ -298,15 +347,17 @@ export function OwnerSetupPage() {
 }
 
 export function AccountPage() {
-  const { user, loading, resendVerification, signOut } = useAuth()
+  const { user, loading, profileLoading, profileReady, resendVerification, signOut } = useAuth()
   const [status, setStatus] = useState('')
 
   if (!accountAccessEnabled) return <ClosedAccess kind="account" />
   if (!firebaseConfigured) return <AccessFrame><p className="eyebrow-label">Student account</p><h1>Account setup is almost ready.</h1><SetupMessage /><Link className="button button--outline" to="/courses">Back to courses</Link></AccessFrame>
   if (loading) return <AccessFrame><p className="eyebrow-label">Student account</p><h1>Loading your account…</h1></AccessFrame>
   if (!user) return <Navigate to="/signin" replace />
+  if (profileLoading) return <AccessFrame><p className="eyebrow-label">Student account</p><h1>Checking your learner profile…</h1></AccessFrame>
 
   const verified = user.emailVerified
+  if (verified && !profileReady) return <AccessFrame><p className="eyebrow-label">Account incomplete</p><h1>This sign-in has no active learner profile.</h1><div className="account-message account-message--warning"><Icon name="shield" /><div><strong>Learning access remains closed.</strong><p>An EFBI learner profile must be created through the approved age and enrollment route. Contact EFBI if you believe this is an error.</p></div></div><div className="access-actions"><Link className="button button--primary" to="/contact">Contact EFBI</Link><button className="button button--outline" onClick={() => void signOut()}>Sign out</button></div></AccessFrame>
   return (
     <AccessFrame>
       <p className="eyebrow-label">Student account</p>
@@ -327,20 +378,23 @@ export function AccountPage() {
 }
 
 export function RequireVerifiedUser({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth()
+  const { user, loading, profileLoading, profileReady } = useAuth()
   const location = useLocation()
   if (!accountAccessEnabled) return <Navigate to="/signin" replace />
   if (!firebaseConfigured) return <Navigate to="/signin" replace />
   if (loading) return <AccessFrame><p className="eyebrow-label">Student access</p><h1>Checking your account…</h1></AccessFrame>
   if (!user) return <Navigate to={`/signin?returnTo=${encodeURIComponent(location.pathname)}`} replace />
   if (!user.emailVerified) return <Navigate to="/account" replace />
+  if (profileLoading) return <AccessFrame><p className="eyebrow-label">Student access</p><h1>Checking your learner profile…</h1></AccessFrame>
+  if (!profileReady) return <Navigate to="/account" replace />
   return children
 }
 
 export function CourseAccessButton({ courseId = 'ai-foundations' }: { courseId?: string }) {
-  const { user } = useAuth()
+  const { user, profileReady } = useAuth()
   const coursePath = `/learn/${courseId}`
-  if (user?.emailVerified) return <Link className="button button--primary" to={coursePath}>Continue course</Link>
+  if (user?.emailVerified && profileReady) return <Link className="button button--primary" to={coursePath}>Continue course</Link>
+  if (user?.emailVerified) return <Link className="button button--primary" to="/account">Check account</Link>
   if (!learnerEnrollmentEnabled) return <Link className="button button--primary" to="/join">Enrollment updates</Link>
   const destination = user ? '/account' : `/signin?returnTo=${encodeURIComponent(coursePath)}`
   return <Link className="button button--primary" to={destination}>Start course</Link>

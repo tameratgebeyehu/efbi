@@ -49,6 +49,19 @@ beforeEach(async () => {
       updatedAt: new Date('2026-09-12T00:00:00Z'),
       updatedBy: 'system-seed',
     })
+    for (const uid of ['alice', 'bob']) {
+      await setDoc(doc(context.firestore(), 'users', uid), {
+        displayName: uid === 'alice' ? 'Alice Learner' : 'Bob Learner',
+        status: 'active',
+        ageBand: '16-plus',
+        privacyNoticeVersion: 'efbi-self-registration-privacy-v1',
+        privacyAcceptedAt: new Date('2026-09-12T00:00:00Z'),
+        learnerSafetyVersion: 'efbi-learner-safety-v1',
+        learnerSafetyAcceptedAt: new Date('2026-09-12T00:00:00Z'),
+        createdAt: new Date('2026-09-12T00:00:00Z'),
+        updatedAt: new Date('2026-09-12T00:00:00Z'),
+      })
+    }
     const draftContent = {
       title: 'AI Foundations — Second Edition',
       summary: 'A practical introduction to useful and responsible artificial intelligence.',
@@ -219,6 +232,21 @@ function addLessonCreation(batch, db, lessonId, overrides = {}) {
     revision: 1,
   }))
   return auditId
+}
+
+function selfRegistrationProfile(overrides = {}) {
+  return {
+    displayName: 'New Learner',
+    status: 'active',
+    ageBand: '16-plus',
+    privacyNoticeVersion: 'efbi-self-registration-privacy-v1',
+    privacyAcceptedAt: serverTimestamp(),
+    learnerSafetyVersion: 'efbi-learner-safety-v1',
+    learnerSafetyAcceptedAt: serverTimestamp(),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ...overrides,
+  }
 }
 
 function programContent(overrides = {}) {
@@ -463,20 +491,30 @@ test('enrollment settings are public, admin-controlled, and fail closed', async 
 })
 
 
-test('a learner can create a minimal profile for their own uid', async () => {
-  const db = environment.authenticatedContext('alice', { email_verified: false }).firestore()
-  await assertSucceeds(setDoc(doc(db, 'users', 'alice'), {
-    displayName: 'Alice Learner',
-    status: 'active',
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  }))
-  await assertFails(setDoc(doc(db, 'users', 'alice'), {
-    displayName: 'Alice Learner',
-    email: 'alice@example.com',
-    status: 'active',
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+test('only a 16-plus learner with both versioned acknowledgements can create a profile', async () => {
+  const db = environment.authenticatedContext('new-learner', { email_verified: false }).firestore()
+  const reference = doc(db, 'users', 'new-learner')
+  await assertSucceeds(setDoc(reference, selfRegistrationProfile()))
+
+  for (const [uid, overrides] of [
+    ['under-12', { ageBand: 'under-12' }],
+    ['age-12-15', { ageBand: '12-15' }],
+    ['missing-privacy', { privacyNoticeVersion: '' }],
+    ['missing-safety', { learnerSafetyAcceptedAt: null }],
+    ['birth-date', { birthDate: '2008-01-01' }],
+    ['profile-email', { email: 'learner@example.com' }],
+  ]) {
+    const rejected = environment.authenticatedContext(uid, { email_verified: false }).firestore()
+    await assertFails(setDoc(doc(rejected, 'users', uid), selfRegistrationProfile(overrides)))
+  }
+})
+
+test('a verified sign-in without a learner profile cannot create learning records', async () => {
+  const orphan = verifiedUser('orphan-account')
+  await assertFails(setDoc(doc(orphan, 'users', 'orphan-account', 'progress', 'ai-foundations'), progressRecord()))
+  await assertFails(setDoc(doc(orphan, 'deletionRequests', 'orphan-account'), {
+    requestId: 'orphan-account', learnerUid: 'orphan-account', scope: 'account-and-learning-data', policyVersion: 'efbi-retention-v1',
+    status: 'requested', requestedAt: serverTimestamp(), updatedAt: serverTimestamp(), completedAt: null, certificateEvidenceRetained: false,
   }))
 })
 

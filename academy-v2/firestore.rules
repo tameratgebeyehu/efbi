@@ -44,11 +44,24 @@ service cloud.firestore {
     }
 
     function validProfile(data) {
-      return data.keys().hasOnly(['displayName', 'status', 'createdAt', 'updatedAt'])
+      return data.keys().hasOnly([
+          'displayName', 'status', 'ageBand', 'privacyNoticeVersion',
+          'privacyAcceptedAt', 'learnerSafetyVersion',
+          'learnerSafetyAcceptedAt', 'createdAt', 'updatedAt'
+        ])
         && validDisplayName(data.displayName)
         && data.status == 'active'
+        && data.ageBand == '16-plus'
+        && data.privacyNoticeVersion == 'efbi-self-registration-privacy-v1'
+        && data.privacyAcceptedAt == request.time
+        && data.learnerSafetyVersion == 'efbi-learner-safety-v1'
+        && data.learnerSafetyAcceptedAt == request.time
         && data.createdAt == request.time
         && data.updatedAt == request.time;
+    }
+
+    function hasLearnerProfile(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid));
     }
 
     function validLegacyProgress(data, courseId) {
@@ -2650,6 +2663,7 @@ service cloud.firestore {
       allow get: if owns(uid) || admin();
       allow list: if admin();
       allow create: if owns(uid)
+        && hasLearnerProfile(uid)
         && validDeletionRequest(request.resource.data, uid)
         && request.resource.data.status == 'requested'
         && request.resource.data.requestedAt == request.time
@@ -2824,6 +2838,7 @@ service cloud.firestore {
         allow get, list: if owns(uid) || admin();
         allow create: if owns(uid)
           && verified()
+          && hasLearnerProfile(uid)
           && learnerWritesAllowed(uid)
           && validProgress(request.resource.data, courseId)
           && (request.resource.data.keys().hasAll(['versionId'])
@@ -2836,6 +2851,7 @@ service cloud.firestore {
           );
         allow update: if owns(uid)
           && verified()
+          && hasLearnerProfile(uid)
           && learnerWritesAllowed(uid)
           && validProgress(request.resource.data, courseId)
           && (request.resource.data.keys().hasAll(['versionId'])
@@ -2862,6 +2878,7 @@ service cloud.firestore {
           || deletionInventoryReadable(uid);
         allow create: if owns(uid)
           && verified()
+          && hasLearnerProfile(uid)
           && learnerWritesAllowed(uid)
           && completedSubmissionCourse(uid, request.resource.data)
           && validSubmissionDraft(request.resource.data, submissionId, uid)
@@ -2875,6 +2892,7 @@ service cloud.firestore {
           );
         allow update: if owns(uid)
           && verified()
+          && hasLearnerProfile(uid)
           && learnerWritesAllowed(uid)
           && (
             request.resource.data.keys().hasAll(['versionId'])
@@ -2915,6 +2933,7 @@ service cloud.firestore {
         allow list: if owns(uid) || admin();
         allow create: if owns(uid)
           && verified()
+          && hasLearnerProfile(uid)
           && learnerWritesAllowed(uid)
           && validCertificateRequest(request.resource.data, uid, requestId);
         allow update: if false;
