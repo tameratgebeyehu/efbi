@@ -51,6 +51,15 @@ Primary source: https://justice.gov.et/wp-content/uploads/2025/04/seasiisia-seus
 - The footer, Contact page, and learner Account page link to the privacy center.
 - Final response procedures, safeguarding ownership, incident escalation, and external review remain pending.
 
+## Phase 25C implementation record
+
+- Admin Studio has a Safety & incidents workspace with immediate, high, and standard response paths.
+- The response flow prioritizes learner safety, containment, minimum factual records, need-to-know sharing, recovery, and review.
+- The workspace clearly says EFBI operators must not investigate a child's disclosure or decide whether abuse occurred.
+- Enrollment controls display the unresolved safeguarding and external-review warning.
+- The designated safeguarding lead and trusted backup remain visibly unassigned; the software does not invent approval.
+- The development playbook is grounded in the Ministry of Justice proclamation page and UNICEF's child-safeguarding toolkit.
+
 ## Decisions still required
 
 - Named safeguarding contact and backup contact

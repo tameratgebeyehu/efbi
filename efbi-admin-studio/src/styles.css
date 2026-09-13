@@ -419,6 +419,42 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   .question-editor { padding: 15px; }
 }
 
+.safety-readiness-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 30px 0; }
+.safety-readiness-card { display: grid; gap: 8px; padding: 20px; border: 1px solid var(--line); background: #fff; }
+.safety-readiness-card small { color: var(--muted); font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
+.safety-readiness-card strong { color: var(--deep); overflow-wrap: anywhere; }
+.safety-readiness-card span { width: fit-content; padding: 5px 8px; color: #8a3f2f; background: #fff0ed; font-size: .68rem; font-weight: 850; text-transform: uppercase; letter-spacing: .05em; }
+.safety-readiness-card--ready span, .safety-readiness-card--safe span { color: var(--green); background: var(--green-soft); }
+.safety-badge--blocked { color: #8a3f2f; border-color: #e2b4a9; background: #fff0ed; }
+.safety-blocker, .enrollment-launch-warning { display: flex; justify-content: space-between; gap: 22px; align-items: center; padding: 20px 22px; border: 1px solid #e2b4a9; background: #fff0ed; }
+.safety-blocker strong, .enrollment-launch-warning strong { color: #7b2e22; }
+.safety-blocker p, .enrollment-launch-warning p { margin: 5px 0 0; color: #77534b; font-size: .82rem; line-height: 1.55; }
+.safety-blocker > span { flex: 0 0 auto; padding: 7px 10px; color: #7b2e22; background: #fff; font-size: .7rem; font-weight: 850; text-transform: uppercase; letter-spacing: .06em; }
+.enrollment-launch-warning { margin: 22px 0; }
+.incident-priority, .incident-steps { margin-top: 55px; }
+.incident-priority-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.incident-priority-card { padding: 24px; border: 1px solid var(--line); background: #fff; }
+.incident-priority-card > span { color: var(--green); font-size: .7rem; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+.incident-priority-card h3 { margin: 13px 0 9px; color: var(--deep); font-size: 1rem; line-height: 1.35; }
+.incident-priority-card p { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.6; }
+.incident-priority-card--urgent { border-top: 4px solid #a53d2b; }
+.incident-priority-card--urgent > span { color: #923524; }
+.incident-priority-card--high { border-top: 4px solid #d3972b; }
+.incident-steps ol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.incident-steps li { display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 20px; border: 1px solid var(--line); background: #fff; }
+.incident-steps li > span { display: grid; place-items: center; width: 36px; height: 36px; color: #fff; background: var(--deep); font-size: .72rem; font-weight: 850; }
+.incident-steps h3 { margin: 0 0 6px; color: var(--deep); font-size: .95rem; }
+.incident-steps p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.55; }
+.incident-record { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); gap: 30px; margin-top: 55px; padding: 30px; color: #fff; background: var(--deep); }
+.incident-record h2 { margin: 8px 0 12px; color: #fff; font-size: 1.5rem; }
+.incident-record p, .incident-record li { color: #bfd0c5; font-size: .82rem; line-height: 1.65; }
+.incident-record ul { margin: 0; padding-left: 20px; }
+.safety-boundary { margin-top: 20px; padding: 18px 20px; border-left: 4px solid #d3972b; background: #fff8e8; }
+.safety-boundary strong { color: var(--deep); }
+.safety-boundary p { margin: 6px 0 0; color: var(--muted); font-size: .8rem; line-height: 1.55; }
+@media (max-width: 900px) { .safety-readiness-grid, .incident-priority-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .incident-record { grid-template-columns: 1fr; } }
+@media (max-width: 620px) { .safety-readiness-grid, .incident-priority-grid, .incident-steps ol { grid-template-columns: 1fr; } .safety-blocker { align-items: start; flex-direction: column; } }
+
 .activation-workspace { min-width: 0; }
 .activation-grid { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(340px, 1fr) minmax(270px, .72fr); gap: 18px; align-items: start; }
 .activation-form, .activation-checks, .activation-action { min-width: 0; padding: 24px; border: 1px solid var(--line); background: #fff; }

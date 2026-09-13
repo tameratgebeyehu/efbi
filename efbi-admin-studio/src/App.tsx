@@ -12,6 +12,7 @@ import EnrollmentManager from './EnrollmentManager'
 import CourseActivationManager from './CourseActivationManager'
 import ProgramManager from './ProgramManager'
 import BlogManager from './BlogManager'
+import SafetyReadiness from './SafetyReadiness'
 
 type AccessState = 'loading' | 'signed-out' | 'denied' | 'admin' | 'reviewer' | 'error'
 
@@ -57,7 +58,7 @@ function SignIn({ onError }: { onError: (message: string) => void }) {
 }
 
 function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; signOut: () => Promise<void> }) {
-  const [section, setSection] = useState<'overview' | 'enrollment' | 'programs' | 'blog' | 'courses' | 'lessons' | 'activation' | 'reviews' | 'certificates' | 'audit' | 'retention'>(role === 'reviewer' ? 'reviews' : 'overview')
+  const [section, setSection] = useState<'overview' | 'enrollment' | 'safety' | 'programs' | 'blog' | 'courses' | 'lessons' | 'activation' | 'reviews' | 'certificates' | 'audit' | 'retention'>(role === 'reviewer' ? 'reviews' : 'overview')
   const areas = [
     { number: '01', title: 'Programs', detail: 'Organize, preview, and publish the learning paths shown on the public website.', status: 'Available' },
     { number: '02', title: 'Blog', detail: 'Draft, preview, publish, correct, and unpublish public articles.', status: 'Available' },
@@ -69,6 +70,7 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
     { number: '08', title: 'Audit history', detail: 'Read the immutable history of content and credential operations.', status: 'Available' },
     { number: '09', title: 'Enrollment', detail: 'Keep learner profile creation closed until the public launch gates are approved.', status: 'Closed by default' },
     { number: '10', title: 'Privacy & retention', detail: 'Process deletion requests with documented holds and protected credential evidence.', status: 'Available' },
+    { number: '11', title: 'Safety & incidents', detail: 'Follow the response checklist and keep unresolved safeguarding launch gates visible.', status: '3 gates open' },
   ]
 
   return (
@@ -78,6 +80,7 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
         <nav aria-label="Studio sections">
           {role === 'admin' && <button className={section === 'overview' ? 'active' : ''} onClick={() => setSection('overview')}>Overview</button>}
           {role === 'admin' && <button className={section === 'enrollment' ? 'active' : ''} onClick={() => setSection('enrollment')}>Enrollment</button>}
+          {role === 'admin' && <button className={section === 'safety' ? 'active' : ''} onClick={() => setSection('safety')}>Safety & incidents</button>}
           {role === 'admin' && <button className={section === 'programs' ? 'active' : ''} onClick={() => setSection('programs')}>Programs</button>}
           {role === 'admin' && <button className={section === 'blog' ? 'active' : ''} onClick={() => setSection('blog')}>Blog</button>}
           {role === 'admin' && <button className={section === 'courses' ? 'active' : ''} onClick={() => setSection('courses')}>Courses</button>}
@@ -91,7 +94,7 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
         <div className="operator"><small>{role === 'admin' ? 'Verified administrator' : 'Verified reviewer'}</small><strong>{user.email}</strong><button onClick={() => void signOut()}>Sign out</button></div>
       </aside>
       <main className="workspace">
-        {section === 'enrollment' && role === 'admin' ? <EnrollmentManager user={user} /> : section === 'programs' && role === 'admin' ? <ProgramManager user={user} /> : section === 'blog' && role === 'admin' ? <BlogManager user={user} /> : section === 'courses' && role === 'admin' ? <CourseManager user={user} /> : section === 'lessons' && role === 'admin' ? <LessonManager user={user} /> : section === 'activation' && role === 'admin' ? <CourseActivationManager user={user} /> : section === 'reviews' ? <ReviewManager user={user} role={role} /> : section === 'certificates' && role === 'admin' ? <CertificateManager user={user} /> : section === 'audit' && role === 'admin' ? <AuditLog /> : section === 'retention' && role === 'admin' ? <RetentionManager user={user} /> : <>
+        {section === 'enrollment' && role === 'admin' ? <EnrollmentManager user={user} /> : section === 'safety' && role === 'admin' ? <SafetyReadiness /> : section === 'programs' && role === 'admin' ? <ProgramManager user={user} /> : section === 'blog' && role === 'admin' ? <BlogManager user={user} /> : section === 'courses' && role === 'admin' ? <CourseManager user={user} /> : section === 'lessons' && role === 'admin' ? <LessonManager user={user} /> : section === 'activation' && role === 'admin' ? <CourseActivationManager user={user} /> : section === 'reviews' ? <ReviewManager user={user} role={role} /> : section === 'certificates' && role === 'admin' ? <CertificateManager user={user} /> : section === 'audit' && role === 'admin' ? <AuditLog /> : section === 'retention' && role === 'admin' ? <RetentionManager user={user} /> : <>
         <header><div><p className="eyebrow">Phase 25 workspace</p><h1>Good morning, builder.</h1><p>Content, review, privacy, and launch controls are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
         <section className="safety-grid" aria-label="Security status">
           <article><small>Network</small><strong>Localhost only</strong><p>Not published with the student website.</p></article>

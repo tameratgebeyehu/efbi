@@ -28,6 +28,8 @@ Ask only for the minimum non-sensitive description needed to understand the conc
 
 The named safeguarding contact, backup contact, and final escalation procedure are still launch gates. Until those are approved, the 12–15 enrollment route remains closed.
 
+The development response checklist and current blockers are recorded in `SAFEGUARDING_AND_INCIDENT_RESPONSE.md` and shown inside Admin Studio under **Safety & incidents**.
+
 ## Owner handling rules
 
 1. Use the official EFBI inbox, not a personal chat, for account-specific privacy requests.

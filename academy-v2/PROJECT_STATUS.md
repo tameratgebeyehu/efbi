@@ -568,6 +568,21 @@ The second age, privacy, and learner-support checkpoint is implemented in the de
 
 Phase 25 remains in progress. Safeguarding contacts, incident response, final operator response procedures, a reviewed 12–15 guardian route, final DPIA review, external review, and controlled launch gates remain open.
 
+## Phase 25C — safeguarding and incident readiness
+
+The third age, privacy, and learner-support checkpoint is implemented in the development codebase:
+
+1. Admin Studio now includes a Safety & incidents workspace restricted to verified administrators on localhost.
+2. It shows the accountable owner and official inbox while keeping the safeguarding lead, backup, and external review visibly blocked.
+3. Immediate danger, high-priority data/account incidents, and standard support requests have separate plain-language paths.
+4. The ordered response checklist covers assessment without investigation, containment, learner protection, minimum factual records, escalation, recovery, and review.
+5. Reviewers are reminded that safeguarding concerns belong in private handling and must never appear in learner-visible feedback.
+6. Enrollment controls warn that the platform is not publicly launch-ready.
+7. `SAFEGUARDING_AND_INCIDENT_RESPONSE.md` records the full development playbook, minimum incident fields, source material, and eight remaining pre-launch actions.
+8. Admin Studio lint and production build pass. No Firestore rules, database content, Admin Studio, learner build, or Hosting target was deployed.
+
+Phase 25 remains in progress. The user must still name a safeguarding lead and trusted backup. EFBI must also build a local referral directory, obtain external review, rehearse the response, review the final DPIA, and approve the 12–15 guardian route before that age group enrolls.
+
 
 ## Recovery commands
 
