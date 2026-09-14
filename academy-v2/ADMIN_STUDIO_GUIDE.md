@@ -24,7 +24,7 @@ Less common operational pages are preserved under **Advanced tools**.
 5. Add the written lesson. Learners must still be able to learn when YouTube is slow or unavailable.
 6. Add up to three practice questions and choose the correct answer for each one.
 7. Open the full preview and check the video, text, questions, and answers.
-8. Select **Save draft**, then **Mark review ready** when the content is approved.
+8. Select **Save changes**, then **Approve** when the content is ready.
 9. Check the confirmation and publish the lesson.
 
 Supported links include normal watch links, `youtu.be` share links, Shorts, live, embed, and `youtube-nocookie.com` links.

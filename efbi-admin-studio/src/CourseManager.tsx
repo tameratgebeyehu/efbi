@@ -163,7 +163,7 @@ function auditRecord({
 }
 
 function StatusPill({ status }: { status: CourseStatus }) {
-  return <span className={`status-pill status-pill--${status}`}>{status === 'ready' ? 'Review ready' : status}</span>
+  return <span className={`status-pill status-pill--${status}`}>{status === 'ready' ? 'Approved' : status === 'draft' ? 'Draft' : 'Published'}</span>
 }
 
 export default function CourseManager({ user }: { user: User }) {
@@ -485,7 +485,7 @@ export default function CourseManager({ user }: { user: User }) {
   return (
     <section className="course-workspace">
       <header className="workspace-title">
-        <div><p className="eyebrow">Phase 10 · Course management</p><h1>Course workspace</h1><p>Create clear course records, review them, and publish immutable releases.</p></div>
+        <div><p className="eyebrow">Course content</p><h1>Courses</h1><p>Create a course, check its preview, and publish when it is ready.</p></div>
         <button className="primary-action" onClick={startNew}>New course</button>
       </header>
 
@@ -507,7 +507,7 @@ export default function CourseManager({ user }: { user: User }) {
 
         <form className="course-editor" onSubmit={createDraft}>
           <div className="editor-heading">
-            <div><p className="eyebrow">{selected ? `Revision ${selected.revision}` : 'New draft'}</p><h2>{selected ? selected.title : 'Create a course'}</h2></div>
+            <div><p className="eyebrow">{selected ? `Saved version ${selected.revision}` : 'New course'}</p><h2>{selected ? selected.title : 'Create a course'}</h2></div>
             {selected && <StatusPill status={selected.status} />}
           </div>
 
@@ -525,8 +525,8 @@ export default function CourseManager({ user }: { user: User }) {
           {normalized.errors.length > 0 && <div className="validation-list"><strong>Before saving</strong><ul>{normalized.errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
 
           <div className="editor-actions">
-            {!selected && <button className="primary-action" type="submit" disabled={busy || normalized.errors.length > 0}>{busy ? 'Creating…' : 'Create draft'}</button>}
-            {selected && <><button type="button" onClick={() => void saveDraft('draft')} disabled={busy || normalized.errors.length > 0 || (selected.status === 'draft' && !hasUnsavedChanges) || (selected.status === 'published' && !hasUnsavedChanges)}>{selected.status === 'published' ? 'Save as new draft' : 'Save draft'}</button><button className="primary-action" type="button" onClick={() => void saveDraft('ready')} disabled={busy || normalized.errors.length > 0 || (selected.status === 'ready' && !hasUnsavedChanges) || (selected.status === 'published' && !hasUnsavedChanges)}>Mark review ready</button></>}
+            {!selected && <button className="primary-action" type="submit" disabled={busy || normalized.errors.length > 0}>{busy ? 'Creating…' : 'Create course'}</button>}
+            {selected && <><button type="button" onClick={() => void saveDraft('draft')} disabled={busy || normalized.errors.length > 0 || (selected.status === 'draft' && !hasUnsavedChanges) || (selected.status === 'published' && !hasUnsavedChanges)}>{selected.status === 'published' ? 'Save new changes' : 'Save changes'}</button><button className="primary-action" type="button" onClick={() => void saveDraft('ready')} disabled={busy || normalized.errors.length > 0 || (selected.status === 'ready' && !hasUnsavedChanges) || (selected.status === 'published' && !hasUnsavedChanges)}>Approve</button></>}
           </div>
         </form>
 
@@ -548,11 +548,11 @@ export default function CourseManager({ user }: { user: User }) {
           </div>}
 
           {selected?.status === 'ready' && <div className="publish-panel">
-            <strong>Ready to publish</strong>
-            <p>Publishing creates an immutable release. This draft cannot change during the publish transaction.</p>
+            <strong>Approved and ready</strong>
+            <p>Publishing saves this approved course content. Add and publish its lessons before the final Publish course step.</p>
             {hasUnsavedChanges && <p className="publish-warning">Save or discard the unsaved edits before publishing.</p>}
-            {!hasUnsavedChanges && <label className="confirm-check"><input type="checkbox" checked={confirmPublish} onChange={(event) => setConfirmPublish(event.target.checked)} />I reviewed this exact preview and want to publish it.</label>}
-            <button className="publish-action" type="button" disabled={busy || hasUnsavedChanges || !confirmPublish} onClick={() => void publish()}>{busy ? 'Publishing…' : `Publish release ${selected.latestReleaseNumber + 1}`}</button>
+            {!hasUnsavedChanges && <label className="confirm-check"><input type="checkbox" checked={confirmPublish} onChange={(event) => setConfirmPublish(event.target.checked)} />I checked the course preview.</label>}
+            <button className="publish-action" type="button" disabled={busy || hasUnsavedChanges || !confirmPublish} onClick={() => void publish()}>{busy ? 'Publishing…' : 'Publish course content'}</button>
           </div>}
         </aside>
       </div>

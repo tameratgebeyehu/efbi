@@ -842,6 +842,19 @@ The first Admin Studio simplification checkpoint is complete in source:
 6. No development-cloud content, learner record, enrollment setting, Hosting target, or custom domain changed in this phase.
 
 
+## Phase 27O — plain-language publishing
+
+The owner-facing publishing language is simplified without weakening the underlying operations:
+
+1. Program, course, lesson, and blog states now read Draft, Approved, and Published.
+2. The main actions read Save changes, Approve, and Publish instead of exposing revision and immutable-release terminology.
+3. Editor headings describe website or course content rather than historical phase numbers.
+4. The final course page is named Publish course and explains what visitors and verified learners will see.
+5. Protected version snapshots, audit events, atomic writes, existing-learner version binding, and explicit confirmation remain unchanged underneath the simpler interface.
+6. Admin Studio lint, production build, responsive navigation, YouTube-link recognition, editor recovery, and deletion rehearsal pass.
+7. No cloud data, enrollment setting, Hosting target, or custom domain changed in this phase.
+
+
 ## Recovery commands
 
 From this directory:

@@ -273,7 +273,7 @@ export default function CourseActivationManager({ user }: { user: User }) {
   return (
     <section className="activation-workspace">
       <header className="workspace-title">
-        <div><p className="eyebrow">Phase 23 · Controlled release</p><h1>Course activation</h1><p>Choose one complete release set, publish its safe outline, and make its lessons available to verified learners.</p></div>
+        <div><p className="eyebrow">Final publishing step</p><h1>Publish course</h1><p>Choose the approved course and lessons that should appear together for learners.</p></div>
         <span className="security-badge">Atomic and audited</span>
       </header>
 
@@ -281,11 +281,11 @@ export default function CourseActivationManager({ user }: { user: User }) {
 
       <div className="activation-grid">
         <section className="activation-form">
-          <p className="eyebrow">Select a release set</p>
-          <h2>Prepare one course version</h2>
+          <p className="eyebrow">Choose content</p>
+          <h2>What should learners see?</h2>
           <p>Course and lesson release numbers must match. Lessons must use unique, continuous order numbers starting at 1.</p>
           <label>Course<select value={courseId} onChange={(event) => chooseCourse(event.target.value)} disabled={loading || busy}><option value="">Choose a published course</option>{courseOptions.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}</select></label>
-          <label>Release version<select value={releaseVersion} onChange={(event) => chooseVersion(event.target.value)} disabled={!courseId || busy}><option value="">Choose a matching version</option>{versionOptions.map((version) => <option key={version} value={version}>Version {version}</option>)}</select></label>
+          <label>Published version<select value={releaseVersion} onChange={(event) => chooseVersion(event.target.value)} disabled={!courseId || busy}><option value="">Choose a matching version</option>{versionOptions.map((version) => <option key={version} value={version}>Version {version}</option>)}</select></label>
           <div className="field-grid">
             <label>Completion path<select value={assessmentType} onChange={(event) => { const next = event.target.value as 'practice-only' | 'project'; setAssessmentType(next); if (next === 'practice-only') setAssessmentVersion('1'); setConfirmed(false) }} disabled={busy}><option value="practice-only">Lessons + practice · no certificate</option><option value="project">Lessons + reviewed final project</option></select></label>
             <label>{assessmentType === 'project' ? 'Project instructions version' : 'Assessment version'}<input type="number" min={1} max={10000} step={1} value={assessmentVersion} onChange={(event) => { setAssessmentVersion(event.target.value); setConfirmed(false) }} disabled={busy || assessmentType === 'practice-only'} /></label>
@@ -294,25 +294,25 @@ export default function CourseActivationManager({ user }: { user: User }) {
         </section>
 
         <section className="activation-checks" aria-live="polite">
-          <p className="eyebrow">Readiness check</p>
+          <p className="eyebrow">Automatic check</p>
           <h2>{selectedCourse?.title ?? 'Choose a course and version'}</h2>
           <ul>
-            <li className={selectedCourse ? 'ready' : ''}><span>{selectedCourse ? '✓' : '—'}</span>Matching course release</li>
+            <li className={selectedCourse ? 'ready' : ''}><span>{selectedCourse ? '✓' : '—'}</span>Course is published</li>
             <li className={selectedLessons.length >= 1 && selectedLessons.length <= 12 ? 'ready' : ''}><span>{selectedLessons.length >= 1 && selectedLessons.length <= 12 ? '✓' : '—'}</span>{selectedLessons.length} matching lesson release{selectedLessons.length === 1 ? '' : 's'} (1–12 required)</li>
             <li className={uniqueLessons && uniqueOrders && contiguousOrders && selectedLessons.length > 0 ? 'ready' : ''}><span>{uniqueLessons && uniqueOrders && contiguousOrders && selectedLessons.length > 0 ? '✓' : '—'}</span>Unique lessons in continuous order</li>
-            <li className={!existingVersion && versionId ? 'ready' : ''}><span>{!existingVersion && versionId ? '✓' : '—'}</span>{existingVersion ? 'This immutable version already exists' : 'New immutable version ID'}</li>
+            <li className={!existingVersion && versionId ? 'ready' : ''}><span>{!existingVersion && versionId ? '✓' : '—'}</span>{existingVersion ? 'This version is already online' : 'Ready for a new public version'}</li>
           </ul>
           {selectedLessons.length > 0 && <ol className="activation-lessons">{selectedLessons.map((lesson) => <li key={lesson.lessonId}><span>{lesson.order}</span><div><strong>{lesson.title}</strong><small>{lesson.lessonId}</small></div></li>)}</ol>}
         </section>
 
         <aside className="activation-action">
-          <p className="eyebrow">Protected action</p>
+          <p className="eyebrow">Publish</p>
           <h2>{currentActive ? `Currently active: version ${currentActive.courseVersion}` : 'No active version yet'}</h2>
           {currentActive && <p>{currentActive.courseTitle} · {currentActive.lessonCount} lessons · {currentActive.assessmentType === 'project' ? 'Final project' : 'Practice only'}</p>}
-          <div className="activation-boundary"><strong>What activation changes</strong><p>Signed-out visitors can see the title, summary, learning time, and lesson outline. Only verified learners can open the full lessons. Existing learners remain locked to the version they already started.</p></div>
+          <div className="activation-boundary"><strong>What publishing changes</strong><p>Visitors can see the course title and lesson outline. Only verified learners can open full lessons. Learners who already started keep their original version.</p></div>
           <label className="confirm-check"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} disabled={!releaseReady || busy} />I checked the course, every lesson, their order, the public outline, and what this completion path allows learners to do.</label>
-          <button className="publish-action" type="button" disabled={!releaseReady || !confirmed || busy} onClick={() => void activate()}>{busy ? 'Activating…' : `Activate version ${selectedVersion || '—'}`}</button>
-          <small>Activation writes the immutable course version, safe public outline, active pointer, and audit event together. If one fails, none are saved.</small>
+          <button className="publish-action" type="button" disabled={!releaseReady || !confirmed || busy} onClick={() => void activate()}>{busy ? 'Publishing…' : 'Publish course'}</button>
+          <small>The course and its public outline are saved together. If anything fails, nothing changes.</small>
         </aside>
       </div>
     </section>

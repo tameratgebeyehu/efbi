@@ -150,7 +150,7 @@ function identifier(prefix: string, lessonId: string) {
 }
 
 function StatusPill({ status }: { status: LessonStatus }) {
-  return <span className={`status-pill status-pill--${status}`}>{status === 'ready' ? 'Review ready' : status}</span>
+  return <span className={`status-pill status-pill--${status}`}>{status === 'ready' ? 'Approved' : status === 'draft' ? 'Draft' : 'Published'}</span>
 }
 
 function QuestionEditor({ label, question, onChange, onRemove, onMoveUp, onMoveDown, first, last }: { label: string; question: PracticeQuestion; onChange: (question: PracticeQuestion) => void; onRemove: () => void; onMoveUp: () => void; onMoveDown: () => void; first: boolean; last: boolean }) {
@@ -426,7 +426,7 @@ export default function LessonManager({ user }: { user: User }) {
   return (
     <section className="course-workspace lesson-workspace">
       <header className="workspace-title">
-        <div><p className="eyebrow">Phase 24 · Content operations</p><h1>Lesson workspace</h1><p>Write lessons, add or remove practice checks, and publish immutable releases.</p></div>
+        <div><p className="eyebrow">Course content</p><h1>Lessons & videos</h1><p>Add the lesson text, paste a YouTube link, and create up to three practice questions.</p></div>
         <button className="primary-action" onClick={startNew}>New lesson</button>
       </header>
 
@@ -442,7 +442,7 @@ export default function LessonManager({ user }: { user: User }) {
         </aside>
 
         <form className="course-editor lesson-editor" onSubmit={(event) => void saveLesson(event, 'draft')}>
-          <div className="editor-heading"><div><p className="eyebrow">{selected ? `Revision ${selected.revision}` : 'New lesson draft'}</p><h2>{selected ? selected.title : 'Create a lesson'}</h2></div>{selected && <StatusPill status={selected.status} />}</div>
+          <div className="editor-heading"><div><p className="eyebrow">{selected ? `Saved version ${selected.revision}` : 'New lesson'}</p><h2>{selected ? selected.title : 'Create a lesson'}</h2></div>{selected && <StatusPill status={selected.status} />}</div>
           <div className="field-grid">
             <label>Course<select value={form.courseId} onChange={(event) => updateField('courseId', event.target.value)} disabled={!!selected}>{courses.map((course) => <option key={course.courseId} value={course.courseId}>{course.title}</option>)}</select></label>
             <label>Lesson order<input type="number" value={form.order} onChange={(event) => updateField('order', event.target.value)} min={1} max={50} step={1} required /></label>
@@ -459,7 +459,7 @@ export default function LessonManager({ user }: { user: User }) {
           {form.questions.length === 0 && <p className="question-empty">No practice questions yet. Add one when the lesson needs a knowledge check.</p>}
           {form.questions.map((question, index) => <QuestionEditor key={index} label={`Practice question ${index + 1}`} question={question} onChange={(next) => updateQuestion(index, next)} onRemove={() => removeQuestion(index)} onMoveUp={() => moveQuestion(index, -1)} onMoveDown={() => moveQuestion(index, 1)} first={index === 0} last={index === form.questions.length - 1} />)}
           {normalized.errors.length > 0 && <div className="validation-list"><strong>Before saving</strong><ul>{normalized.errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
-          <div className="editor-actions"><button type="button" onClick={() => void saveLesson(undefined, 'draft')} disabled={busy || normalized.errors.length > 0 || (selected?.status === 'draft' && !hasUnsavedChanges)}>{busy ? 'Saving...' : 'Save draft'}</button><button className="primary-action" type="button" onClick={() => void saveLesson(undefined, 'ready')} disabled={selectedId === 'new' || busy || normalized.errors.length > 0 || (selected?.status === 'ready' && !hasUnsavedChanges)}>{busy ? 'Saving...' : 'Mark review ready'}</button></div>
+          <div className="editor-actions"><button type="button" onClick={() => void saveLesson(undefined, 'draft')} disabled={busy || normalized.errors.length > 0 || (selected?.status === 'draft' && !hasUnsavedChanges)}>{busy ? 'Saving...' : 'Save changes'}</button><button className="primary-action" type="button" onClick={() => void saveLesson(undefined, 'ready')} disabled={selectedId === 'new' || busy || normalized.errors.length > 0 || (selected?.status === 'ready' && !hasUnsavedChanges)}>{busy ? 'Saving...' : 'Approve'}</button></div>
         </form>
 
         <aside className="course-preview lesson-preview">
@@ -473,7 +473,7 @@ export default function LessonManager({ user }: { user: User }) {
           </div>
           <div className="release-panel"><div className="release-panel__heading"><strong>Practice checks</strong><span>{normalized.content.questions.length}</span></div>{normalized.content.questions.length === 0 && <p>No practice checks in this lesson.</p>}{normalized.content.questions.map((question, index) => <article key={index}><span>{question.prompt || `Question ${index + 1}`}</span><small>Answer {question.correctOption + 1}</small></article>)}</div>
           {selected && <div className="release-panel"><div className="release-panel__heading"><strong>Lesson releases</strong><span>{selectedReleases.length}</span></div>{selectedReleases.length === 0 && <p>No lesson releases published.</p>}{selectedReleases.map((release) => <article key={release.releaseId}><span>Release {release.version}</span><small>{readableDate(release.publishedAt)}</small></article>)}</div>}
-          {selected?.status === 'ready' && <div className="publish-panel"><strong>Ready to publish</strong><p>Publishing creates an immutable lesson release. The lesson cannot change during the publish transaction.</p>{hasUnsavedChanges && <p className="publish-warning">Save or discard unsaved edits before publishing.</p>}{!hasUnsavedChanges && <label className="confirm-check"><input type="checkbox" checked={confirmPublish} onChange={(event) => setConfirmPublish(event.target.checked)} />I reviewed this exact lesson preview and want to publish it.</label>}<button className="publish-action" type="button" disabled={busy || hasUnsavedChanges || !confirmPublish} onClick={() => void publishLesson()}>{busy ? 'Publishing...' : `Publish release ${selected.latestReleaseNumber + 1}`}</button></div>}
+          {selected?.status === 'ready' && <div className="publish-panel"><strong>Approved and ready</strong><p>Publishing saves this lesson, video, and its practice questions together.</p>{hasUnsavedChanges && <p className="publish-warning">Save or discard unsaved edits before publishing.</p>}{!hasUnsavedChanges && <label className="confirm-check"><input type="checkbox" checked={confirmPublish} onChange={(event) => setConfirmPublish(event.target.checked)} />I checked the lesson preview, video, and correct answers.</label>}<button className="publish-action" type="button" disabled={busy || hasUnsavedChanges || !confirmPublish} onClick={() => void publishLesson()}>{busy ? 'Publishing...' : 'Publish lesson'}</button></div>}
         </aside>
       </div>
     </section>

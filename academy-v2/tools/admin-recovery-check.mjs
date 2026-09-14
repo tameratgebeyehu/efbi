@@ -26,10 +26,10 @@ const learnerUid = 'phase27f-deletion-learner'
 const adminRoot = path.resolve(projectRoot, '..', 'efbi-admin-studio')
 
 const editors = [
-  { nav: 'Programs', heading: 'Program workspace', label: 'Program title', key: 'efbi-admin-program-recovery-v1', prompt: 'Unsaved program text found', restored: 'locally saved program text was restored' },
-  { nav: 'Blog', heading: 'Blog workspace', label: 'Article title', key: 'efbi-admin-blog-recovery-v1', prompt: 'Unsaved article found', restored: 'locally saved article was restored' },
-  { nav: 'Courses', heading: 'Course workspace', label: 'Course title', key: 'efbi-admin-course-recovery-v1', prompt: 'Unsaved course text found', restored: 'locally saved course text was restored' },
-  { nav: 'Lessons & videos', heading: 'Lesson workspace', label: 'Lesson title', key: 'efbi-admin-lesson-recovery-v1', prompt: 'Unsaved lesson text found', restored: 'locally saved lesson text was restored' },
+  { nav: 'Programs', heading: 'Programs', label: 'Program title', key: 'efbi-admin-program-recovery-v1', prompt: 'Unsaved program text found', restored: 'locally saved program text was restored' },
+  { nav: 'Blog', heading: 'Blog', label: 'Article title', key: 'efbi-admin-blog-recovery-v1', prompt: 'Unsaved article found', restored: 'locally saved article was restored' },
+  { nav: 'Courses', heading: 'Courses', label: 'Course title', key: 'efbi-admin-course-recovery-v1', prompt: 'Unsaved course text found', restored: 'locally saved course text was restored' },
+  { nav: 'Lessons & videos', heading: 'Lessons & videos', label: 'Lesson title', key: 'efbi-admin-lesson-recovery-v1', prompt: 'Unsaved lesson text found', restored: 'locally saved lesson text was restored' },
 ]
 const adminSectionLabels = ['Home', 'Programs', 'Courses', 'Lessons & videos', 'Publish course', 'Blog', 'Learner reviews', 'Certificates', 'Launch checks', 'Starter content', 'Enrollment settings', 'Safety & incidents', 'Activity history', 'Privacy & deletion']
 
