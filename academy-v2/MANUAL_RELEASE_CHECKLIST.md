@@ -11,6 +11,8 @@ Automated Phase 27G evidence is recorded in `PHASE_27G_RELEASE_EVIDENCE.md`. It 
 - Use one real phone, one tablet-sized browser, and one desktop browser.
 - Confirm there is no horizontal scrolling, clipped text, overlapping control, unreadable contrast, or button that is too small to tap.
 - Rotate the phone once and confirm the page remains usable.
+- In localhost Admin Studio, check 75%, 90%, 100%, 125%, 150%, and 200% browser zoom. Confirm all fourteen sections, the verified-owner identity, and Sign out remain reachable without zooming out.
+- At tablet and phone widths, open and close the Studio menu with touch, keyboard, and Escape; confirm the current section is announced and no horizontal menu strip hides later sections.
 
 ## 2. Keyboard and screen-reader basics
 

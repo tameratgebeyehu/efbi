@@ -91,6 +91,51 @@ async function clickButton(client, text) {
   assert.fail(`Button was missing or remained disabled: ${text}`)
 }
 
+async function inspectStudioNavigation(client, width, height, compact) {
+  await client.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 600 })
+  await pause(120)
+  const initial = await client.evaluate(`(() => {
+    const visible = (element) => element && getComputedStyle(element).display !== 'none' && element.getBoundingClientRect().height > 0
+    const operator = document.querySelector('.operator')
+    const toggle = document.querySelector('.studio-menu-toggle')
+    return {
+      operatorVisible: visible(operator) && operator.getBoundingClientRect().bottom <= innerHeight + 1,
+      toggleVisible: visible(toggle),
+      overflow: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth,
+    }
+  })()`)
+  assert.equal(initial.operatorVisible, true, `${width}px: verified operator and sign-out controls must remain visible.`)
+  assert.equal(initial.toggleVisible, compact, `${width}px: compact menu visibility is incorrect.`)
+  assert.equal(initial.overflow <= 1, true, `${width}px: dashboard overflows horizontally by ${initial.overflow}px.`)
+
+  if (compact) await clickSelector(client, '.studio-menu-toggle')
+  const navigation = await client.evaluate(`(() => {
+    const nav = document.querySelector('#studio-navigation')
+    const buttons = [...(nav?.querySelectorAll('button') ?? [])]
+    if (!nav || !buttons.length || getComputedStyle(nav).display === 'none') return { visible: false }
+    nav.scrollTop = nav.scrollHeight
+    const navRect = nav.getBoundingClientRect()
+    const lastRect = buttons.at(-1).getBoundingClientRect()
+    return {
+      visible: true,
+      buttonCount: buttons.length,
+      scrollable: nav.scrollHeight <= nav.clientHeight + 1 || ['auto', 'scroll'].includes(getComputedStyle(nav).overflowY),
+      lastReachable: lastRect.bottom <= navRect.bottom + 1 && lastRect.top >= navRect.top - 1,
+      expanded: document.querySelector('.studio-menu-toggle')?.getAttribute('aria-expanded') ?? null,
+    }
+  })()`)
+  assert.equal(navigation.visible, true, `${width}px: Studio navigation is not available.`)
+  assert.equal(navigation.buttonCount, 14, `${width}px: an administrator must receive all fourteen Studio sections.`)
+  assert.equal(navigation.scrollable, true, `${width}px: a long Studio menu cannot scroll.`)
+  assert.equal(navigation.lastReachable, true, `${width}px: the final Studio menu item cannot be reached.`)
+  if (compact) {
+    assert.equal(navigation.expanded, 'true', `${width}px: compact menu does not announce its open state.`)
+    await client.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))` })
+    await pause(50)
+    assert.equal(await client.evaluate(`document.querySelector('.studio-menu-toggle')?.getAttribute('aria-expanded')`), 'false', `${width}px: Escape does not close the compact menu.`)
+  }
+}
+
 let adminApp
 let previewProcess
 let browserProcess
@@ -170,6 +215,12 @@ try {
   await clickButton(client, 'Sign in securely')
   await waitForPage(client, (state) => state.text.includes('Good morning, builder.'), 'Verified administrator dashboard')
   assert.equal(await client.evaluate(`document.querySelectorAll('main').length`), 1, 'Admin Studio must contain exactly one main landmark.')
+
+  await inspectStudioNavigation(client, 1152, 650, false)
+  await inspectStudioNavigation(client, 800, 700, true)
+  await inspectStudioNavigation(client, 375, 700, true)
+  await client.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
+  console.log('✓ Admin Studio navigation remains reachable at zoomed-desktop, tablet, and phone widths')
 
   await clickButton(client, 'Launch drafts')
   await waitForPage(client, (state) => state.text.includes('Launch content drafts') && state.text.includes('Import 10 missing drafts'), 'Launch draft importer')

@@ -778,7 +778,7 @@ Phase 27 remains in progress. The owner must import the pack into the developmen
 
 ## Phase 27J — controlled development-cloud draft import
 
-This checkpoint is in progress:
+This checkpoint is complete:
 
 1. The read-only cloud preflight reconfirmed closed enrollment, the three approved development Authentication domains, password-required email sign-in, and only the verified owner administrator.
 2. The development project still contains zero published programs, active courses, public catalog records, course versions, course releases, lesson releases, and published articles.
@@ -787,10 +787,26 @@ This checkpoint is in progress:
 5. Its first cloud run correctly reported all ten drafts missing. The attempted Studio import wrote nothing because the development project was still using an older ruleset from 2026-09-12.
 6. A read-only deployed-rules check now compares normalized source and SHA-256 fingerprints without printing rule contents. It confirmed the former cloud fingerprint did not match the tested repository rules.
 7. All 96 isolated Firestore authorization and lifecycle tests passed immediately before deployment. Only `firestore.rules` was then deployed to `efbi-academy-dev-doha`; the cloud and local fingerprints now match at `a2d85fc86bc4dda9`.
-8. The post-deployment cloud preflight confirms enrollment remains closed, operator roles and Authentication domains are unchanged, all seven public-content collections remain empty, and all ten private launch drafts remain absent until the owner retries the protected import.
-9. No draft, release, public content, enrollment setting, Authentication account, Hosting build, or custom domain was changed or deployed.
+8. The owner retried the protected import. All ten expected IDs and exact source fields now exist with approved-owner attribution and linked audit history.
+9. Eight records remain untouched revision-one private drafts. Artificial Intelligence is still private and source-matched after two owner saves. The founder article is intentionally owner-published as public version one after its review workflow.
+10. Closed enrollment, operator roles, Authentication domains, and the absence of any active course or public course catalog remain unchanged.
+11. No learner record, course version, course release, lesson release, active-course pointer, Hosting build, or custom domain was changed or deployed.
 
-Phase 27J completes only after the owner imports through localhost Admin Studio and the read-only verifier confirms all ten exact private drafts and their ten linked audit events.
+Phase 27J is complete. The content is recoverably present in the development project; remaining publication is a separate deliberate owner-review phase.
+
+## Phase 27K — responsive Admin Studio navigation
+
+The responsive navigation development checkpoint is complete:
+
+1. The desktop sidebar now reserves the owner block and makes the fourteen-section navigation independently scrollable at shorter and zoomed viewport heights.
+2. At tablet and phone widths, the former hidden horizontal strip is replaced by a labeled menu button with the current section, `aria-expanded`, an explicit controlled navigation region, and Escape-to-close behavior.
+3. The verified-administrator identity and Sign out control remain visible outside the scrolling section list.
+4. Every menu control meets a 44-pixel compact-layout target, focus indicators are visible, and selecting a section closes the compact menu.
+5. An isolated authenticated Chromium journey verifies all fourteen destinations and the final Privacy & retention item at 1152×650, 800×700, and 375×700 without horizontal page overflow or hidden operator controls.
+6. The same journey still passes the ten-draft import, all four interrupted-editor recoveries, and complete synthetic deletion flow. Admin Studio lint and production build pass.
+7. No cloud data, Firebase configuration, Hosting build, or public website was changed by the responsive implementation.
+
+Human zoom, touch, and screen-reader confirmation remains required before launch.
 
 
 ## Recovery commands

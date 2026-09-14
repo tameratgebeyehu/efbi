@@ -17,6 +17,24 @@ import LaunchReadiness from './LaunchReadiness'
 import LaunchContentPack from './LaunchContentPack'
 
 type AccessState = 'loading' | 'signed-out' | 'denied' | 'admin' | 'reviewer' | 'error'
+type StudioSection = 'overview' | 'launch' | 'launch-drafts' | 'enrollment' | 'safety' | 'programs' | 'blog' | 'courses' | 'lessons' | 'activation' | 'reviews' | 'certificates' | 'audit' | 'retention'
+
+const adminNavigation: { id: StudioSection; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'launch', label: 'Launch readiness' },
+  { id: 'launch-drafts', label: 'Launch drafts' },
+  { id: 'enrollment', label: 'Enrollment' },
+  { id: 'safety', label: 'Safety & incidents' },
+  { id: 'programs', label: 'Programs' },
+  { id: 'blog', label: 'Blog' },
+  { id: 'courses', label: 'Courses' },
+  { id: 'lessons', label: 'Lessons' },
+  { id: 'activation', label: 'Activation' },
+  { id: 'reviews', label: 'Reviews' },
+  { id: 'certificates', label: 'Certificates' },
+  { id: 'audit', label: 'Audit history' },
+  { id: 'retention', label: 'Privacy & retention' },
+]
 
 const localHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
 
@@ -60,7 +78,24 @@ function SignIn({ onError }: { onError: (message: string) => void }) {
 }
 
 function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; signOut: () => Promise<void> }) {
-  const [section, setSection] = useState<'overview' | 'launch' | 'launch-drafts' | 'enrollment' | 'safety' | 'programs' | 'blog' | 'courses' | 'lessons' | 'activation' | 'reviews' | 'certificates' | 'audit' | 'retention'>(role === 'reviewer' ? 'reviews' : 'overview')
+  const [section, setSection] = useState<StudioSection>(role === 'reviewer' ? 'reviews' : 'overview')
+  const [navigationOpen, setNavigationOpen] = useState(false)
+  const navigation = role === 'admin' ? adminNavigation : adminNavigation.filter((item) => item.id === 'reviews')
+  const currentSectionLabel = navigation.find((item) => item.id === section)?.label ?? 'Studio sections'
+
+  useEffect(() => {
+    if (!navigationOpen) return undefined
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setNavigationOpen(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [navigationOpen])
+
+  function openSection(nextSection: StudioSection) {
+    setSection(nextSection)
+    setNavigationOpen(false)
+  }
   const areas = [
     { number: '01', title: 'Programs', detail: 'Organize, preview, and publish the learning paths shown on the public website.', status: 'Available' },
     { number: '02', title: 'Blog', detail: 'Draft, preview, publish, correct, and unpublish public articles.', status: 'Available' },
@@ -81,21 +116,9 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
     <div className="studio">
       <aside className="sidebar">
         <div className="brand brand--light"><img src="/efbi-icon.png" alt="" /><span>EFBI</span><small>ADMIN STUDIO</small></div>
-        <nav aria-label="Studio sections">
-          {role === 'admin' && <button className={section === 'overview' ? 'active' : ''} onClick={() => setSection('overview')}>Overview</button>}
-          {role === 'admin' && <button className={section === 'launch' ? 'active' : ''} onClick={() => setSection('launch')}>Launch readiness</button>}
-          {role === 'admin' && <button className={section === 'launch-drafts' ? 'active' : ''} onClick={() => setSection('launch-drafts')}>Launch drafts</button>}
-          {role === 'admin' && <button className={section === 'enrollment' ? 'active' : ''} onClick={() => setSection('enrollment')}>Enrollment</button>}
-          {role === 'admin' && <button className={section === 'safety' ? 'active' : ''} onClick={() => setSection('safety')}>Safety & incidents</button>}
-          {role === 'admin' && <button className={section === 'programs' ? 'active' : ''} onClick={() => setSection('programs')}>Programs</button>}
-          {role === 'admin' && <button className={section === 'blog' ? 'active' : ''} onClick={() => setSection('blog')}>Blog</button>}
-          {role === 'admin' && <button className={section === 'courses' ? 'active' : ''} onClick={() => setSection('courses')}>Courses</button>}
-          {role === 'admin' && <button className={section === 'lessons' ? 'active' : ''} onClick={() => setSection('lessons')}>Lessons</button>}
-          {role === 'admin' && <button className={section === 'activation' ? 'active' : ''} onClick={() => setSection('activation')}>Activation</button>}
-          <button className={section === 'reviews' ? 'active' : ''} onClick={() => setSection('reviews')}>Reviews</button>
-          {role === 'admin' && <button className={section === 'certificates' ? 'active' : ''} onClick={() => setSection('certificates')}>Certificates</button>}
-          {role === 'admin' && <button className={section === 'audit' ? 'active' : ''} onClick={() => setSection('audit')}>Audit history</button>}
-          {role === 'admin' && <button className={section === 'retention' ? 'active' : ''} onClick={() => setSection('retention')}>Privacy & retention</button>}
+        <button className="studio-menu-toggle" type="button" aria-expanded={navigationOpen} aria-controls="studio-navigation" onClick={() => setNavigationOpen((current) => !current)}><span>{navigationOpen ? 'Close menu' : 'Open menu'}</span><small>{currentSectionLabel}</small></button>
+        <nav id="studio-navigation" className={navigationOpen ? 'is-open' : ''} aria-label="Studio sections">
+          {navigation.map((item) => <button key={item.id} className={section === item.id ? 'active' : ''} aria-current={section === item.id ? 'page' : undefined} onClick={() => openSection(item.id)}>{item.label}</button>)}
         </nav>
         <div className="operator"><small>{role === 'admin' ? 'Verified administrator' : 'Verified reviewer'}</small><strong>{user.email}</strong><button onClick={() => void signOut()}>Sign out</button></div>
       </aside>
