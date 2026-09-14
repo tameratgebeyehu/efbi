@@ -758,6 +758,24 @@ The first reviewable content pack is implemented in the development codebase:
 
 Phase 27 remains in progress. The owner must import and review the drafts, watch each video beside its written lesson, approve or edit every answer, publish through the normal workspaces, and complete the remaining human and Console checks. Modules 5–12 can be added in a later reviewed pack.
 
+## Phase 27I — four-module launch rehearsal
+
+The complete current learner course has passed an isolated emulator-only rehearsal:
+
+1. The test fixture mirrors the exact versioned launch pack as one reviewed course release, four reviewed lesson releases, one practice-only course version, one active-course pointer, and one narrow public catalog record.
+2. A signed-out visitor sees exactly four safe module outlines. Written lesson bodies, practice answers, learner data, and internal release fields remain unavailable.
+3. A synthetic learner registers, verifies the local test email, and receives the reviewed release. The app now forces a fresh Firebase ID token after verification so Firestore does not continue using a stale unverified claim.
+4. Every module avoids contacting YouTube before the learner selects **Load video**. After consent, each module uses its exact owner-supplied video through YouTube's privacy-enhanced embed domain.
+5. A deliberately blocked video produces a retry message while the complete written lesson remains usable.
+6. The learner answers all twelve practice questions, receives 3/3 in each module, and saves sequential 25%, 50%, 75%, and 100% completion states.
+7. An authoritative Firestore read confirms the exact course version and four completed lesson IDs. The client does not store or control a percentage field.
+8. The course is consistently labeled **AI for Ethiopia** and **Learning only · no certificate**. Stale project and certificate promises were removed from the course list, account shortcut, and certificate sample.
+9. Sign-out, privacy-safe password reset, returning sign-in, deletion request, cancellation, and deliberate reopening still pass in the same journey.
+10. The complete local gate passes: 58 responsive browser checks, 96 Firestore authorization and lifecycle tests, learner lint and production build, the 48-file source-security scan, and Hosting configuration checks.
+11. No development-cloud content, production data, Firebase rule, Hosting build, custom domain, or enrollment setting was changed or deployed.
+
+Phase 27 remains in progress. The owner must import the pack into the development project, review all drafts, watch the four videos beside their written lessons, approve or edit all twelve answers, publish and activate the reviewed course, and complete the real-device, assistive-technology, Firebase Console, and final controlled-security checks.
+
 
 ## Recovery commands
 

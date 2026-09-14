@@ -16,7 +16,7 @@ const routes = [
   { path: '/programs', text: 'Choose what you want to learn.' },
   { path: '/programs/artificial-intelligence', text: 'Artificial Intelligence' },
   { path: '/courses', text: 'Courses built for doing.' },
-  { path: '/courses/ai-foundations', text: 'AI Foundations for Ethiopia' },
+  { path: '/courses/ai-foundations', text: 'AI for Ethiopia' },
   { path: '/certification', text: 'A certificate you earn.' },
   { path: '/verify', text: 'Check an EFBI certificate.', forms: 1 },
   { path: '/blog', text: 'Ideas for learning and building.' },

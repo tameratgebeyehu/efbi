@@ -22,6 +22,8 @@ Automated Phase 27G evidence is recorded in `PHASE_27G_RELEASE_EVIDENCE.md`. It 
 ## 3. Real connection and recovery
 
 - On the owner computer, type clearly identifiable test text into each Admin Studio editor, reload before saving, choose **Restore copy**, and confirm the exact text returns.
+- Watch all four current EFBI videos from beginning to end beside their written lessons. Confirm the order, title, content, captions, and written explanation agree.
+- Before selecting **Load video**, confirm the lesson shows no YouTube frame or unexpected YouTube request. After selecting it, confirm the correct module video appears.
 - Test one lesson with YouTube temporarily blocked or disconnected. Confirm the retry message appears and the written lesson remains available.
 - Repeat once on a slower mobile connection if practical.
 
@@ -29,6 +31,9 @@ Automated Phase 27G evidence is recorded in `PHASE_27G_RELEASE_EVIDENCE.md`. It 
 
 - Use a dedicated test email, never a student account.
 - Confirm registration, real inbox verification, sign-out, sign-in, password reset, and protected lesson access.
+- While signed out, confirm the public course page shows exactly four outlines and no lesson body or practice answer.
+- Complete all four modules in order, submit all twelve practice questions, and confirm progress reaches 25%, 50%, 75%, then 100%.
+- Confirm the completed course says **Learning only · no certificate** and never asks for a project or certificate request.
 - Request deletion, cancel it, and reopen it.
 - In localhost Admin Studio, complete Firestore deletion for the exact test UID.
 - Remove the same UID from Firebase Authentication, confirm it can no longer sign in, then record the permanent confirmation in Admin Studio.

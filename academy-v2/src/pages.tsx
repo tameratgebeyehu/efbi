@@ -187,30 +187,42 @@ export function CoursesPage() {
     return () => { active = false }
   }, [])
 
+  const publishedPilot = activeCourses.find((course) => course.courseId === 'ai-foundations')
+  const pilot = publishedPilot ?? {
+    courseId: 'ai-foundations',
+    courseTitle: 'AI for Ethiopia',
+    courseDescription: 'Start with AI basics and learn practical, responsible ways students and teachers can use it.',
+    level: 'Beginner',
+    lessonCount: 4,
+    courseVersion: 0,
+    assessmentVersion: 1,
+    assessmentType: 'practice-only' as const,
+  }
   const additionalCourses = activeCourses.filter((course) => course.courseId !== 'ai-foundations')
+  const pilotAssessment = pilot.assessmentType === 'project' ? 'Reviewed project certificate' : 'Learning only · no certificate'
 
   return (
     <>
-      <PageHero eyebrow="Courses" title="Courses built for doing." description="Learn in short steps, practice each idea, and finish with a project." className="page-hero--courses"><RebuildNotice compact /></PageHero>
+      <PageHero eyebrow="Courses" title="Courses built for doing." description="Learn in short steps, practice each idea, and use what you understand." className="page-hero--courses"><RebuildNotice compact /></PageHero>
       <section className="section shell">
         <article className="course-feature-card">
           <div className="course-cover">
             <div className="cover-top"><span>EFBI / COURSE 01</span><span>PILOT</span></div>
-            <div className="cover-main"><small>Artificial Intelligence</small><strong>AI Foundations<br />for Ethiopia</strong><p>Understand · Question · Build</p></div>
+            <div className="cover-main"><small>Artificial Intelligence</small><strong>{pilot.courseTitle}</strong><p>Understand · Practice · Use</p></div>
             <div className="cover-grid" aria-hidden="true">{Array.from({ length: 12 }).map((_, index) => <i key={index} />)}</div>
           </div>
           <div className="course-feature-copy">
-            <div className="course-tags"><span>Beginner</span><span>4 lessons</span><span>Self-paced</span></div>
-            <h2>AI Foundations for Ethiopia</h2>
-            <p>Learn what AI can do, use it responsibly, and design a small solution for your school or community.</p>
-            <ul><li><Icon name="check" /> Video and written lessons</li><li><Icon name="check" /> Privacy and responsible AI</li><li><Icon name="check" /> One practical project</li><li><Icon name="check" /> Quick knowledge checks</li></ul>
+            <div className="course-tags"><span>{pilot.level}</span><span>{pilot.lessonCount} modules</span><span>{pilotAssessment}</span></div>
+            <h2>{pilot.courseTitle}</h2>
+            <p>{pilot.courseDescription}</p>
+            <ul><li><Icon name="check" /> EFBI video and written lessons</li><li><Icon name="check" /> Practical student uses</li><li><Icon name="check" /> Support for lesson planning</li><li><Icon name="check" /> Responsible AI practice</li></ul>
             <Link className="button button--primary" to="/courses/ai-foundations">View course <Icon name="arrow" /></Link>
           </div>
         </article>
         <section className="learner-catalog" aria-labelledby="active-courses-title">
           <div className="catalog-heading"><div><p className="eyebrow-label">Your course catalog</p><h2 id="active-courses-title">Active EFBI courses</h2></div><p>Only reviewed versions activated by EFBI appear here.</p></div>
           {!catalogReady && <p className="catalog-loading" role="status">Checking active courses…</p>}
-          {catalogReady && additionalCourses.length === 0 && <div className="catalog-empty"><Icon name="book" /><div><strong>AI Foundations is the active pilot.</strong><p>More courses will appear here after EFBI reviews and activates their complete lesson sets.</p></div></div>}
+          {catalogReady && additionalCourses.length === 0 && <div className="catalog-empty"><Icon name="book" /><div><strong>{publishedPilot ? `${publishedPilot.courseTitle} is the active pilot.` : 'The pilot course is still being reviewed.'}</strong><p>More courses will appear here after EFBI reviews and activates their complete lesson sets.</p></div></div>}
           {additionalCourses.length > 0 && <div className="active-course-grid">{additionalCourses.map((course) => <article key={course.courseId}><div className="active-course-number">V{course.courseVersion}</div><div className="course-tags"><span>{course.level}</span><span>{course.lessonCount} lessons</span><span>{course.assessmentType === 'project' ? 'Reviewed project certificate' : 'Learning only · no certificate'}</span></div><h3>{course.courseTitle}</h3><p>{course.courseDescription}</p><Link className="button button--outline" to={`/courses/${course.courseId}`}>View course <Icon name="arrow" /></Link></article>)}</div>}
         </section>
         <div className="catalog-heading"><div><p className="eyebrow-label">Coming next</p><h2>More courses are on the way</h2></div><p>We’ll open each course after its lessons and learning tools are ready.</p></div>
@@ -274,7 +286,7 @@ export function CertificationPage() {
           <div className="certificate-top"><img src="/efbi-icon.png" alt="" /><span>EFBI ACADEMY</span></div>
           <p>Certificate of completion</p>
           <small>Presented to</small><h2>Learner Name</h2>
-          <small>for completing</small><h3>AI Foundations for Ethiopia</h3>
+          <small>for completing</small><h3>Sample EFBI Project Course</h3>
           <div className="certificate-details"><span><small>Issued</small>Month 2026</span><span><small>Credential ID</small>EFBI-XXXX</span></div>
           <div className="certificate-signature"><strong>Tamerat Gebeyehu</strong><span>Founder & Director</span></div>
           <div className="certificate-seal"><Icon name="shield" /></div>

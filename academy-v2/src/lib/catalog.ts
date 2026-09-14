@@ -92,12 +92,12 @@ const aiLessonIds = curriculum.map((lesson) => lesson.slug)
 const aiFallbackCatalog: CourseCatalog = {
   source: 'built-in',
   courseId: aiCourseId,
-  assessmentType: 'project',
+  assessmentType: 'practice-only',
   lessons: curriculum,
-  courseTitle: 'AI Foundations for Ethiopia',
-  courseDescription: 'Four short lessons that help you understand AI and use it responsibly.',
+  courseTitle: 'AI for Ethiopia',
+  courseDescription: 'A four-module preview for students and educators learning practical, responsible uses of AI.',
   level: 'Beginner',
-  statusMessage: 'Using the tested built-in course while EFBI checks backend releases.',
+  statusMessage: 'Using the tested built-in preview while EFBI checks the reviewed course release.',
 }
 
 function safeString(value: unknown) {

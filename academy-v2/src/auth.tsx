@@ -52,7 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfileReady(false)
           if (!nextUser) { setProfileLoading(false); return }
           setProfileLoading(true)
-          void getFirebaseFirestore().then(async (firestore) => {
+          void (async () => {
+            if (nextUser.emailVerified) await nextUser.getIdToken(true)
+            return getFirebaseFirestore()
+          })().then(async (firestore) => {
             if (!firestore) return false
             const snapshot = await firestore.firestoreSdk.getDoc(firestore.firestoreSdk.doc(firestore.db, 'users', nextUser.uid))
             if (!snapshot.exists()) return false
@@ -369,7 +372,7 @@ export function AccountPage() {
       {status && <p className="form-status form-status--success" role="status">{status}</p>}
       <section className="account-privacy-link"><Icon name="shield" /><div><strong>Privacy & support</strong><p>See what EFBI saves, request a copy or correction, report a safety concern, or manage account deletion.</p><Link to="/privacy">Open privacy controls <Icon name="arrow" /></Link></div></section>
       <div className="access-actions">
-        {verified ? <><Link className="button button--primary" to="/courses">Browse active courses</Link><Link className="button button--outline" to="/submit/ai-foundations">AI Foundations project</Link></> : <button className="button button--primary" onClick={async () => { await resendVerification(); setStatus('A new verification email was sent.') }}>Send verification again</button>}
+        {verified ? <Link className="button button--primary" to="/courses">Browse active courses</Link> : <button className="button button--primary" onClick={async () => { await resendVerification(); setStatus('A new verification email was sent.') }}>Send verification again</button>}
         <button className="button button--outline" onClick={() => void signOut()}>Sign out</button>
       </div>
     </AccessFrame>

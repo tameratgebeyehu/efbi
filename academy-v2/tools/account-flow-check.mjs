@@ -5,7 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'
-import { doc, setDoc } from 'firebase/firestore'
+import { collection, doc, getDocs, setDoc } from 'firebase/firestore'
 import {
   findBrowser,
   openPage,
@@ -22,15 +22,103 @@ const projectId = 'demo-efbi'
 const apiKey = 'demo-api-key'
 const password = 'Local-Test-Only-27E!'
 const email = `phase27e-${Date.now()}@example.test`
+const launchPack = JSON.parse(await readFile(new URL('../content/launch-pack-v1.json', import.meta.url), 'utf8'))
+const launchCourse = launchPack.courses.find((course) => course.courseId === 'ai-foundations')
+const launchLessons = launchPack.lessons
+  .filter((lesson) => lesson.courseId === 'ai-foundations')
+  .sort((left, right) => left.order - right.order)
+const launchVersionId = 'ai-foundations--v1'
+
+assert.ok(launchCourse, 'The launch pack must contain AI for Ethiopia.')
+assert.equal(launchLessons.length, 4, 'The launch rehearsal requires the four current modules.')
+
+async function seedLaunchCourse(db) {
+  const timestamp = new Date()
+  const auditId = 'audit-launch-rehearsal-ai-v1'
+  const courseReleaseId = 'release-ai-foundations-v0001'
+  const lessonIds = launchLessons.map((lesson) => lesson.lessonId)
+  const lessonOutlines = launchLessons.map((lesson) => ({
+    lessonId: lesson.lessonId,
+    title: lesson.title,
+    summary: lesson.summary,
+    order: lesson.order,
+    durationMinutes: lesson.durationMinutes,
+  }))
+
+  await Promise.all([
+    setDoc(doc(db, 'courseReleases', courseReleaseId), {
+      ...launchCourse,
+      releaseId: courseReleaseId,
+      version: 1,
+      draftRevision: 2,
+      publishedAt: timestamp,
+      publishedBy: 'launch-rehearsal-admin',
+      auditId,
+    }),
+    ...launchLessons.map((lesson) => {
+      const releaseId = `release-${lesson.lessonId}-v0001`
+      return setDoc(doc(db, 'lessonReleases', releaseId), {
+        ...lesson,
+        releaseId,
+        version: 1,
+        draftRevision: 2,
+        publishedAt: timestamp,
+        publishedBy: 'launch-rehearsal-admin',
+        auditId,
+      })
+    }),
+    setDoc(doc(db, 'courseVersions', launchVersionId), {
+      versionId: launchVersionId,
+      courseId: launchCourse.courseId,
+      courseTitle: launchCourse.title,
+      courseVersion: 1,
+      assessmentVersion: 1,
+      assessmentType: 'practice-only',
+      lessonIds,
+      publishedAt: timestamp,
+      publishedBy: 'launch-rehearsal-admin',
+      auditId,
+    }),
+    setDoc(doc(db, 'activeCourses', launchCourse.courseId), {
+      courseId: launchCourse.courseId,
+      versionId: launchVersionId,
+      courseVersion: 1,
+      courseTitle: launchCourse.title,
+      lessonCount: launchLessons.length,
+      assessmentVersion: 1,
+      assessmentType: 'practice-only',
+      activatedAt: timestamp,
+      activatedBy: 'launch-rehearsal-admin',
+      auditId,
+    }),
+    setDoc(doc(db, 'publicCourseCatalog', launchCourse.courseId), {
+      courseId: launchCourse.courseId,
+      versionId: launchVersionId,
+      courseVersion: 1,
+      courseTitle: launchCourse.title,
+      lessonCount: launchLessons.length,
+      assessmentVersion: 1,
+      assessmentType: 'practice-only',
+      courseDescription: launchCourse.description,
+      level: launchCourse.level,
+      language: launchCourse.language,
+      estimatedMinutes: launchCourse.estimatedMinutes,
+      lessonOutlines,
+      activatedAt: timestamp,
+      activatedBy: 'launch-rehearsal-admin',
+      auditId,
+    }),
+  ])
+}
 
 async function waitForPage(client, predicate, description, timeout = 15000) {
   const started = Date.now()
   while (Date.now() - started < timeout) {
-    const state = await client.evaluate(`({ pathname: location.pathname, text: document.body?.innerText ?? '' })`)
+    const state = await client.evaluate(`({ pathname: location.pathname, h1: document.querySelector('h1')?.textContent?.trim() ?? '', text: document.body?.innerText ?? '' })`)
     if (predicate(state)) return state
     await pause(100)
   }
-  const state = await client.evaluate(`({ pathname: location.pathname, text: document.body?.innerText ?? '' })`)
+  const state = await client.evaluate(`({ pathname: location.pathname, h1: document.querySelector('h1')?.textContent?.trim() ?? '', text: document.body?.innerText ?? '' })`)
   throw new Error(`${description} did not appear. Current route: ${state.pathname}\n${state.text.slice(0, 1200)}`)
 }
 
@@ -95,12 +183,14 @@ try {
   await testEnvironment.clearFirestore()
   await fetch(`http://127.0.0.1:9099/emulator/v1/projects/${projectId}/accounts`, { method: 'DELETE' })
   await testEnvironment.withSecurityRulesDisabled(async (context) => {
-    await setDoc(doc(context.firestore(), 'publicSettings', 'enrollment'), {
+    const db = context.firestore()
+    await setDoc(doc(db, 'publicSettings', 'enrollment'), {
       open: true,
       minAge: 12,
       updatedAt: new Date(),
       updatedBy: 'phase-27e-browser-check',
     })
+    await seedLaunchCourse(db)
   })
 
   const port = await reservePort()
@@ -118,7 +208,6 @@ try {
       VITE_FIREBASE_APP_ID: '1:123456789:web:phase27e',
       VITE_USE_FIREBASE_EMULATORS: 'true',
       VITE_SITE_MODE: 'enrollment-open',
-      VITE_AI_LESSON_01_YOUTUBE_ID: 'dQw4w9WgXcQ',
     },
   })
   previewProcess.stdout.on('data', (chunk) => { previewOutput += chunk })
@@ -139,6 +228,22 @@ try {
   await client.send('Network.enable')
   await client.send('Emulation.setDeviceMetricsOverride', { width: 1200, height: 900, deviceScaleFactor: 1, mobile: false })
 
+  await client.send('Page.navigate', { url: `${baseUrl}/courses/ai-foundations` })
+  await waitForReact(client)
+  await waitForPage(
+    client,
+    (state) => state.text.includes('AI for Ethiopia') && state.text.includes('How teachers can use AI for lesson planning') && state.text.toLowerCase().includes('learning only · no certificate'),
+    'Public AI for Ethiopia outline',
+    30000,
+  )
+  const publicBoundary = await client.evaluate(`({
+    lessonCount: document.querySelectorAll('.curriculum-list > li').length,
+    hasPrivateBody: document.body.innerText.includes('You do not need programming experience to begin.'),
+    hasAnswer: document.body.innerText.includes('Every module keeps its main learning in the written lesson'),
+  })`)
+  assert.deepEqual(publicBoundary, { lessonCount: 4, hasPrivateBody: false, hasAnswer: false }, 'The signed-out outline exposed private lesson content or omitted a module.')
+  console.log('✓ signed-out visitors received four safe outlines without lesson bodies or answer keys')
+
   await client.send('Page.navigate', { url: `${baseUrl}/join` })
   await waitForReact(client)
   await click(client, 'input[value="16-plus"]')
@@ -158,15 +263,79 @@ try {
   await waitForPage(client, (state) => state.pathname === '/account' && state.text.includes('Email verified'), 'Verified learner account')
   console.log('✓ local email verification unlocked the learner account')
 
-  await client.send('Page.navigate', { url: `${baseUrl}/learn/ai-foundations/understanding-ai` })
-  await waitForPage(client, (state) => state.pathname.includes('/learn/ai-foundations') && state.text.includes('Written lesson and transcript'), 'Protected lesson')
+  await client.send('Page.navigate', { url: `${baseUrl}/learn/ai-foundations/${launchLessons[0].lessonId}` })
+  await waitForPage(client, (state) => state.pathname.includes('/learn/ai-foundations') && state.text.includes('Written lesson and transcript') && state.text.includes(launchLessons[3].title), 'Protected four-module course')
   const landmarks = await client.evaluate(`document.querySelectorAll('main').length`)
   assert.equal(landmarks, 1, 'Protected lessons must contain exactly one main landmark.')
+  assert.equal(await client.evaluate(`document.querySelectorAll('.lesson-sidebar li').length`), 4, 'The protected course must list exactly four current modules.')
   await client.send('Network.setBlockedURLs', { urls: ['*youtube-nocookie.com*'] })
   await click(client, '.video-gate button')
   await waitForPage(client, (state) => state.text.includes('The video could not load.'), 'Video failure fallback', 16000)
   assert.equal(await client.evaluate(`document.body.innerText.includes('Written lesson and transcript')`), true, 'Written learning must remain available when video fails.')
   console.log('✓ blocked video produced a retry option while written learning stayed available')
+
+  await client.evaluate(`(() => {
+    const originalFetch = window.fetch.bind(window)
+    window.fetch = (input, init) => String(input).includes('youtube-nocookie.com/generate_204')
+      ? Promise.resolve(new Response(null, { status: 204 }))
+      : originalFetch(input, init)
+    window.__efbiObservedVideoSources = []
+    new MutationObserver(() => {
+      const frame = document.querySelector('.video-frame iframe')
+      if (frame && !window.__efbiObservedVideoSources.includes(frame.src)) window.__efbiObservedVideoSources.push(frame.src)
+    }).observe(document.body, { childList: true, subtree: true })
+  })()`)
+  await client.send('Network.setBlockedURLs', { urls: ['*youtube-nocookie.com/embed/*'] })
+
+  for (const [index, lesson] of launchLessons.entries()) {
+    await waitForPage(
+      client,
+      (state) => state.pathname.endsWith(`/${lesson.lessonId}`) && state.h1 === lesson.title && state.text.includes('Quick knowledge check'),
+      `Protected Module ${index + 1}`,
+    )
+    assert.equal(await client.evaluate(`Boolean(document.querySelector('.video-frame iframe'))`), false, `Module ${index + 1} loaded YouTube before learner consent.`)
+    await client.evaluate(`window.__efbiObservedVideoSources = []`)
+    await click(client, '.video-gate button')
+    let observedVideoSource = ''
+    for (let attempt = 0; attempt < 100 && !observedVideoSource; attempt += 1) {
+      observedVideoSource = await client.evaluate(`window.__efbiObservedVideoSources?.[0] ?? ''`)
+      if (!observedVideoSource) await pause(50)
+    }
+    assert.equal(observedVideoSource, `https://www.youtube-nocookie.com/embed/${lesson.videoYoutubeId}?rel=0`, `Module ${index + 1} used the wrong privacy-enhanced YouTube embed.`)
+
+    const selectedAnswers = await client.evaluate(`(() => {
+      const answers = ${JSON.stringify(launchLessons.map((item) => item.questions.map((question) => question.correctOption)))}[${index}]
+      const fields = [...document.querySelectorAll('.knowledge-check fieldset')]
+      if (fields.length !== answers.length) return -1
+      fields.forEach((field, questionIndex) => field.querySelectorAll('input[type="radio"]')[answers[questionIndex]]?.click())
+      return fields.filter((field) => field.querySelector('input[type="radio"]:checked')).length
+    })()`)
+    assert.equal(selectedAnswers, 3, `Module ${index + 1} did not present all three practice questions.`)
+    await click(client, '.knowledge-check button[type="submit"]')
+    await waitForPage(client, (state) => state.text.includes('3 of 3') && state.text.includes('You understood the key ideas.'), `Module ${index + 1} practice check`)
+
+    await click(client, '.lesson-completion button.button--primary')
+    const expectedPercent = (index + 1) * 25
+    await waitForPage(client, (state) => state.text.includes(`course progress is ${expectedPercent}%`), `Module ${index + 1} saved progress`)
+    if (index < launchLessons.length - 1) {
+      await click(client, '.lesson-next a.button--primary')
+    }
+  }
+  await waitForPage(client, (state) => state.text.includes('You completed all 4 lessons.') && state.text.includes('This learning-only course has no certificate.'), 'Completed learning-only course')
+
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore()
+    const learners = await getDocs(collection(db, 'users'))
+    assert.equal(learners.size, 1, 'The isolated rehearsal must contain exactly one synthetic learner.')
+    const progress = await getDocs(collection(db, 'users', learners.docs[0].id, 'progress'))
+    assert.equal(progress.size, 1, 'The completed launch rehearsal must create exactly one course-progress record.')
+    assert.equal(progress.docs[0].id, 'ai-foundations', 'The progress record was saved under the wrong course.')
+    const savedProgress = progress.docs[0].data()
+    assert.equal(savedProgress.versionId, launchVersionId)
+    assert.equal(savedProgress.percent, undefined, 'Versioned progress must not store a client-controlled percentage.')
+    assert.deepEqual(savedProgress.completedLessonIds, launchLessons.map((lesson) => lesson.lessonId))
+  })
+  console.log('✓ one verified learner completed all four EFBI modules with exact videos, practice checks, and versioned progress')
 
   await client.send('Network.setBlockedURLs', { urls: [] })
   await client.send('Page.navigate', { url: `${baseUrl}/account` })

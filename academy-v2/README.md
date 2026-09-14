@@ -38,3 +38,5 @@ npm run test:admin-recovery
 Start with `PROJECT_STATUS.md`, `LAUNCH_ROADMAP.md`, `PHASE_27G_RELEASE_EVIDENCE.md`, and `MANUAL_RELEASE_CHECKLIST.md`.
 
 The first reviewable educational pack and its safe Admin Studio workflow are documented in `LAUNCH_CONTENT_PACK.md`.
+
+`npm run test:account-flow` rehearses the exact current four-module course entirely in isolated Firebase emulators. It does not publish content or access learner data in the cloud.
