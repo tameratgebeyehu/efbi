@@ -43,6 +43,7 @@ Before adding Modules 5–12, the owner must confirm:
 5. The importer creates only missing IDs as private drafts. Existing IDs are skipped.
 6. Every created draft receives a separate immutable `adminAudit` event.
 7. If electricity or connectivity interrupts the operation, reopen the page and import only the remaining items.
+8. Run `npm run check:launch-drafts` from `academy-v2`. It reads the development project and confirms the exact ten private drafts, their revision-one state, owner identity, and linked audit events without publishing anything.
 
 The importer cannot publish programs or articles, publish course or lesson releases, activate a course, open enrollment, issue a certificate, or overwrite an existing draft.
 

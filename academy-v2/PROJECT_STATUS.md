@@ -776,6 +776,19 @@ The complete current learner course has passed an isolated emulator-only rehears
 
 Phase 27 remains in progress. The owner must import the pack into the development project, review all drafts, watch the four videos beside their written lessons, approve or edit all twelve answers, publish and activate the reviewed course, and complete the real-device, assistive-technology, Firebase Console, and final controlled-security checks.
 
+## Phase 27J — controlled development-cloud draft import
+
+This checkpoint is in progress:
+
+1. The read-only cloud preflight reconfirmed closed enrollment, the three approved development Authentication domains, password-required email sign-in, and only the verified owner administrator.
+2. The development project still contains zero published programs, active courses, public catalog records, course versions, course releases, lesson releases, and published articles.
+3. `npm run check:launch-drafts` now compares the ten source-pack IDs and fields with their private cloud drafts, verifies revision-one lifecycle metadata, confirms the approved owner identity, and follows every draft's immutable audit link.
+4. The verifier prints only safe inventory metadata. It never prints lesson bodies, answers, credentials, learner information, or audit details, and it has no write operation.
+5. Its first cloud run correctly reports all ten drafts missing. The private Admin Studio import still requires the verified owner's browser-session sign-in, exact confirmation phrase, and review acknowledgement.
+6. No draft, release, public content, enrollment setting, Firebase rule, Hosting build, or custom domain was changed or deployed by this checkpoint so far.
+
+Phase 27J completes only after the owner imports through localhost Admin Studio and the read-only verifier confirms all ten exact private drafts and their ten linked audit events.
+
 
 ## Recovery commands
 

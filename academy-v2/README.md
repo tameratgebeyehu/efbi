@@ -22,9 +22,12 @@ npm run test:hosting-config
 npm run test:rules
 npm run test:account-flow
 npm run test:admin-recovery
+npm run check:launch-drafts
 ```
 
 `npm run check:cloud-readiness` is read-only and checks the approved Doha development project. It intentionally fails while required public content is absent or a cloud security boundary is wrong.
+
+`npm run check:launch-drafts` is also read-only. It verifies that the development project contains the exact ten source-matched launch drafts and their audit links; it never publishes or activates them.
 
 `npm run secure:cloud-preview -- --confirm "secure-preview:efbi-academy-dev-doha"` is a narrow owner utility. It can add the approved localhost Authentication domain and close enrollment; it cannot open enrollment, grant roles, publish content, or deploy.
 
