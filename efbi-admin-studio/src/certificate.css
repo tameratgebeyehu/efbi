@@ -46,5 +46,5 @@
 .certificate-locked strong, .certificate-boundary strong { color: var(--deep); }
 .certificate-locked p, .certificate-boundary p { margin: 5px 0 0; }
 
-@media (max-width: 1100px) { .certificate-layout-admin { grid-template-columns: 210px minmax(0, 1fr); } .certificate-actions { position: static; grid-column: 1 / -1; } }
+@media (max-width: 1280px) { .certificate-layout-admin { grid-template-columns: 210px minmax(0, 1fr); } .certificate-actions { position: static; grid-column: 1 / -1; } }
 @media (max-width: 700px) { .certificate-layout-admin { grid-template-columns: 1fr; } .certificate-list { position: static; max-height: 560px; } .certificate-record-admin { padding: 20px 16px; } .certificate-record-admin > header { flex-direction: column; } .certificate-record-admin > dl { grid-template-columns: 1fr; } .certificate-actions { grid-column: auto; } }

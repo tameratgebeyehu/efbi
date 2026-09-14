@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from './auth-context'
 import type { CourseLesson, KnowledgeCheckQuestion } from './data'
@@ -58,7 +58,12 @@ function progressErrorMessage(error: unknown) {
 function LessonVideo({ lesson }: { lesson: CourseLesson }) {
   const [lowBandwidth, setLowBandwidth] = useState(readLowBandwidthPreference)
   const [videoState, setVideoState] = useState<'idle' | 'loading' | 'ready' | 'failed'>('idle')
+  const frameRef = useRef<HTMLIFrameElement>(null)
+  const shortcutHelpId = useId()
   const videoId = lesson.videoYoutubeId ?? getYouTubeVideoId(lesson.slug)
+  const videoSource = videoId
+    ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&controls=1&disablekb=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`
+    : ''
 
   useEffect(() => {
     if (videoState !== 'loading') return undefined
@@ -80,6 +85,19 @@ function LessonVideo({ lesson }: { lesson: CourseLesson }) {
     }
   }, [videoState])
 
+  useEffect(() => {
+    if (videoState !== 'ready') return undefined
+    function pauseWhenHidden() {
+      if (document.visibilityState !== 'hidden') return
+      frameRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }),
+        'https://www.youtube-nocookie.com',
+      )
+    }
+    document.addEventListener('visibilitychange', pauseWhenHidden)
+    return () => document.removeEventListener('visibilitychange', pauseWhenHidden)
+  }, [videoState])
+
   function updateLowBandwidth(enabled: boolean) {
     saveLowBandwidthPreference(enabled)
     setLowBandwidth(enabled)
@@ -96,14 +114,18 @@ function LessonVideo({ lesson }: { lesson: CourseLesson }) {
       {videoId && videoState === 'ready' && !lowBandwidth ? (
         <div className="video-frame">
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0`}
+            ref={frameRef}
+            src={videoSource}
             title={`${lesson.title} — EFBI Academy lesson video`}
             loading="lazy"
             referrerPolicy="strict-origin-when-cross-origin"
-            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
+            tabIndex={0}
+            aria-describedby={shortcutHelpId}
             onError={() => setVideoState('failed')}
           />
+          <div className="video-player-help" id={shortcutHelpId}><strong>Keyboard</strong><span>Focus or click the player: Space or K pauses, arrows seek or change volume, J/L jump 10 seconds, M mutes, F opens full screen, and &lt;/&gt; changes speed. Switching browser tabs pauses playback.</span></div>
         </div>
       ) : (
         <div className="video-gate">

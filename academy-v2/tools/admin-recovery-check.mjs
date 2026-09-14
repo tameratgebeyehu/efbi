@@ -31,6 +31,7 @@ const editors = [
   { nav: 'Courses', heading: 'Course workspace', label: 'Course title', key: 'efbi-admin-course-recovery-v1', prompt: 'Unsaved course text found', restored: 'locally saved course text was restored' },
   { nav: 'Lessons', heading: 'Lesson workspace', label: 'Lesson title', key: 'efbi-admin-lesson-recovery-v1', prompt: 'Unsaved lesson text found', restored: 'locally saved lesson text was restored' },
 ]
+const adminSectionLabels = ['Overview', 'Launch readiness', 'Launch drafts', 'Enrollment', 'Safety & incidents', 'Programs', 'Blog', 'Courses', 'Lessons', 'Activation', 'Reviews', 'Certificates', 'Audit history', 'Privacy & retention']
 
 async function waitForPage(client, predicate, description, timeout = 15000) {
   const started = Date.now()
@@ -133,6 +134,29 @@ async function inspectStudioNavigation(client, width, height, compact) {
     await client.send('Runtime.evaluate', { expression: `window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))` })
     await pause(50)
     assert.equal(await client.evaluate(`document.querySelector('.studio-menu-toggle')?.getAttribute('aria-expanded')`), 'false', `${width}px: Escape does not close the compact menu.`)
+  }
+
+  for (const label of adminSectionLabels) {
+    if (compact && await client.evaluate(`document.querySelector('.studio-menu-toggle')?.getAttribute('aria-expanded') !== 'true'`)) {
+      await clickSelector(client, '.studio-menu-toggle')
+      await pause(30)
+    }
+    const selected = await client.evaluate(`(() => {
+      const button = [...document.querySelectorAll('#studio-navigation button')].find((candidate) => candidate.textContent?.trim() === ${JSON.stringify(label)})
+      if (!(button instanceof HTMLButtonElement)) return false
+      button.click()
+      return true
+    })()`)
+    assert.equal(selected, true, `${width}px: ${label} could not be selected.`)
+    await pause(120)
+    const workspace = await client.evaluate(`({
+      mainCount: document.querySelectorAll('main').length,
+      h1Count: document.querySelectorAll('main h1').length,
+      overflow: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth,
+    })`)
+    assert.equal(workspace.mainCount, 1, `${width}px ${label}: exactly one main landmark is required.`)
+    assert.equal(workspace.h1Count, 1, `${width}px ${label}: exactly one workspace heading is required.`)
+    assert.equal(workspace.overflow <= 1, true, `${width}px ${label}: page overflows horizontally by ${workspace.overflow}px.`)
   }
 }
 

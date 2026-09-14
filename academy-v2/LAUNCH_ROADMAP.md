@@ -110,6 +110,8 @@ Phase 27J development-cloud import complete: the exact tested Firestore rules we
 
 Phase 27K responsive Admin Studio checkpoint complete in source: the desktop section list now scrolls independently while owner and sign-out controls remain reachable. Zoomed, tablet, and phone layouts use an accessible collapsible menu instead of hiding later sections in a horizontal strip. An authenticated emulator browser verifies all fourteen menu items at 1152×650, 800×700, and 375×700, including Escape behavior, the final Privacy & retention item, visible operator controls, and no horizontal page overflow. The existing draft-import, editor-recovery, and deletion journeys remain green. Human visual, touch, zoom, and screen-reader confirmation remains open. Nothing was deployed.
 
+Phase 27L lesson-video checkpoint complete in source: all four videos remain consent-gated and privacy-enhanced with no autoplay. Native YouTube keyboard controls are explicitly enabled and explained, browser-tab hiding sends only a pause command, and unnecessary sharing and clipboard permissions are removed. YouTube-controlled branding and links remain unobscured because its current documented branding parameter is deprecated and its policy forbids covering player controls. The exact four-module emulator journey, public browser suite, source-security scan, preview build, and Hosting checks pass. Human playback, captions, keyboard, full-screen, and slow-connection confirmation remains open. Nothing was deployed.
+
 ## Phase 28 — controlled internet launch
 
 1. Deploy the tested build to development Hosting with enrollment still closed.

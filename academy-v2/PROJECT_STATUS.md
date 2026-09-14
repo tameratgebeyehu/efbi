@@ -808,6 +808,22 @@ The responsive navigation development checkpoint is complete:
 
 Human zoom, touch, and screen-reader confirmation remains required before launch.
 
+## Phase 27L — compliant lesson video controls
+
+The lesson-player development checkpoint is complete:
+
+1. All lesson embeds remain click-to-load on `youtube-nocookie.com`; no YouTube request occurs before learner consent and no video autoplays.
+2. Native YouTube controls and keyboard support are explicit. Space/K, arrows, J/L, M, F, and speed shortcuts are explained directly below the player.
+3. The iframe is keyboard-focusable and carries the exact site origin for IFrame API commands. When the browser tab becomes hidden, EFBI sends only the `pauseVideo` command.
+4. Unnecessary `web-share` and clipboard iframe permissions were removed from learner and owner-preview embeds.
+5. EFBI does not hide, cover, or disable YouTube branding, Share, Watch on YouTube, advertising, or other player-controlled elements. YouTube's branding-removal parameter is deprecated, and its current policy prohibits obscuring any player control.
+6. `VIDEO_EMBED_POLICY.md` records the product, privacy, accessibility, branding, and release boundary with official Google references.
+7. The isolated four-module learner journey verifies every video ID, approved parameter, keyboard-enabled state, focusability, permission boundary, written fallback, twelve practice checks, progress, account recovery, and deletion flow.
+8. The 58-route responsive browser suite, 48-file source-security scan, preview build, security headers, and credential-leak check remain green.
+9. No lesson release, course activation, learner record, Hosting target, or custom domain was changed or deployed.
+
+Human playback, captions, keyboard, mobile full-screen, and slower-connection confirmation remains required before launch.
+
 
 ## Recovery commands
 

@@ -301,7 +301,22 @@ try {
       observedVideoSource = await client.evaluate(`window.__efbiObservedVideoSources?.[0] ?? ''`)
       if (!observedVideoSource) await pause(50)
     }
-    assert.equal(observedVideoSource, `https://www.youtube-nocookie.com/embed/${lesson.videoYoutubeId}?rel=0`, `Module ${index + 1} used the wrong privacy-enhanced YouTube embed.`)
+    const observedUrl = new URL(observedVideoSource)
+    assert.equal(`${observedUrl.origin}${observedUrl.pathname}`, `https://www.youtube-nocookie.com/embed/${lesson.videoYoutubeId}`, `Module ${index + 1} used the wrong privacy-enhanced YouTube embed.`)
+    assert.deepEqual(
+      Object.fromEntries(observedUrl.searchParams),
+      { rel: '0', controls: '1', disablekb: '0', playsinline: '1', enablejsapi: '1', origin: baseUrl },
+      `Module ${index + 1} did not preserve the approved native controls, keyboard support, and IFrame API origin.`,
+    )
+    const playerBoundary = await client.evaluate(`(() => {
+      const frame = document.querySelector('.video-frame iframe')
+      return {
+        focusable: frame?.tabIndex === 0,
+        minimalPermissions: !String(frame?.getAttribute('allow')).includes('web-share') && !String(frame?.getAttribute('allow')).includes('clipboard-write'),
+        shortcutHelp: document.querySelector('.video-player-help')?.textContent?.includes('Space or K pauses') ?? false,
+      }
+    })()`)
+    assert.deepEqual(playerBoundary, { focusable: true, minimalPermissions: true, shortcutHelp: true }, `Module ${index + 1} player accessibility or permission boundary is incomplete.`)
 
     const selectedAnswers = await client.evaluate(`(() => {
       const answers = ${JSON.stringify(launchLessons.map((item) => item.questions.map((question) => question.correctOption)))}[${index}]
