@@ -784,8 +784,11 @@ This checkpoint is in progress:
 2. The development project still contains zero published programs, active courses, public catalog records, course versions, course releases, lesson releases, and published articles.
 3. `npm run check:launch-drafts` now compares the ten source-pack IDs and fields with their private cloud drafts, verifies revision-one lifecycle metadata, confirms the approved owner identity, and follows every draft's immutable audit link.
 4. The verifier prints only safe inventory metadata. It never prints lesson bodies, answers, credentials, learner information, or audit details, and it has no write operation.
-5. Its first cloud run correctly reports all ten drafts missing. The private Admin Studio import still requires the verified owner's browser-session sign-in, exact confirmation phrase, and review acknowledgement.
-6. No draft, release, public content, enrollment setting, Firebase rule, Hosting build, or custom domain was changed or deployed by this checkpoint so far.
+5. Its first cloud run correctly reported all ten drafts missing. The attempted Studio import wrote nothing because the development project was still using an older ruleset from 2026-09-12.
+6. A read-only deployed-rules check now compares normalized source and SHA-256 fingerprints without printing rule contents. It confirmed the former cloud fingerprint did not match the tested repository rules.
+7. All 96 isolated Firestore authorization and lifecycle tests passed immediately before deployment. Only `firestore.rules` was then deployed to `efbi-academy-dev-doha`; the cloud and local fingerprints now match at `a2d85fc86bc4dda9`.
+8. The post-deployment cloud preflight confirms enrollment remains closed, operator roles and Authentication domains are unchanged, all seven public-content collections remain empty, and all ten private launch drafts remain absent until the owner retries the protected import.
+9. No draft, release, public content, enrollment setting, Authentication account, Hosting build, or custom domain was changed or deployed.
 
 Phase 27J completes only after the owner imports through localhost Admin Studio and the read-only verifier confirms all ten exact private drafts and their ten linked audit events.
 

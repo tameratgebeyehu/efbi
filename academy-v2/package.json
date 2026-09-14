@@ -17,6 +17,7 @@
     "test:source-security": "node tools/source-security-check.mjs",
     "check:cloud-readiness": "node tools/cloud-readiness-check.cjs",
     "check:launch-drafts": "node tools/launch-draft-readiness-check.cjs",
+    "check:deployed-rules": "node tools/deployed-rules-check.cjs",
     "secure:cloud-preview": "node tools/secure-cloud-preview.cjs",
     "test:account-flow": "firebase emulators:exec --only auth,firestore --project demo-efbi \"node tools/account-flow-check.mjs\"",
     "test:admin-recovery": "firebase emulators:exec --only auth,firestore --project demo-efbi \"node tools/admin-recovery-check.mjs\"",
