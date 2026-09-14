@@ -31,6 +31,18 @@ type PackRecord = {
 
 const pack = JSON.parse(launchPackRaw) as LaunchPack
 const confirmationPhrase = 'IMPORT LAUNCH DRAFTS'
+const importTarget = import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true'
+  ? 'Local Firebase emulators'
+  : `Development cloud · ${import.meta.env.VITE_FIREBASE_PROJECT_ID?.trim() || 'project not configured'}`
+
+function safeImportFailure(error: unknown, created: number) {
+  const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : ''
+  const progress = `Import stopped safely after ${created} item${created === 1 ? '' : 's'}. Existing drafts were not overwritten.`
+  if (code.endsWith('permission-denied') || code.endsWith('unauthenticated')) return `${progress} Sign out, sign in again with the verified owner account, and retry.`
+  if (code.endsWith('failed-precondition') || code.endsWith('invalid-argument')) return `${progress} The cloud rejected a draft or audit pair. Keep this page open and report this exact notice.`
+  if (code.endsWith('unavailable') || code.endsWith('deadline-exceeded') || code.endsWith('network-request-failed')) return `${progress} Check the connection, then rerun to import only missing items.`
+  return `${progress} Refresh the inventory and retry; if it repeats, keep this page open for diagnosis.`
+}
 
 function validatePack() {
   const errors: string[] = []
@@ -155,9 +167,9 @@ export default function LaunchContentPack({ user }: { user: User }) {
       setConfirmed(false)
       await refresh()
       setNotice({ kind: 'success', message: created ? `${created} audited launch drafts were imported. Review every item before marking it ready.` : 'Every launch draft already exists. Nothing was overwritten.' })
-    } catch {
+    } catch (error) {
       await refresh()
-      setNotice({ kind: 'error', message: `Import stopped safely after ${created} item${created === 1 ? '' : 's'}. Existing drafts were not overwritten; review them and rerun to import only missing items.` })
+      setNotice({ kind: 'error', message: safeImportFailure(error, created) })
     } finally {
       setBusy(false)
     }
@@ -167,7 +179,7 @@ export default function LaunchContentPack({ user }: { user: User }) {
     <header className="workspace-title"><div><p className="eyebrow">Phase 27 · Owner review</p><h1>Launch content drafts</h1><p>Bring the four EFBI programs, first AI course, four lessons, twelve practice questions, and first article into the protected review workflow.</p></div><span className="security-badge">Drafts only</span></header>
     {notice && <div className={`notice notice--${notice.kind}`} role={notice.kind === 'error' ? 'alert' : 'status'}>{notice.message}</div>}
     {validationErrors.length > 0 && <div className="notice notice--error" role="alert"><strong>Pack validation failed.</strong><ul>{validationErrors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
-    <aside className="launch-pack-boundary"><strong>Nothing is published by this action.</strong><p>Each missing item is created as a private revision-one draft with its own immutable audit event. Existing IDs are skipped, so interruption is recoverable and no saved content is overwritten.</p></aside>
+    <aside className="launch-pack-boundary"><strong>Nothing is published by this action.</strong><p>Each missing item is created as a private revision-one draft with its own immutable audit event. Existing IDs are skipped, so interruption is recoverable and no saved content is overwritten.</p><p><b>Current target:</b> {importTarget}</p></aside>
     <section className="launch-pack-summary" aria-label="Launch draft pack summary">
       <article><small>Programs</small><strong>{pack.programs.length}</strong></article>
       <article><small>Course</small><strong>{pack.courses.length}</strong></article>
