@@ -73,6 +73,26 @@ export function validLessonId(value: string) {
     && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)
 }
 
+export function extractYouTubeVideoId(value: string) {
+  const input = value.trim()
+  if (!input) return ''
+  if (/^[A-Za-z0-9_-]{11}$/.test(input)) return input
+  try {
+    const candidate = /^(?:www\.)?(?:youtube(?:-nocookie)?\.com|youtu\.be)\//i.test(input) ? `https://${input}` : input
+    const url = new URL(candidate)
+    const host = url.hostname.toLowerCase()
+    let id = ''
+    if (host === 'youtu.be') id = url.pathname.split('/').filter(Boolean)[0] ?? ''
+    else if (host === 'youtube.com' || host.endsWith('.youtube.com') || host === 'youtube-nocookie.com' || host.endsWith('.youtube-nocookie.com')) {
+      if (url.pathname === '/watch') id = url.searchParams.get('v') ?? ''
+      else id = url.pathname.match(/^\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{11})(?:\/|$)/)?.[1] ?? ''
+    }
+    return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : ''
+  } catch {
+    return ''
+  }
+}
+
 function normalizeQuestion(question: PracticeQuestion): PracticeQuestion {
   return {
     prompt: question.prompt.trim(),
@@ -92,6 +112,8 @@ function validateQuestion(question: PracticeQuestion, label: string, errors: str
 }
 
 export function normalizeLessonForm(values: LessonFormValues) {
+  const rawYouTubeInput = values.videoYoutubeId.trim()
+  const videoYoutubeId = extractYouTubeVideoId(rawYouTubeInput)
   const content: LessonContent = {
     courseId: values.courseId.trim(),
     lessonId: values.lessonId.trim(),
@@ -99,7 +121,7 @@ export function normalizeLessonForm(values: LessonFormValues) {
     title: values.title.trim(),
     summary: values.summary.trim(),
     durationMinutes: Number(values.durationMinutes),
-    videoYoutubeId: values.videoYoutubeId.trim(),
+    videoYoutubeId,
     bodyMarkdown: values.bodyMarkdown.trim(),
     questions: values.questions.map(normalizeQuestion),
   }
@@ -110,7 +132,7 @@ export function normalizeLessonForm(values: LessonFormValues) {
   if (content.title.length < 5 || content.title.length > 100) errors.push('Lesson title must be 5-100 characters.')
   if (content.summary.length < 20 || content.summary.length > 240) errors.push('Lesson summary must be 20-240 characters.')
   if (!Number.isInteger(content.durationMinutes) || content.durationMinutes < 5 || content.durationMinutes > 300) errors.push('Lesson time must be 5-300 minutes.')
-  if (content.videoYoutubeId && !/^[A-Za-z0-9_-]{11}$/.test(content.videoYoutubeId)) errors.push('YouTube ID must be empty or exactly 11 characters.')
+  if (rawYouTubeInput && !videoYoutubeId) errors.push('Paste a valid YouTube link or an 11-character video ID.')
   if (content.bodyMarkdown.length < 100 || content.bodyMarkdown.length > 12000) errors.push('Written lesson must be 100-12,000 characters.')
   if (content.questions.length > 3) errors.push('A lesson can have up to 3 practice questions.')
   content.questions.forEach((question, index) => validateQuestion(question, `Question ${index + 1}`, errors))

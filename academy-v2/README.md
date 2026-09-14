@@ -47,4 +47,6 @@ The first reviewable educational pack and its safe Admin Studio workflow are doc
 
 YouTube privacy, keyboard, branding, and fallback decisions are documented in `VIDEO_EMBED_POLICY.md`.
 
+The short owner guide for adding programs, courses, YouTube videos, questions, articles, and publishing is `ADMIN_STUDIO_GUIDE.md`.
+
 `npm run test:account-flow` rehearses the exact current four-module course entirely in isolated Firebase emulators. It does not publish content or access learner data in the cloud.

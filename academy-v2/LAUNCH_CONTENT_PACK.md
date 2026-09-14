@@ -38,6 +38,8 @@ Before adding Modules 5–12, the owner must confirm:
 
 On 2026-09-14, the four public YouTube oEmbed records matched the expected module titles and identified the channel as `EFBI`. The public caption-track listing returned zero discoverable tracks for all four videos. Treat captions as unconfirmed until the owner verifies them in the YouTube player or adds reviewed caption tracks in YouTube Studio. Written lessons remain available, but they do not replace synchronized captions for video accessibility.
 
+The owner subsequently confirmed that captions are present in the actual YouTube players. Repeat the caption check in the final hosted preview because the public metadata endpoint did not expose the tracks.
+
 ## Safe import
 
 1. Start Admin Studio locally and sign in as the verified owner.

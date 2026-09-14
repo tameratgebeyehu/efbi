@@ -18,22 +18,26 @@ import LaunchContentPack from './LaunchContentPack'
 
 type AccessState = 'loading' | 'signed-out' | 'denied' | 'admin' | 'reviewer' | 'error'
 type StudioSection = 'overview' | 'launch' | 'launch-drafts' | 'enrollment' | 'safety' | 'programs' | 'blog' | 'courses' | 'lessons' | 'activation' | 'reviews' | 'certificates' | 'audit' | 'retention'
+type NavigationItem = { id: StudioSection; label: string }
 
-const adminNavigation: { id: StudioSection; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'launch', label: 'Launch readiness' },
-  { id: 'launch-drafts', label: 'Launch drafts' },
-  { id: 'enrollment', label: 'Enrollment' },
-  { id: 'safety', label: 'Safety & incidents' },
+const ownerNavigation: NavigationItem[] = [
+  { id: 'overview', label: 'Home' },
   { id: 'programs', label: 'Programs' },
-  { id: 'blog', label: 'Blog' },
   { id: 'courses', label: 'Courses' },
-  { id: 'lessons', label: 'Lessons' },
-  { id: 'activation', label: 'Activation' },
-  { id: 'reviews', label: 'Reviews' },
+  { id: 'lessons', label: 'Lessons & videos' },
+  { id: 'activation', label: 'Publish course' },
+  { id: 'blog', label: 'Blog' },
+  { id: 'reviews', label: 'Learner reviews' },
   { id: 'certificates', label: 'Certificates' },
-  { id: 'audit', label: 'Audit history' },
-  { id: 'retention', label: 'Privacy & retention' },
+]
+
+const advancedNavigation: NavigationItem[] = [
+  { id: 'launch', label: 'Launch checks' },
+  { id: 'launch-drafts', label: 'Starter content' },
+  { id: 'enrollment', label: 'Enrollment settings' },
+  { id: 'safety', label: 'Safety & incidents' },
+  { id: 'audit', label: 'Activity history' },
+  { id: 'retention', label: 'Privacy & deletion' },
 ]
 
 const localHost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
@@ -80,8 +84,10 @@ function SignIn({ onError }: { onError: (message: string) => void }) {
 function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; signOut: () => Promise<void> }) {
   const [section, setSection] = useState<StudioSection>(role === 'reviewer' ? 'reviews' : 'overview')
   const [navigationOpen, setNavigationOpen] = useState(false)
-  const navigation = role === 'admin' ? adminNavigation : adminNavigation.filter((item) => item.id === 'reviews')
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const navigation = role === 'admin' ? [...ownerNavigation, ...advancedNavigation] : ownerNavigation.filter((item) => item.id === 'reviews')
   const currentSectionLabel = navigation.find((item) => item.id === section)?.label ?? 'Studio sections'
+  const advancedActive = advancedNavigation.some((item) => item.id === section)
 
   useEffect(() => {
     if (!navigationOpen) return undefined
@@ -97,19 +103,13 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
     setNavigationOpen(false)
   }
   const areas = [
-    { number: '01', title: 'Programs', detail: 'Organize, preview, and publish the learning paths shown on the public website.', status: 'Available' },
-    { number: '02', title: 'Blog', detail: 'Draft, preview, publish, correct, and unpublish public articles.', status: 'Available' },
-    { number: '03', title: 'Courses', detail: 'Create, review, preview, and publish versioned course records.', status: 'Available' },
-    { number: '04', title: 'Lessons & questions', detail: 'Draft lessons and browser-only practice checks with audited saves.', status: 'Available' },
-    { number: '05', title: 'Course activation', detail: 'Lock matching course and lesson releases into one audited version for new learners.', status: 'Available' },
-    { number: '06', title: 'Reviews & assignments', detail: 'Assign immutable submissions and give reviewers narrow read access.', status: 'Available' },
-    { number: '07', title: 'Certificates', detail: 'Issue, revoke, or replace a credential through atomic audited actions.', status: 'Available' },
-    { number: '08', title: 'Audit history', detail: 'Read the immutable history of content and credential operations.', status: 'Available' },
-    { number: '09', title: 'Enrollment', detail: 'Keep learner profile creation closed until the public launch gates are approved.', status: 'Closed by default' },
-    { number: '10', title: 'Privacy & retention', detail: 'Process deletion requests with documented holds and protected credential evidence.', status: 'Available' },
-    { number: '11', title: 'Safety & incidents', detail: 'Follow the response checklist and keep unresolved safeguarding launch gates visible.', status: '3 gates open' },
-    { number: '12', title: 'Launch readiness', detail: 'Inventory public content, active course links, placeholder risks, and manual quality gates.', status: 'Available' },
-    { number: '13', title: 'Launch drafts', detail: 'Import the reviewed starter pack as private audited drafts without overwriting content.', status: 'Drafts only' },
+    { section: 'programs' as const, number: '01', title: 'Programs', detail: 'Edit the learning areas shown on the website.' },
+    { section: 'courses' as const, number: '02', title: 'Courses', detail: 'Create or update a course.' },
+    { section: 'lessons' as const, number: '03', title: 'Lessons & videos', detail: 'Add lesson text, a YouTube link, and practice questions.' },
+    { section: 'activation' as const, number: '04', title: 'Publish course', detail: 'Put the approved course and lessons online together.' },
+    { section: 'blog' as const, number: '05', title: 'Blog', detail: 'Write and publish an EFBI article.' },
+    { section: 'reviews' as const, number: '06', title: 'Learner reviews', detail: 'Review submitted student projects.' },
+    { section: 'certificates' as const, number: '07', title: 'Certificates', detail: 'Manage certificate requests and issued certificates.' },
   ]
 
   return (
@@ -118,20 +118,21 @@ function Dashboard({ user, role, signOut }: { user: User; role: StudioRole; sign
         <div className="brand brand--light"><img src="/efbi-icon.png" alt="" /><span>EFBI</span><small>ADMIN STUDIO</small></div>
         <button className="studio-menu-toggle" type="button" aria-expanded={navigationOpen} aria-controls="studio-navigation" onClick={() => setNavigationOpen((current) => !current)}><span>{navigationOpen ? 'Close menu' : 'Open menu'}</span><small>{currentSectionLabel}</small></button>
         <nav id="studio-navigation" className={navigationOpen ? 'is-open' : ''} aria-label="Studio sections">
-          {navigation.map((item) => <button key={item.id} className={section === item.id ? 'active' : ''} aria-current={section === item.id ? 'page' : undefined} onClick={() => openSection(item.id)}>{item.label}</button>)}
+          {(role === 'admin' ? ownerNavigation : navigation).map((item) => <button data-studio-section key={item.id} className={section === item.id ? 'active' : ''} aria-current={section === item.id ? 'page' : undefined} onClick={() => openSection(item.id)}>{item.label}</button>)}
+          {role === 'admin' && <div className={`advanced-navigation ${advancedOpen ? 'is-open' : ''}`}><button className={advancedActive ? 'advanced-navigation-toggle active' : 'advanced-navigation-toggle'} type="button" aria-expanded={advancedOpen} onClick={() => setAdvancedOpen((current) => !current)}><span>Advanced tools</span><small>{advancedOpen ? 'Hide' : 'Show'}</small></button><div>{advancedNavigation.map((item) => <button data-studio-section key={item.id} className={section === item.id ? 'active' : ''} aria-current={section === item.id ? 'page' : undefined} onClick={() => openSection(item.id)}>{item.label}</button>)}</div></div>}
         </nav>
         <div className="operator"><small>{role === 'admin' ? 'Verified administrator' : 'Verified reviewer'}</small><strong>{user.email}</strong><button onClick={() => void signOut()}>Sign out</button></div>
       </aside>
       <main className="workspace">
         {section === 'launch' && role === 'admin' ? <LaunchReadiness /> : section === 'launch-drafts' && role === 'admin' ? <LaunchContentPack user={user} /> : section === 'enrollment' && role === 'admin' ? <EnrollmentManager user={user} /> : section === 'safety' && role === 'admin' ? <SafetyReadiness /> : section === 'programs' && role === 'admin' ? <ProgramManager user={user} /> : section === 'blog' && role === 'admin' ? <BlogManager user={user} /> : section === 'courses' && role === 'admin' ? <CourseManager user={user} /> : section === 'lessons' && role === 'admin' ? <LessonManager user={user} /> : section === 'activation' && role === 'admin' ? <CourseActivationManager user={user} /> : section === 'reviews' ? <ReviewManager user={user} role={role} /> : section === 'certificates' && role === 'admin' ? <CertificateManager user={user} /> : section === 'audit' && role === 'admin' ? <AuditLog /> : section === 'retention' && role === 'admin' ? <RetentionManager user={user} /> : <>
-        <header><div><p className="eyebrow">Phase 27 workspace</p><h1>Good morning, builder.</h1><p>Content, assessment, privacy, and launch-quality controls are available through protected steps.</p></div><span className="security-badge">Admin claim verified</span></header>
+        <header><div><p className="eyebrow">EFBI Admin Studio</p><h1>What would you like to do?</h1><p>Choose a task below. Your drafts save safely, and nothing becomes public until you approve it.</p></div><span className="security-badge">Signed in</span></header>
         <section className="safety-grid" aria-label="Security status">
-          <article><small>Network</small><strong>Localhost only</strong><p>Not published with the student website.</p></article>
-          <article><small>Session</small><strong>Browser session</strong><p>No shared admin password or permanent browser role.</p></article>
-          <article><small>Privacy</small><strong>Controlled deletion</strong><p>Learner requests are restricted, reviewed, and permanently recorded.</p></article>
+          <article><small>Studio</small><strong>Private on this computer</strong><p>The admin area is not part of the public website.</p></article>
+          <article><small>Enrollment</small><strong>Currently closed</strong><p>Visitors cannot create learner accounts yet.</p></article>
+          <article><small>Saving</small><strong>Recovery enabled</strong><p>Unsaved editor text can return after a reload or power loss.</p></article>
         </section>
-        <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Control areas</p><h2>Built in secure stages</h2></div><p>Only tested workflows are enabled. Later operations remain visibly locked.</p></div><div className="area-grid">{areas.map((area) => <article key={area.number}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>{area.status}</small></article>)}</div></section>
-        <section className="next-step"><div><p className="eyebrow">Current checkpoint</p><h2>Launch content and quality</h2><p>Use Launch readiness to inspect the real public inventory, then complete the manual browser, accessibility, account, recovery, and security checks.</p></div><span className="next-step__badge">Phase 27 active</span></section>
+        <section className="area-section"><div className="section-heading"><div><p className="eyebrow">Main tasks</p><h2>Build and manage EFBI</h2></div><p>Start with a program, create its course, add lessons and videos, then publish.</p></div><div className="area-grid">{areas.map((area) => <button className="dashboard-action" type="button" key={area.number} onClick={() => openSection(area.section)}><span>{area.number}</span><div><h3>{area.title}</h3><p>{area.detail}</p></div><small>Open</small></button>)}</div></section>
+        <section className="next-step"><div><p className="eyebrow">Simple publishing order</p><h2>Program → Course → Lessons → Publish</h2><p>Add the YouTube link inside Lessons & videos. Preview your work, save it, and use Publish course only when the course and its lessons are ready.</p></div><button type="button" onClick={() => openSection('lessons')}>Add lesson or video</button></section>
         </>}
       </main>
     </div>

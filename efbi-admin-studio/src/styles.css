@@ -55,6 +55,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .sidebar nav button:hover { color: #fff; background: rgba(255,255,255,.05); }
 .sidebar nav button.active { color: #fff; border-color: rgba(255,255,255,.15); background: rgba(255,255,255,.08); }
 .studio-menu-toggle { display: none; }
+.advanced-navigation { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.12); }
+.advanced-navigation > .advanced-navigation-toggle { display: flex; justify-content: space-between; align-items: center; color: #b8d0c2; }
+.advanced-navigation-toggle small { color: #86aa96; font-size: .62rem; font-weight: 800; text-transform: uppercase; }
+.advanced-navigation > div { display: none; }
+.advanced-navigation.is-open > div { display: block; }
+.advanced-navigation > div > button { padding-left: 24px; color: #aac3b5; font-size: .76rem; }
 .operator { min-width: 0; flex: 0 0 auto; display: grid; gap: 6px; margin-top: auto; padding: 16px 4px 0; border-top: 1px solid rgba(255,255,255,.12); }
 .operator small { color: #a3c1b0; font-size: .75rem; }
 .operator strong { overflow: hidden; text-overflow: ellipsis; font-size: .76rem; }
@@ -78,8 +84,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .section-heading h2, .next-step h2 { margin: 0; color: var(--deep); font-size: clamp(1.8rem, 3vw, 2.7rem); letter-spacing: -.045em; }
 .section-heading > p { max-width: 370px; margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.55; }
 .area-grid { border-top: 1px solid var(--line); }
-.area-grid article { display: grid; grid-template-columns: 50px minmax(0, 1fr) auto; gap: 20px; align-items: center; padding: 22px 4px; border-bottom: 1px solid var(--line); }
-.area-grid article > span { color: var(--green); font-size: .75rem; font-weight: 900; }
+.area-grid article, .area-grid .dashboard-action { width: 100%; display: grid; grid-template-columns: 50px minmax(0, 1fr) auto; gap: 20px; align-items: center; padding: 22px 4px; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: transparent; }
+.area-grid .dashboard-action { cursor: pointer; }
+.area-grid .dashboard-action:hover { padding-inline: 14px; background: #f2f7f3; }
+.area-grid article > span, .area-grid .dashboard-action > span { color: var(--green); font-size: .75rem; font-weight: 900; }
 .area-grid h3 { margin: 0 0 5px; color: var(--deep); font-size: 1.05rem; }
 .area-grid p { margin: 0; color: var(--muted); font-size: .8rem; }
 .area-grid small { padding: 6px 9px; color: #66736b; border: 1px solid var(--line); background: #fff; font-size: .75rem; font-weight: 800; text-transform: uppercase; }
@@ -143,6 +151,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .course-editor textarea.textarea--short { min-height: 92px; }
 .course-editor input:focus, .course-editor select:focus, .course-editor textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(8,115,66,.1); }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.field-success { color: var(--green) !important; font-weight: 800 !important; }
 .validation-list { padding: 14px 16px; color: #76342b; border: 1px solid #e8c2bc; background: #fff5f3; font-size: .74rem; }
 .validation-list ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.55; }
 .editor-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding-top: 4px; }

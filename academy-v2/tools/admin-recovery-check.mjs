@@ -29,9 +29,9 @@ const editors = [
   { nav: 'Programs', heading: 'Program workspace', label: 'Program title', key: 'efbi-admin-program-recovery-v1', prompt: 'Unsaved program text found', restored: 'locally saved program text was restored' },
   { nav: 'Blog', heading: 'Blog workspace', label: 'Article title', key: 'efbi-admin-blog-recovery-v1', prompt: 'Unsaved article found', restored: 'locally saved article was restored' },
   { nav: 'Courses', heading: 'Course workspace', label: 'Course title', key: 'efbi-admin-course-recovery-v1', prompt: 'Unsaved course text found', restored: 'locally saved course text was restored' },
-  { nav: 'Lessons', heading: 'Lesson workspace', label: 'Lesson title', key: 'efbi-admin-lesson-recovery-v1', prompt: 'Unsaved lesson text found', restored: 'locally saved lesson text was restored' },
+  { nav: 'Lessons & videos', heading: 'Lesson workspace', label: 'Lesson title', key: 'efbi-admin-lesson-recovery-v1', prompt: 'Unsaved lesson text found', restored: 'locally saved lesson text was restored' },
 ]
-const adminSectionLabels = ['Overview', 'Launch readiness', 'Launch drafts', 'Enrollment', 'Safety & incidents', 'Programs', 'Blog', 'Courses', 'Lessons', 'Activation', 'Reviews', 'Certificates', 'Audit history', 'Privacy & retention']
+const adminSectionLabels = ['Home', 'Programs', 'Courses', 'Lessons & videos', 'Publish course', 'Blog', 'Learner reviews', 'Certificates', 'Launch checks', 'Starter content', 'Enrollment settings', 'Safety & incidents', 'Activity history', 'Privacy & deletion']
 
 async function waitForPage(client, predicate, description, timeout = 15000) {
   const started = Date.now()
@@ -92,6 +92,13 @@ async function clickButton(client, text) {
   assert.fail(`Button was missing or remained disabled: ${text}`)
 }
 
+async function openAdvancedNavigation(client) {
+  if (await client.evaluate(`document.querySelector('.advanced-navigation-toggle')?.getAttribute('aria-expanded') !== 'true'`)) {
+    await clickSelector(client, '.advanced-navigation-toggle')
+    await pause(30)
+  }
+}
+
 async function inspectStudioNavigation(client, width, height, compact) {
   await client.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 600 })
   await pause(120)
@@ -110,9 +117,10 @@ async function inspectStudioNavigation(client, width, height, compact) {
   assert.equal(initial.overflow <= 1, true, `${width}px: dashboard overflows horizontally by ${initial.overflow}px.`)
 
   if (compact) await clickSelector(client, '.studio-menu-toggle')
+  await openAdvancedNavigation(client)
   const navigation = await client.evaluate(`(() => {
     const nav = document.querySelector('#studio-navigation')
-    const buttons = [...(nav?.querySelectorAll('button') ?? [])]
+    const buttons = [...(nav?.querySelectorAll('button[data-studio-section]') ?? [])]
     if (!nav || !buttons.length || getComputedStyle(nav).display === 'none') return { visible: false }
     nav.scrollTop = nav.scrollHeight
     const navRect = nav.getBoundingClientRect()
@@ -126,7 +134,7 @@ async function inspectStudioNavigation(client, width, height, compact) {
     }
   })()`)
   assert.equal(navigation.visible, true, `${width}px: Studio navigation is not available.`)
-  assert.equal(navigation.buttonCount, 14, `${width}px: an administrator must receive all fourteen Studio sections.`)
+  assert.equal(navigation.buttonCount, 14, `${width}px: all eight main and six advanced Studio sections must remain available.`)
   assert.equal(navigation.scrollable, true, `${width}px: a long Studio menu cannot scroll.`)
   assert.equal(navigation.lastReachable, true, `${width}px: the final Studio menu item cannot be reached.`)
   if (compact) {
@@ -142,7 +150,7 @@ async function inspectStudioNavigation(client, width, height, compact) {
       await pause(30)
     }
     const selected = await client.evaluate(`(() => {
-      const button = [...document.querySelectorAll('#studio-navigation button')].find((candidate) => candidate.textContent?.trim() === ${JSON.stringify(label)})
+      const button = [...document.querySelectorAll('#studio-navigation button[data-studio-section]')].find((candidate) => candidate.textContent?.trim() === ${JSON.stringify(label)})
       if (!(button instanceof HTMLButtonElement)) return false
       button.click()
       return true
@@ -237,7 +245,7 @@ try {
   await setFieldByLabel(client, 'Email', email)
   await setFieldByLabel(client, 'Password', password)
   await clickButton(client, 'Sign in securely')
-  await waitForPage(client, (state) => state.text.includes('Good morning, builder.'), 'Verified administrator dashboard')
+  await waitForPage(client, (state) => state.text.includes('What would you like to do?'), 'Verified administrator dashboard')
   assert.equal(await client.evaluate(`document.querySelectorAll('main').length`), 1, 'Admin Studio must contain exactly one main landmark.')
 
   await inspectStudioNavigation(client, 1152, 650, false)
@@ -246,7 +254,8 @@ try {
   await client.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
   console.log('✓ Admin Studio navigation remains reachable at zoomed-desktop, tablet, and phone widths')
 
-  await clickButton(client, 'Launch drafts')
+  await openAdvancedNavigation(client)
+  await clickButton(client, 'Starter content')
   await waitForPage(client, (state) => state.text.includes('Launch content drafts') && state.text.includes('Import 10 missing drafts'), 'Launch draft importer')
   assert.equal(await client.evaluate(`document.querySelectorAll('main').length`), 1, 'Launch draft importer must preserve one main landmark.')
   await setFieldByLabel(client, 'Type IMPORT LAUNCH DRAFTS', 'IMPORT LAUNCH DRAFTS')
@@ -282,9 +291,18 @@ try {
   for (const collectionName of ['publishedPrograms', 'publishedPosts', 'courseReleases', 'lessonReleases', 'activeCourses', 'publicCourseCatalog']) {
     assert.equal((await adminDb.collection(collectionName).get()).empty, true, `Draft import must not write ${collectionName}.`)
   }
+  await clickButton(client, 'Lessons & videos')
+  await waitForPage(client, (state) => state.text.includes('Lessons & videos') && state.text.includes('YouTube video'), 'Lesson and video editor')
+  await setFieldByLabel(client, 'YouTube video', 'https://youtu.be/Bh2XmeaZsBc?si=EFBI-test')
+  await waitForPage(client, (state) => state.text.includes('Video recognized · Bh2XmeaZsBc'), 'YouTube link recognition')
+  assert.equal(await client.evaluate(`document.body.innerText.includes('Paste a valid YouTube link')`), false, 'A valid full YouTube share link must not produce a validation error.')
+  await client.evaluate(`localStorage.removeItem('efbi-admin-lesson-recovery-v1')`)
+  console.log('✓ lesson editor accepts a full YouTube share link and extracts the safe video ID')
+
   await client.send('Page.reload', { ignoreCache: true })
-  await waitForPage(client, (state) => state.text.includes('Good morning, builder.'), 'Restored administrator session after draft import')
-  await clickButton(client, 'Launch drafts')
+  await waitForPage(client, (state) => state.text.includes('What would you like to do?'), 'Restored administrator session after draft import')
+  await openAdvancedNavigation(client)
+  await clickButton(client, 'Starter content')
   await waitForPage(client, (state) => state.text.includes('All drafts imported'), 'Idempotent launch draft state')
   console.log('✓ launch pack imported the four verified EFBI video modules as ten audited drafts without publishing or overwriting content')
 
@@ -296,7 +314,7 @@ try {
     assert.equal(await client.evaluate(`Boolean(localStorage.getItem(${JSON.stringify(editor.key)})?.includes(${JSON.stringify(sentinel)}))`), true, `${editor.nav} did not save its local recovery record.`)
 
     await client.send('Page.reload', { ignoreCache: true })
-    await waitForPage(client, (state) => state.text.includes('Good morning, builder.'), 'Restored administrator session')
+    await waitForPage(client, (state) => state.text.includes('What would you like to do?'), 'Restored administrator session')
     await clickButton(client, editor.nav)
     await waitForPage(client, (state) => state.text.includes(editor.prompt), `${editor.nav} recovery prompt`)
     await clickButton(client, 'Restore copy')
@@ -308,7 +326,8 @@ try {
 
   console.log('✓ all four Admin Studio editors passed isolated power-loss recovery')
 
-  await clickButton(client, 'Privacy & retention')
+  await openAdvancedNavigation(client)
+  await clickButton(client, 'Privacy & deletion')
   await waitForPage(client, (state) => state.text.includes('Keep every privacy request moving') && state.text.includes(learnerUid), 'Administrator deletion workspace', 30000)
   assert.equal(await client.evaluate(`document.querySelectorAll('main').length`), 1, 'Privacy operations must contain exactly one main landmark.')
   await setFieldByLabel(client, 'Type the learner UID', learnerUid)

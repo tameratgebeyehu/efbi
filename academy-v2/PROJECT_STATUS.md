@@ -828,6 +828,19 @@ Human playback, captions, keyboard, mobile full-screen, and slower-connection co
 
 Phase 27M is in progress. A read-only cloud preflight reconfirmed closed enrollment, one verified administrator, matching deployed Firestore rules, one intentionally published founder article, and no active course or public course catalog. All four launch video IDs resolve to the expected EFBI titles and channel. However, the public caption-track listing returned zero discoverable tracks for every video, so lesson publication and course activation remain blocked pending owner caption verification or reviewed caption uploads. The four program drafts, course draft, four lesson drafts, and all twelve answer keys remain private; no cloud content was changed by this audit.
 
+The owner confirmed captions in the actual YouTube players on 2026-09-14. Caption presence must be repeated on the final hosted preview, but it no longer blocks local content review.
+
+## Phase 27N — simpler owner workflow
+
+The first Admin Studio simplification checkpoint is complete in source:
+
+1. Eight everyday owner destinations remain visible: Home, Programs, Courses, Lessons & videos, Publish course, Blog, Learner reviews, and Certificates.
+2. Launch checks, starter-content import, enrollment settings, safety, activity history, and privacy/deletion are preserved under one collapsed Advanced tools section.
+3. The Home screen uses direct task buttons and explains the publishing order as Program → Course → Lessons → Publish.
+4. The lesson editor accepts a normal YouTube watch, share, Shorts, live, embed, or privacy-enhanced link, extracts only its eleven-character ID, and clearly confirms recognition. Raw video IDs still work.
+5. All fourteen underlying workspaces remain reachable at zoomed desktop, tablet, and phone widths, while editor power-loss recovery and protected deletion continue to pass in isolated emulators.
+6. No development-cloud content, learner record, enrollment setting, Hosting target, or custom domain changed in this phase.
+
 
 ## Recovery commands
 
