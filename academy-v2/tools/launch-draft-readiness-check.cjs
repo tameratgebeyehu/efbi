@@ -106,21 +106,27 @@ async function main() {
       continue
     }
 
+    const recordFindings = []
+    const addFinding = (message) => {
+      findings.push(`${record.collection}/${record.id}: ${message}`)
+      recordFindings.push(message)
+    }
     const changedFields = Object.entries(record.item)
       .filter(([key, value]) => !isDeepStrictEqual(draft[key], value))
       .map(([key]) => key)
-    if (changedFields.length) findings.push(`${record.collection}/${record.id}: source fields differ (${changedFields.join(', ')}).`)
+    if (changedFields.length) addFinding(`source fields differ (${changedFields.join(', ')}).`)
     if (draft.status !== 'draft' || draft.revision !== 1 || draft.latestReleaseNumber !== 0 || draft.latestReleaseId !== '') {
-      findings.push(`${record.collection}/${record.id}: draft lifecycle metadata is not the expected revision-one state.`)
+      addFinding('draft lifecycle metadata is not the expected revision-one state.')
     }
     if (!draft.createdAt || !draft.updatedAt || !draft.createdBy || draft.createdBy !== draft.updatedBy) {
-      findings.push(`${record.collection}/${record.id}: draft ownership or timestamps are incomplete.`)
+      addFinding('draft ownership or timestamps are incomplete.')
     }
-    if (owner?.localId && draft.createdBy !== owner.localId) findings.push(`${record.collection}/${record.id}: draft was not created by the approved owner.`)
+    if (owner?.localId && draft.createdBy !== owner.localId) addFinding('draft was not created by the approved owner.')
+    let audit = null
     if (!draft.lastAuditId) {
-      findings.push(`${record.collection}/${record.id}: linked audit event is missing.`)
+      addFinding('linked audit event is missing.')
     } else {
-      const audit = await getDocument('adminAudit', draft.lastAuditId, accessToken)
+      audit = await getDocument('adminAudit', draft.lastAuditId, accessToken)
       const expectedEntityType = record.collection.slice(0, -1)
       if (!audit
         || audit.eventId !== draft.lastAuditId
@@ -131,18 +137,47 @@ async function main() {
         || audit.revision !== 1
         || audit.releaseId !== ''
         || !audit.createdAt) {
-        findings.push(`${record.collection}/${record.id}: linked audit event is missing or inconsistent.`)
+        addFinding('linked audit event is missing or inconsistent.')
       }
     }
-    inventory.push({ kind: record.kind, id: record.id, title: record.title, status: changedFields.length ? 'changed' : 'exact private draft' })
+    inventory.push({
+      kind: record.kind,
+      id: record.id,
+      title: record.title,
+      status: recordFindings.length ? 'needs review' : 'verified private draft',
+      lifecycle: {
+        status: draft.status ?? null,
+        revision: draft.revision ?? null,
+        latestReleaseNumber: draft.latestReleaseNumber ?? null,
+        hasLatestRelease: Boolean(draft.latestReleaseId),
+        approvedOwner: Boolean(owner?.localId && draft.createdBy === owner.localId),
+      },
+      linkedAudit: audit ? { action: audit.action ?? null, revision: audit.revision ?? null, hasRelease: Boolean(audit.releaseId) } : null,
+    })
+  }
+
+  const publicRecords = []
+  for (const record of [
+    ...pack.programs.map((item) => ({ collection: 'publishedPrograms', id: item.programId, kind: 'Program' })),
+    ...pack.articles.map((item) => ({ collection: 'publishedPosts', id: item.postId, kind: 'Article' })),
+    ...pack.courses.flatMap((item) => [
+      { collection: 'activeCourses', id: item.courseId, kind: 'Active course' },
+      { collection: 'publicCourseCatalog', id: item.courseId, kind: 'Public course catalog' },
+    ]),
+  ]) {
+    const published = await getDocument(record.collection, record.id, accessToken)
+    if (!published) continue
+    publicRecords.push({ kind: record.kind, collection: record.collection, id: record.id, version: published.version ?? published.courseVersion ?? null })
+    findings.push(`${record.collection}/${record.id}: public record exists before Phase 27J approval.`)
   }
 
   console.log(JSON.stringify({
     projectId,
     packId: pack.packId,
     expectedDrafts: records.length,
-    exactDrafts: inventory.filter((item) => item.status === 'exact private draft').length,
+    exactDrafts: inventory.filter((item) => item.status === 'verified private draft').length,
     inventory,
+    publicRecords,
     findings,
   }, null, 2))
 
