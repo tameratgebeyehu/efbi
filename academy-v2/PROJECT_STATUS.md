@@ -824,6 +824,10 @@ The lesson-player development checkpoint is complete:
 
 Human playback, captions, keyboard, mobile full-screen, and slower-connection confirmation remains required before launch.
 
+## Phase 27M — launch-content owner review
+
+Phase 27M is in progress. A read-only cloud preflight reconfirmed closed enrollment, one verified administrator, matching deployed Firestore rules, one intentionally published founder article, and no active course or public course catalog. All four launch video IDs resolve to the expected EFBI titles and channel. However, the public caption-track listing returned zero discoverable tracks for every video, so lesson publication and course activation remain blocked pending owner caption verification or reviewed caption uploads. The four program drafts, course draft, four lesson drafts, and all twelve answer keys remain private; no cloud content was changed by this audit.
+
 
 ## Recovery commands
 

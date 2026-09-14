@@ -34,6 +34,10 @@ Before adding Modules 5–12, the owner must confirm:
 5. the exact eleven-character YouTube ID is recorded; and
 6. the written lesson remains complete when YouTube is blocked.
 
+## Phase 27M video audit
+
+On 2026-09-14, the four public YouTube oEmbed records matched the expected module titles and identified the channel as `EFBI`. The public caption-track listing returned zero discoverable tracks for all four videos. Treat captions as unconfirmed until the owner verifies them in the YouTube player or adds reviewed caption tracks in YouTube Studio. Written lessons remain available, but they do not replace synchronized captions for video accessibility.
+
 ## Safe import
 
 1. Start Admin Studio locally and sign in as the verified owner.

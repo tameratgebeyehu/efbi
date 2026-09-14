@@ -28,6 +28,7 @@ Automated Phase 27G evidence is recorded in `PHASE_27G_RELEASE_EVIDENCE.md`. It 
 - Before selecting **Load video**, confirm the lesson shows no YouTube frame or unexpected YouTube request. After selecting it, confirm the correct module video appears.
 - Focus or click each loaded player and test Space/K, Left/Right, Up/Down, J/L, M, F, and playback-speed shortcuts. Switch browser tabs and confirm playback pauses.
 - Confirm the 16:9 video is not clipped and YouTube-controlled branding and controls remain visible and unobscured; EFBI must not cover them.
+- Confirm each of the four launch videos has an accurate, synchronized caption track; the 2026-09-14 public metadata audit discovered zero tracks.
 - Test one lesson with YouTube temporarily blocked or disconnected. Confirm the retry message appears and the written lesson remains available.
 - Repeat once on a slower mobile connection if practical.
 
